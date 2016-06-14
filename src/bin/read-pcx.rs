@@ -104,21 +104,21 @@ fn read_pcx(file: &mut File) -> PCX {
     // read palette
     let first_byte = file.read_u8().unwrap();
     assert!(first_byte == 12);
-    file.read(&mut pcx.palette);
+    file.read(&mut pcx.palette).ok();
     return pcx;
 }
 
 fn pcx_to_ppm(pcx: PCX, outfile: &str) {
     let mut outfile = File::create(outfile).unwrap();
-    outfile.write_fmt(format_args!("P3\n"));
-    outfile.write_fmt(format_args!("{0} {1}\n", pcx.header.width, pcx.header.height));
-    outfile.write_fmt(format_args!("255\n"));
+    outfile.write_fmt(format_args!("P3\n")).ok();
+    outfile.write_fmt(format_args!("{0} {1}\n", pcx.header.width, pcx.header.height)).ok();
+    outfile.write_fmt(format_args!("255\n")).ok();
     for i in 0..(pcx.header.width as usize)*(pcx.header.height as usize) {
         let pal_idx: usize = 3 * (pcx.data[i as usize] as usize);
         outfile.write_fmt(format_args!("{0} {1} {2}\n",
                                        pcx.palette[pal_idx + 0],
                                        pcx.palette[pal_idx + 1],
-                                       pcx.palette[pal_idx + 2]));
+                                       pcx.palette[pal_idx + 2])).ok();
     }
 }
 
