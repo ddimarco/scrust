@@ -36,8 +36,8 @@ impl PCX {
             bpl: 0,
         };
 
-        let id = file.read_u8().unwrap();
-        println!("id: {}", id);
+        // id
+        let _ = file.read_u8().unwrap();
         pcxhead.version = file.read_u8().unwrap();
         pcxhead.encoding = file.read_u8().unwrap();
         pcxhead.bpp = file.read_u8().unwrap();
@@ -47,9 +47,9 @@ impl PCX {
         let ymin = file.read_u16::<LittleEndian>().unwrap();
         let xmax = file.read_u16::<LittleEndian>().unwrap();
         let ymax = file.read_u16::<LittleEndian>().unwrap();
-        let hres = file.read_u16::<LittleEndian>().unwrap();
-        let vres = file.read_u16::<LittleEndian>().unwrap();
-        println!("hres, vres: {}, {}", hres, vres);
+        // hres, vres
+        let _ = file.read_u16::<LittleEndian>().unwrap();
+        let _ = file.read_u16::<LittleEndian>().unwrap();
 
         pcxhead.clrmap = unsafe{std::mem::uninitialized()};
         file.read(&mut pcxhead.clrmap).ok();
@@ -62,8 +62,8 @@ impl PCX {
         let _ = file.read_u16::<LittleEndian>().unwrap();
 
         file.seek(SeekFrom::Current(58)).ok();
-        println!("xmin: {0}, ymin: {1}, xmax: {2}, ymax: {3}",
-                 xmin, ymin, xmax, ymax);
+        // println!("xmin: {0}, ymin: {1}, xmax: {2}, ymax: {3}",
+        //          xmin, ymin, xmax, ymax);
 
         // read data
         pcxhead.width = xmax - xmin + 1;
