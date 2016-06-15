@@ -1,11 +1,11 @@
 use std::ffi::CString;
-extern crate libc;
 use libc::{// c_void,
            c_char};
 
-use std::io::Read;
+use std;
+use std::io::{Read, Result, Seek, SeekFrom};
 
-extern crate byteorder;
+#[allow(unused_imports)]
 use byteorder::{LittleEndian, ReadBytesExt};
 
 // FIXME: don't treat void* as u64
@@ -21,17 +21,19 @@ extern {
                        filehandle: &mut u64) -> bool;
     fn SFileCloseFile(handle: u64) -> bool;
     fn SFileReadFile(handle: u64, buffer: *mut u8, toread: u32, read: *mut u32, lpoverlapped: u64) -> bool;
+
+    fn SFileSetFilePointer(handle: u64, lFilePos: u32, plFilePos: *mut u32, moveMethod: u32) -> u32;
 }
 
 // FIXME: lifetime of maf should be < mpqarchive
 // datatype for a file inside an mpq archive
-struct MPQArchiveFile {
+pub struct MPQArchiveFile {
     handle: u64,
     //archive: MPQArchive,
 }
 impl Drop for MPQArchiveFile {
     fn drop(&mut self) {
-        println!("closing mpqarchivefile!");
+        //println!("closing mpqarchivefile!");
         unsafe {
             SFileCloseFile(self.handle);
         }
@@ -58,15 +60,33 @@ impl Read for MPQArchiveFile {
         return Ok(read_bytes as usize);
     }
 }
+impl Seek for MPQArchiveFile {
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
+        // FIXME: untested, p has different types here (can be < 0)!!!
+        let (move_method, fpos) = match pos {
+            SeekFrom::Current(p) => (1, p as u32),
+            SeekFrom::Start(p) => (0, p as u32),
+            SeekFrom::End(p) => (2, p as u32),
+        };
+        let mut fph: u32 = 0;
+        unsafe {
+            let fs = SFileSetFilePointer(self.handle, fpos, &mut fph,
+                                         move_method as u32);
+            println!("fs: {}, lFilePosHigh: {}", fs, fph);
+            // FIXME: is this correct?
+            return Ok(fs as u64);
+        }
+    }
+}
 
-struct MPQArchive {
+pub struct MPQArchive {
     pub filename: String,
     handle: u64,
 }
 
 impl Drop for MPQArchive {
     fn drop(&mut self) {
-        println!("dropping archive!");
+        //println!("dropping archive!");
         self.close();
     }
 }
@@ -112,6 +132,7 @@ impl MPQArchive {
     }
 }
 
+/*
 fn main() {
     println!("opening file");
 
@@ -136,3 +157,4 @@ fn main() {
 
     println!("closed");
 }
+*/
