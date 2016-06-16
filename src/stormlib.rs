@@ -72,7 +72,7 @@ impl Seek for MPQArchiveFile {
         unsafe {
             let fs = SFileSetFilePointer(self.handle, fpos, &mut fph,
                                          move_method as u32);
-            println!("fs: {}, lFilePosHigh: {}", fs, fph);
+            // println!("fs: {}, lFilePosHigh: {}", fs, fph);
             // FIXME: is this correct?
             return Ok(fs as u64);
         }
