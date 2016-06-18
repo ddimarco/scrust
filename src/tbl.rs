@@ -52,23 +52,3 @@ pub fn read_tbl<T: Read + Seek>(file: &mut T) -> std::vec::Vec<String> {
     strings
 }
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs::File;
-
-    #[test]
-    fn reading() {
-        let mut file=File::open("/home/dm/code/rust/read-pcx/images.tbl").unwrap();
-        let strings = read_tbl(&mut file);
-        assert_eq!(strings.len(), 929);
-
-        assert_eq!(strings[0], "zerg\\avenger.grp");
-        assert_eq!(strings[1], "protoss\\mshield.los");
-        assert_eq!(strings[2], "zerg\\zavBirth.grp");
-        assert_eq!(strings[3], "zerg\\zavbirth.lob");
-        assert_eq!(strings[4], "zerg\\zavDeath.grp");
-        assert_eq!(strings[928], "thingy\\MaelHit.grp");
-    }
-}
