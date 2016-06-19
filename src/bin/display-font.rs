@@ -9,7 +9,7 @@ use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
 
 extern crate read_pcx;
-use read_pcx::font::Font;
+use read_pcx::font::{Font, FontSize};
 use read_pcx::pcx::PCX;
 use read_pcx::pal::Palette;
 
@@ -91,29 +91,16 @@ impl RenderText for Font {
     }
 }
 
-// fn print_buf_hex(buf: &[u8], width: u32) {
-//     let lines = buf.len() as u32 / width;
-//     for y in 0..lines {
-//         for x in 0..width {
-//             print!("{:2x}", buf[(y*width + x) as usize]);
-//         }
-//         println!("");
-//     }
-// }
-
 fn main() {
     println!("opening mpq...");
     let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
 
-    let mut font_file = gd.open("files\\font\\font14.fnt").unwrap();
-    let fnt = Font::read(&mut font_file);
+    let fnt = gd.font(FontSize::Font16);
     println!("low-id: {}, high-idx: {}, max-width: {}, max-height: {}",
              fnt.header.low_idx,
              fnt.header.high_idx,
              fnt.header.max_width,
              fnt.header.max_height);
-
-    let pcx = PCX::read(&mut gd.open("glue\\palmm\\tfont.pcx").unwrap());
 
     // sdl
     let sdl_context = sdl2::init().unwrap();
@@ -129,7 +116,7 @@ fn main() {
 
     let (w, h) = (320, fnt.line_height());
     let texture = fnt.render_textbox("Na, wie isses?", 0, &mut renderer,
-                                     &pcx.palette, &pcx.data, w, h);
+                                     &gd.fontmm_reindex.palette, &gd.fontmm_reindex.data, w, h);
     println!("w: {}, h: {}", w, h);
 
     renderer.set_draw_color(Color::RGBA(0, 0, 0, 0));

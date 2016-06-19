@@ -5,6 +5,13 @@ use std::cmp::min;
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
+pub enum FontSize {
+    Font10 = 0,
+    Font14 = 1,
+    Font16 = 2,
+    Font16X = 3,
+}
+
 pub struct FontHeader {
     /// index of first letter in file
     pub low_idx: u8,
