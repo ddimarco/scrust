@@ -6,6 +6,8 @@ use std::io::{Read, Write, Seek, SeekFrom};
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
+use ::pal::Palette;
+
 pub struct PCXHeader {
     pub version: u8,
     pub encoding: u8,
@@ -21,7 +23,8 @@ pub struct PCXHeader {
 pub struct PCX {
     pub header: PCXHeader,
     pub data: Vec<u8>,
-    pub palette: [u8; 256*3],
+    //pub palette: [u8; 256*3],
+    pub palette: Palette,
 }
 
 impl PCX {
@@ -69,27 +72,28 @@ impl PCX {
         pcxhead.width = xmax - xmin + 1;
         pcxhead.height = ymax - ymin + 1;
         let bufsize = (pcxhead.width as usize)*(pcxhead.height as usize);
-        let mut pcx = PCX {
-            header: pcxhead,
-            data: vec![0; bufsize],
-            palette: [0; 256*3],
-        };
+        // let mut pcx = PCX {
+        //     header: pcxhead,
+        //     data: vec![0; bufsize],
+        //     palette: [0; 256*3],
+        // };
+        let mut data = vec![0; bufsize];
 
         let mut outpos = 0;
-        for _ in 0..pcx.header.height {
+        for _ in 0..pcxhead.height {
             let mut x = 0;
-            while (x < pcx.header.bpl) && (outpos < bufsize as usize) {
+            while (x < pcxhead.bpl) && (outpos < bufsize as usize) {
                 let val = file.read_u8().unwrap();
                 if val > 192 {
                     let repeat = val - 192;
                     let color = file.read_u8().unwrap();
                     for _ in 0..repeat {
-                        pcx.data[outpos] = color;
+                        data[outpos] = color;
                         outpos += 1;
                         x += 1;
                     }
                 } else {
-                    pcx.data[outpos] = val;
+                    data[outpos] = val;
                     outpos += 1;
                     x += 1;
                 }
@@ -99,8 +103,14 @@ impl PCX {
         // read palette
         let first_byte = file.read_u8().unwrap();
         assert!(first_byte == 12);
-        file.read(&mut pcx.palette).ok();
-        return pcx;
+        let mut buf = [0; 256*3];
+        file.read(&mut buf).ok();
+
+        PCX {
+            header: pcxhead,
+            data: data,
+            palette: Palette::from_buffer(&buf),
+        }
     }
 
     pub fn to_ppm(self: &PCX, outfile: &str) {
@@ -111,9 +121,9 @@ impl PCX {
         for i in 0..(self.header.width as usize)*(self.header.height as usize) {
             let pal_idx: usize = 3 * (self.data[i as usize] as usize);
             outfile.write_fmt(format_args!("{0} {1} {2}\n",
-                                           self.palette[pal_idx + 0],
-                                           self.palette[pal_idx + 1],
-                                           self.palette[pal_idx + 2])).ok();
+                                           self.palette.data[pal_idx + 0],
+                                           self.palette.data[pal_idx + 1],
+                                           self.palette.data[pal_idx + 2])).ok();
         }
     }
 

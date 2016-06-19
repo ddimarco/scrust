@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Write, Seek, SeekFrom};
+use std::cmp::min;
 
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -14,11 +15,11 @@ pub struct FontHeader {
 }
 
 pub struct FontLetter {
-    width: u8,
-    height: u8,
-    xoffset: u8,
-    yoffset: u8,
-    data: Vec<u8>,
+    pub width: u8,
+    pub height: u8,
+    pub xoffset: i8,
+    pub yoffset: i8,
+    pub data: Vec<u8>,
 }
 
 pub struct Font {
@@ -55,8 +56,8 @@ impl Font {
             // read letter header
             let w = file.read_u8().unwrap();
             let h = file.read_u8().unwrap();
-            let xoff = file.read_u8().unwrap();
-            let yoff = file.read_u8().unwrap();
+            let xoff = file.read_i8().unwrap();
+            let yoff = file.read_i8().unwrap();
             let datasize = w as usize * h as usize;
             let mut data = vec![0 as u8; datasize];
             let mut i: usize = 0;
@@ -90,7 +91,25 @@ impl Font {
             },
             letters: letters,
         }
+    }
 
+    pub fn get_letter<'a>(&'a self, c: char) -> &'a FontLetter {
+        assert!(c != ' ');
+        &self.letters[(c as usize) - 33]
+    }
 
+    pub fn letter_width(&self, c: char) -> u32 {
+        if c == ' ' {
+            min((self.header.max_width as u32)/3,
+                          6)
+        } else {
+            let ref letter = self.get_letter(c);
+            (letter.xoffset as u32) + (letter.width as u32)
+        }
+    }
+
+    pub fn line_height(&self) -> u32 {
+        let ref letter = self.get_letter('y');
+        (letter.yoffset as u32) + (letter.height as u32)
     }
 }

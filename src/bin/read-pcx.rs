@@ -1,4 +1,3 @@
-
 extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -21,12 +20,12 @@ fn pcx_to_texture(renderer: &mut Renderer, pcx: PCX) -> sdl2::render::Texture {
         let mut i = 0;
         for y in 0..pcx.header.height as usize {
             for x in 0..pcx.header.width as usize {
-                let offset = y*pitch + x*3;
                 let col = pcx.data[i];
-                let r = pcx.palette[col as usize*3  + 0];
-                let g = pcx.palette[col as usize*3 + 1];
-                let b = pcx.palette[col as usize*3 + 2];
+                let r = pcx.palette.data[col as usize*3 + 0];
+                let g = pcx.palette.data[col as usize*3 + 1];
+                let b = pcx.palette.data[col as usize*3 + 2];
 
+                let offset = y*pitch + x*3;
                 buffer[offset + 0] = r;
                 buffer[offset + 1] = g;
                 buffer[offset + 2] = b;
