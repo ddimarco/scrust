@@ -5,12 +5,12 @@ use std::io::{Read, Seek, SeekFrom};
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
-fn read_string<T: Read>(file: &mut T, len: u16) -> String {
+fn read_string<T: Read>(file: &mut T, length: Option<u16>) -> String {
     let mut res_str = String::new();
 
     let mut i=0;
     loop {
-        if (len > 0) && (i >= len) {
+        if (length != None) && (i >= length.unwrap()) {
             break;
         }
         match file.read_u8() {
@@ -42,9 +42,9 @@ pub fn read_tbl<T: Read + Seek>(file: &mut T) -> std::vec::Vec<String> {
         file.seek(SeekFrom::Start(string_offsets[i] as u64)).ok();
         let len =
             if i == (string_count - 1) {
-                0
+                None
             } else {
-                string_offsets[i+1] - string_offsets[i]
+                Some(string_offsets[i+1] - string_offsets[i])
             };
         strings.push(read_string(file, len));
     }

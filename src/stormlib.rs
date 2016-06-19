@@ -55,7 +55,11 @@ impl Read for MPQArchiveFile {
         let mut read_bytes: u32 = 0;
         unsafe {
             let succ = SFileReadFile(self.handle, buf.as_mut_ptr(), len, &mut read_bytes, 0);
-            assert!(succ == true);
+            //assert!(succ == true);
+            // FIXME:
+            if !succ {
+                return Ok(read_bytes as usize);
+            }
         }
         return Ok(read_bytes as usize);
     }

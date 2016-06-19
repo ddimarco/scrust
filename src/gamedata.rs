@@ -1,14 +1,18 @@
 use std::path::Path;
+use std::io::{Read, Seek, SeekFrom};
 
 use ::stormlib::{MPQArchive, MPQArchiveFile};
 use ::font::{Font, FontSize};
 use ::pcx::PCX;
+use ::tbl::read_tbl;
 
 pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
 
     fonts: Vec<Font>,
     pub fontmm_reindex: PCX,
+    pub images_tbl: Vec<String>,
+    pub stat_txt_tbl: Vec<String>,
 }
 
 impl GameData {
@@ -25,11 +29,14 @@ impl GameData {
 
         let fonts = GameData::load_fonts(&archives);
         let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx").unwrap());
+        let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
+        let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
         GameData {
             mpq_archives: archives,
             fonts: fonts,
             fontmm_reindex: fontmm_reindex,
-
+            images_tbl: images_tbl,
+            stat_txt_tbl: stat_txt_tbl,
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
