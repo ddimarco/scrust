@@ -101,13 +101,13 @@ impl GRP {
         frames
     }
 
-    pub fn read_line_data<T: Read + Seek>(file: &mut T,
-                                          line_idx: usize,
-                                          line_offset: u64,
-                                          xoffset: usize,
-                                          framewidth: u8,
-                                          data: &mut Vec<u8>,
-                                          real_framewidth: u16) {
+    fn read_line_data<T: Read + Seek>(file: &mut T,
+                                      line_idx: usize,
+                                      line_offset: u64,
+                                      xoffset: usize,
+                                      framewidth: u8,
+                                      data: &mut Vec<u8>,
+                                      real_framewidth: u16) {
         file.seek(SeekFrom::Start(line_offset)).ok();
         let data_start = line_idx * real_framewidth as usize;
         let mut x = xoffset;

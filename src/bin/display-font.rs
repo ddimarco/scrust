@@ -47,10 +47,10 @@ impl RenderText for Font {
             let mut y = 0;
             let mut x: usize = 0;
 
-            let mut outfile = File::create("/tmp/font.ppm").unwrap();
-            outfile.write_fmt(format_args!("P3\n")).ok();
-            outfile.write_fmt(format_args!("{0} {1}\n", width, height)).ok();
-            outfile.write_fmt(format_args!("255\n")).ok();
+            // let mut outfile = File::create("/tmp/font.ppm").unwrap();
+            // outfile.write_fmt(format_args!("P3\n")).ok();
+            // outfile.write_fmt(format_args!("{0} {1}\n", width, height)).ok();
+            // outfile.write_fmt(format_args!("255\n")).ok();
 
             for c in text.chars() {
                 if c != ' ' {
@@ -75,16 +75,14 @@ impl RenderText for Font {
                 x = x + 1 + letterwidth as usize;
             }
 
-            let pixelsize = 3;
-            for i in 0..buffer.len()/pixelsize {
-                outfile.write_fmt(format_args!("{0} {1} {2}\n",
-                                               buffer[i * pixelsize + 0],
-                                               buffer[i * pixelsize + 1],
-                                               buffer[i * pixelsize + 2],
-                                               )).ok();
-            }
-
-
+            // let pixelsize = 3;
+            // for i in 0..buffer.len()/pixelsize {
+            //     outfile.write_fmt(format_args!("{0} {1} {2}\n",
+            //                                    buffer[i * pixelsize + 0],
+            //                                    buffer[i * pixelsize + 1],
+            //                                    buffer[i * pixelsize + 2],
+            //                                    )).ok();
+            // }
             })
             .ok();
         return texture;
