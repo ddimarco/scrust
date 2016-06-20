@@ -8,3 +8,4 @@ pub mod grp;
 pub mod font;
 pub mod pal;
 pub mod gamedata;
+pub mod unitsdata;

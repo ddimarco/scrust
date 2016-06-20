@@ -1,10 +1,12 @@
 use std::path::Path;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::Read;
 
 use ::stormlib::{MPQArchive, MPQArchiveFile};
 use ::font::{Font, FontSize};
 use ::pcx::PCX;
 use ::tbl::read_tbl;
+
+use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
 pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
@@ -13,6 +15,13 @@ pub struct GameData {
     pub fontmm_reindex: PCX,
     pub images_tbl: Vec<String>,
     pub stat_txt_tbl: Vec<String>,
+
+    // TODO: encapsulate this stuff
+    pub images_dat: ImagesDat,
+    pub units_dat: UnitsDat,
+    pub sprites_dat: SpritesDat,
+    pub flingy_dat: FlingyDat,
+
 }
 
 impl GameData {
@@ -31,12 +40,22 @@ impl GameData {
         let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx").unwrap());
         let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
         let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
+
+        let images_dat = ImagesDat::read(&mut GameData::open_(&archives, "arr/images.dat").unwrap());
+        let units_dat = UnitsDat::read(&mut GameData::open_(&archives, "arr/units.dat").unwrap());
+        let sprites_dat = SpritesDat::read(&mut GameData::open_(&archives, "arr/sprites.dat").unwrap());
+        let flingy_dat = FlingyDat::read(&mut GameData::open_(&archives, "arr/flingy.dat").unwrap());
         GameData {
             mpq_archives: archives,
             fonts: fonts,
             fontmm_reindex: fontmm_reindex,
             images_tbl: images_tbl,
             stat_txt_tbl: stat_txt_tbl,
+
+            images_dat: images_dat,
+            units_dat: units_dat,
+            sprites_dat: sprites_dat,
+            flingy_dat: flingy_dat,
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
