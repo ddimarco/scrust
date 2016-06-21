@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::{Read, Write, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom};
 use std::cmp::min;
 
 extern crate byteorder;

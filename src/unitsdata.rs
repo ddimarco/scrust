@@ -64,7 +64,7 @@ macro_rules! dat_struct {
 dat_struct! (
     ImagesDat
     {
-        grp_file:              u32;  999,
+        grp_id:                u32;  999,
         graphic_turns:         u8;   999,
         clickable:             u8;   999,
         use_full_iscript:      u8;   999,
@@ -84,7 +84,7 @@ dat_struct! (
 dat_struct! (
     SpritesDat
     {
-        image_file               :u16  ;517,
+        image_id                 :u16  ;517,
         health_bar               :u8   ;387,
         unknown                  :u8   ;517,
         visible                  :u8   ;517,
@@ -96,7 +96,7 @@ dat_struct! (
 dat_struct! (
     FlingyDat
     {
-        sprite         :u16  ;209,
+        sprite_id      :u16  ;209,
         top_speed      :u32  ;209,
         acceleration   :u16  ;209,
         halt_distance  :u32  ;209,
@@ -109,7 +109,8 @@ dat_struct! (
 dat_struct! (
     UnitsDat
     {
-        graphics                        :u8   ;228,
+        // called "graphics" earlier
+        flingy_id                       :u8   ;228,
         subunit1                        :u16  ;228,
         subunit2                        :u16  ;228,
         infestation                     :u16  ;96,

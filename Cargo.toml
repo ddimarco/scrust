@@ -3,7 +3,14 @@ name = "read-pcx"
 version = "0.1.0"
 authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
 
+[profile.release]
+# enable debug symbols in release
+debug = true
+
 [dependencies]
 sdl2 = "0.20.0"
 byteorder = "*"
 libc = "*"
+enum_primitive = "*"
+num = "*"
+rand = "*"

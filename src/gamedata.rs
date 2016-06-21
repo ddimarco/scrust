@@ -1,10 +1,13 @@
 use std::path::Path;
 use std::io::Read;
 
+use std::collections::HashMap;
+
 use ::stormlib::{MPQArchive, MPQArchiveFile};
 use ::font::{Font, FontSize};
 use ::pcx::PCX;
 use ::tbl::read_tbl;
+use ::grp::GRP;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
@@ -22,6 +25,7 @@ pub struct GameData {
     pub sprites_dat: SpritesDat,
     pub flingy_dat: FlingyDat,
 
+    grp_cache: HashMap<u32, GRP>,
 }
 
 impl GameData {
@@ -56,6 +60,8 @@ impl GameData {
             units_dat: units_dat,
             sprites_dat: sprites_dat,
             flingy_dat: flingy_dat,
+
+            grp_cache: HashMap::new(),
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
@@ -74,7 +80,7 @@ impl GameData {
     fn open_(archives: &Vec<MPQArchive>, filename: &str) -> Option<MPQArchiveFile> {
         for mpq in archives.iter() {
             if mpq.has_file(filename) {
-                println!("found {} in {}", filename, mpq.filename);
+                //println!("found {} in {}", filename, mpq.filename);
                 let res: MPQArchiveFile = mpq.open_file(filename);
                 return Some(res);
             }
@@ -88,6 +94,20 @@ impl GameData {
 
     pub fn font<'a>(&'a self, size: FontSize) -> &'a Font {
         &self.fonts[size as usize]
+    }
+
+    pub fn grp(& mut self, grp_id: u32) -> &GRP {
+        // TODO: cache only references
+        if self.grp_cache.contains_key(&grp_id) {
+            return self.grp_cache.get(&grp_id).unwrap();
+        }
+        let name = "unit\\".to_string() + &self.images_tbl[(grp_id as usize) - 1];
+        println!("grp id: {}, filename: {}", grp_id, name);
+
+        let grp = GRP::read(&mut self.open(&name).unwrap());
+        self.grp_cache.insert(grp_id, grp);
+
+        return self.grp_cache.get(&grp_id).unwrap();
     }
 
 }
