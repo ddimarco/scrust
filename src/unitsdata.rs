@@ -42,11 +42,15 @@ macro_rules! dat_struct {
         }
     ) => {
         pub struct $struct_name {
-            $( pub $name: Vec<$tpe>, )*
+            $(
+                pub $name: Vec<$tpe>,
+            )*
         }
         impl $struct_name {
             pub fn read(file: &mut Read) -> $struct_name {
-                $( let $name = dat_reader!($tpe, file, $count);)*
+                $(
+                    let $name = dat_reader!($tpe, file, $count);
+                )*
 
                 $struct_name {
                     $( $name: $name, )*
@@ -117,8 +121,8 @@ dat_struct! (
         elevation_level                 :u8   ;228,
         unknown                         :u8   ;228,
         sub_label                       :u8   ;228,
-        comp_AI_idle                    :u8   ;228,
-        human_AI_idle                   :u8   ;228,
+        comp_ai_idle                    :u8   ;228,
+        human_ai_idle                   :u8   ;228,
         return_to_idle                  :u8   ;228,
         attack_unit                     :u8   ;228,
         attack_move                     :u8   ;228,
