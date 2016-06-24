@@ -15,9 +15,15 @@ impl Palette {
     }
 
     pub fn read_wpe<T: Read>(f: &mut T) -> Palette {
-        let mut data = Vec::<u8>::with_capacity(256*3);
-        let bytes_read = f.read(&mut data).unwrap();
-        assert_eq!(bytes_read, 256*3);
+        let mut data = vec![0 as u8; 3*256];
+        let mut read_buf = [0 as u8; 4];
+        for i in 0..256 {
+            let bytes_read = f.read(&mut read_buf).unwrap();
+            assert_eq!(bytes_read, 4);
+            data[i*3 + 0] = read_buf[0];
+            data[i*3 + 1] = read_buf[1];
+            data[i*3 + 2] = read_buf[2];
+        }
 
         Palette {
             data: data,

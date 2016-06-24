@@ -8,6 +8,7 @@ use ::font::{Font, FontSize};
 use ::pcx::PCX;
 use ::tbl::read_tbl;
 use ::grp::GRP;
+use ::pal::Palette;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
@@ -19,13 +20,19 @@ pub struct GameData {
     pub images_tbl: Vec<String>,
     pub stat_txt_tbl: Vec<String>,
 
+    // pub unit_reindexing_tbl: Vec<u8>,
+    // pub ofire_reindexing_tbl: Vec<u8>,
+    // pub bfire_reindexing_tbl: Vec<u8>,
+    // pub gfire_reindexing_tbl: Vec<u8>,
+    // pub bexpl_reindexing_tbl: Vec<u8>,
+
     // TODO: encapsulate this stuff
     pub images_dat: ImagesDat,
     pub units_dat: UnitsDat,
     pub sprites_dat: SpritesDat,
     pub flingy_dat: FlingyDat,
 
-    grp_cache: HashMap<u32, GRP>,
+    pub install_pal: Palette,
 }
 
 impl GameData {
@@ -49,10 +56,17 @@ impl GameData {
         let units_dat = UnitsDat::read(&mut GameData::open_(&archives, "arr/units.dat").unwrap());
         let sprites_dat = SpritesDat::read(&mut GameData::open_(&archives, "arr/sprites.dat").unwrap());
         let flingy_dat = FlingyDat::read(&mut GameData::open_(&archives, "arr/flingy.dat").unwrap());
+
+        let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe").unwrap());
+
+        // let unit_pcx = PCX::read(&mut GameData::open_(&archives, "game/tunit.pcx").unwrap());
         GameData {
             mpq_archives: archives,
             fonts: fonts,
             fontmm_reindex: fontmm_reindex,
+
+            install_pal: install_pal,
+
             images_tbl: images_tbl,
             stat_txt_tbl: stat_txt_tbl,
 
@@ -61,7 +75,6 @@ impl GameData {
             sprites_dat: sprites_dat,
             flingy_dat: flingy_dat,
 
-            grp_cache: HashMap::new(),
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
@@ -96,18 +109,34 @@ impl GameData {
         &self.fonts[size as usize]
     }
 
+
+}
+
+/*
+pub struct GRPCache<'a> {
+    grp_cache: HashMap<u32, GRP>,
+    gd: &'a GameData,
+}
+impl<'a> GRPCache<'a> {
+    pub fn new(gd: &'a GameData) -> GRPCache<'a> {
+        GRPCache {
+            grp_cache: HashMap::new(),
+            gd: gd,
+        }
+    }
+
     pub fn grp(& mut self, grp_id: u32) -> &GRP {
         // TODO: cache only references
         if self.grp_cache.contains_key(&grp_id) {
             return self.grp_cache.get(&grp_id).unwrap();
         }
-        let name = "unit\\".to_string() + &self.images_tbl[(grp_id as usize) - 1];
+        let name = "unit\\".to_string() + &self.gd.images_tbl[(grp_id as usize) - 1];
         println!("grp id: {}, filename: {}", grp_id, name);
 
-        let grp = GRP::read(&mut self.open(&name).unwrap());
+        let grp = GRP::read(&mut self.gd.open(&name).unwrap());
         self.grp_cache.insert(grp_id, grp);
 
         return self.grp_cache.get(&grp_id).unwrap();
     }
-
 }
+*/
