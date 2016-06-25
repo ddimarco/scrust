@@ -21,12 +21,12 @@ use sdl2::render::{Renderer, Texture};
 
 extern crate read_pcx;
 use read_pcx::gamedata::GameData;
-use read_pcx::iscript::{IScript, AnimationType, OpCode};
+use read_pcx::iscript::{AnimationType, OpCode};
 use read_pcx::grp::GRP;
 use read_pcx::pal::Palette;
 use read_pcx::unitsdata::ImagesDat;
 
-use read_pcx::font::{Font, FontSize};
+use read_pcx::font::FontSize;
 use read_pcx::font::RenderText;
 
 
@@ -59,30 +59,42 @@ macro_rules! def_opcodes {
     }
 }
 
-struct SCImage<'iscript, 'gamedata> {
-    pub image_id: u16,
+
+struct IScriptState<'iscript> {
+    pub iscript_id: u32,
     // current position in iscript
     pub pos: u16,
     // reference to iscript animation offsets
     iscript_anim_offsets: &'iscript Vec<u16>,
+    // FIXME: class wide instance would be enough
     // reference to iscript buffer
     iscript_data: &'iscript Vec<u8>,
-    // FIXME: a class wide instance would be enough
-    images_dat: &'gamedata ImagesDat,
-
-    // FIXME: avoid copying
-    grp: GRP,
-
-    texture: Texture,
+    images_dat: &'iscript ImagesDat,
 
     waiting_ticks_left: usize,
     rel_x: u8,
     rel_y: u8,
     direction: u8,
     frameset: u16,
+
 }
 
-impl<'iscript, 'gamedata> Read for SCImage<'iscript, 'gamedata> {
+trait IScriptable<'a> {
+    fn state(&'a mut self) -> &'a mut IScriptState;
+    fn step(&'a mut self) {
+        self.state().interpret_iscript();
+    }
+}
+
+/**
+iscript needs to
+  - create scimages over/underlays (& add to parent)
+  - create sprites over/underlays (& add to global layer)
+  - signal end of life
+**/
+
+
+impl<'iscript> Read for IScriptState<'iscript> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         for i in 0..buf.len() {
             if self.pos as usize > self.iscript_data.len() {
@@ -95,16 +107,9 @@ impl<'iscript, 'gamedata> Read for SCImage<'iscript, 'gamedata> {
     }
 }
 
-
-impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
-    pub fn new(gd: &'gamedata GameData,
-               renderer: &mut Renderer,
-               image_id: u16,
-               iscript: &'iscript IScript)
-               -> SCImage<'iscript, 'gamedata> {
-        // image id -> iscript id:
-        let iscript_id = gd.images_dat.iscript_id[image_id as usize];
-        let ref iscript_anim_offsets = iscript.id_offsets_map.get(&iscript_id).unwrap();
+impl<'iscript> IScriptState<'iscript> {
+    pub fn new(gd: &'iscript GameData, iscript_id: u32) -> IScriptState<'iscript> {
+        let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
 
         println!("header:");
         for anim_idx in 0..iscript_anim_offsets.len() {
@@ -112,26 +117,13 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
             let pos = iscript_anim_offsets[anim_idx];
             println!("{:?}: {}", anim, pos);
         }
-
-        let grp_id = gd.images_dat.grp_id[image_id as usize];
-        let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
-        println!("grp id: {}, filename: {}", grp_id, name);
-        let grp = GRP::read(&mut gd.open(&name).unwrap());
-
         let start_pos = iscript_anim_offsets[AnimationType::Init as usize];
-        let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
-                                      grp.header.width as u32,
-                                      grp.header.height as u32)
-            .unwrap();
-        SCImage {
+        IScriptState {
+            iscript_id: iscript_id,
             pos: start_pos,
-            image_id: image_id,
             iscript_anim_offsets: iscript_anim_offsets,
-            iscript_data: &iscript.data,
+            iscript_data: &gd.iscript.data,
             images_dat: &gd.images_dat,
-            grp: grp,
-            texture: texture,
-
             waiting_ticks_left: 0,
             rel_x: 0,
             rel_y: 0,
@@ -139,56 +131,6 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
             direction: 0,
         }
     }
-
-    // FIXME: expensive, try:
-    // - only redraw when necessary
-    // - cache & combine textures
-    // - see http://stackoverflow.com/questions/12506979/what-is-the-point-of-an-sdl2-texture
-    fn update_texture(texture: &mut Texture,
-                      data: &[u8],
-                      pal: &Palette,
-                      reindexing_table: Option<&[u8]>) {
-        let tq = texture.query();
-        assert!(tq.width as usize * tq.height as usize == data.len());
-        texture.with_lock(None, |buffer: &mut [u8], _: usize| {
-                for i in 0..data.len() {
-                    let col = data[i] as usize;
-                    let col_mapped = match reindexing_table {
-                        Some(tbl) => tbl[col] as usize,
-                        None => col,
-                    };
-
-                    buffer[i * 3 + 0] = pal.data[col_mapped * 3 + 0];
-                    buffer[i * 3 + 1] = pal.data[col_mapped * 3 + 1];
-                    buffer[i * 3 + 2] = pal.data[col_mapped * 3 + 2];
-                }
-            })
-            .ok();
-    }
-
-    pub fn render(&mut self,
-                  x: i32,
-                  y: i32,
-                  pal: &Palette,
-                  reindexing_table: Option<&[u8]>,
-                  renderer: &mut Renderer) {
-        let (w, h) = (self.grp.header.width as u32, self.grp.header.height as u32);
-        let frame = self.frame_idx();
-        // FIXME: cache this
-        let ref data = self.grp.frames[frame];
-        SCImage::update_texture(&mut self.texture, data, &pal, reindexing_table);
-
-        // TODO: rel_x/y should probably done in the texture already
-        renderer.copy_ex(&self.texture,
-                     None,
-                     Some(Rect::new(x + self.rel_x as i32, y + self.rel_y as i32, w, h)),
-                     0.,
-                     None,
-                     self.draw_flipped(),
-                     false)
-            .ok();
-    }
-
 
     pub fn set_animation(&mut self, anim: AnimationType) {
         self.pos = self.iscript_anim_offsets[anim as usize];
@@ -200,23 +142,16 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
     pub fn set_direction(&mut self, dir: u8) {
         self.direction = dir % 32;
     }
+    pub fn turn_cwise(&mut self, units: u8) {
+        let new_dir = self.direction + units;
+        self.set_direction(new_dir);
+    }
+    pub fn turn_ccwise(&mut self, units: u8) {
+        let new_dir = ((self.direction as i16 - units as i16) + 32) % 32;
+        assert!(new_dir >= 0);
+        self.set_direction(new_dir as u8);
+    }
 
-    fn can_turn(&self) -> bool {
-        (self.images_dat.graphic_turns[self.image_id as usize] > 0)
-    }
-    fn draw_flipped(&self) -> bool {
-        self.can_turn() && self.direction > 16
-    }
-
-    fn frame_idx(&self) -> usize {
-        if !self.can_turn() {
-            self.frameset as usize
-        } else if self.direction > 16 {
-            (self.frameset + 32 - self.direction as u16) as usize
-        } else {
-            (self.frameset + self.direction as u16) as usize
-        }
-    }
 
     pub fn current_animation(&self) -> AnimationType {
         let mut nearest_label = AnimationType::Init;
@@ -253,23 +188,23 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         def_opcodes! (
         self, opcode,
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
-            // shadows and such; img* is associated with the current entity
+        // shadows and such; img* is associated with the current entity
             println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
-            //let mut img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
+        // let mut img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
         // FIXME
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
-            // e.g. explosions on death
+        // e.g. explosions on death
             println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
         // FIXME
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-            // independent overlay, e.g. scanner sweep
+        // independent overlay, e.g. scanner sweep
             println!("sprol: {}, {}, {}", sprite_id, rel_x, rel_y);
         // FIXME
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-            // independent underlay, e.g. gore
+        // independent underlay, e.g. gore
             println!("lowsprul: {}, {}, {}", sprite_id, rel_x, rel_y);
         // FIXME
         },
@@ -320,14 +255,16 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         },
         OpCode::TurnCWise => (units: u8) {
             println!("turnccwise.: {}", units);
-            let new_dir = self.direction + units;
-            self.set_direction(new_dir);
+            self.turn_cwise(units);
+        // let new_dir = self.direction + units;
+        // self.set_direction(new_dir);
         },
         OpCode::TurnCCWise => (units: u8) {
             println!("turnccwise: {}", units);
-            let new_dir = ((self.direction as i16 - units as i16) + 32) % 32;
-            assert!(new_dir >= 0);
-            self.set_direction(new_dir as u8);
+            self.turn_ccwise(units);
+        // let new_dir = ((self.direction as i16 - units as i16) + 32) % 32;
+        // assert!(new_dir >= 0);
+        // self.set_direction(new_dir as u8);
         },
         OpCode::SetFlDirect => (dir: u8) {
             println!("setfldirect: {}", dir);
@@ -365,7 +302,7 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         },
         OpCode::AttackWith => (weapon: u8) {
             println!("attackwith: {}", weapon);
-            // FIXME
+        // FIXME
         },
         OpCode::GotoRepeatAttk => () {
         // Signals to StarCraft that after this point, when the unit's cooldown time
@@ -381,11 +318,129 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
 
         OpCode::End => () {
             println!("end");
-            // FIXME
+        // FIXME
         }
 
     );
 
+    }
+}
+
+struct SCImage<'iscript> {
+    pub image_id: u16,
+
+    // FIXME: avoid copying
+    grp: GRP,
+
+    texture: Texture,
+
+    iscript_state: IScriptState<'iscript>,
+}
+impl<'state> IScriptable<'state> for SCImage<'state> {
+    fn state(&'state mut self) -> &'state mut IScriptState {
+        &mut self.iscript_state
+    }
+}
+
+
+impl<'gamedata> SCImage<'gamedata> {
+    pub fn new(gd: &'gamedata GameData,
+               renderer: &mut Renderer,
+               image_id: u16)
+               -> SCImage<'gamedata> {
+        // image id -> iscript id:
+        let iscript_id = gd.images_dat.iscript_id[image_id as usize];
+
+        let grp_id = gd.images_dat.grp_id[image_id as usize];
+        let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
+        println!("grp id: {}, filename: {}", grp_id, name);
+        let grp = GRP::read(&mut gd.open(&name).unwrap());
+
+        let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
+                                      grp.header.width as u32,
+                                      grp.header.height as u32)
+            .unwrap();
+        SCImage {
+            image_id: image_id,
+            grp: grp,
+            texture: texture,
+            iscript_state: IScriptState::new(gd, iscript_id),
+        }
+    }
+
+    fn can_turn(&self) -> bool {
+        (self.iscript_state.images_dat.graphic_turns[self.image_id as usize] > 0)
+    }
+    fn draw_flipped(&self) -> bool {
+        self.can_turn() && self.iscript_state.direction > 16
+    }
+
+    fn frame_idx(&self) -> usize {
+        if !self.can_turn() {
+            self.iscript_state.frameset as usize
+        } else if self.iscript_state.direction > 16 {
+            (self.iscript_state.frameset + 32 - self.iscript_state.direction as u16) as usize
+        } else {
+            (self.iscript_state.frameset + self.iscript_state.direction as u16) as usize
+        }
+    }
+
+    // FIXME: expensive, try:
+    // - only redraw when necessary
+    // - cache & combine textures
+    // - see http://stackoverflow.com/questions/12506979/what-is-the-point-of-an-sdl2-texture
+    fn update_texture(texture: &mut Texture,
+                      data: &[u8],
+                      pal: &Palette,
+                      reindexing_table: Option<&[u8]>) {
+        let tq = texture.query();
+        assert!(tq.width as usize * tq.height as usize == data.len());
+        texture.with_lock(None, |buffer: &mut [u8], _: usize| {
+                for i in 0..data.len() {
+                    let col = data[i] as usize;
+                    let col_mapped = match reindexing_table {
+                        Some(tbl) => tbl[col] as usize,
+                        None => col,
+                    };
+
+                    buffer[i * 3 + 0] = pal.data[col_mapped * 3 + 0];
+                    buffer[i * 3 + 1] = pal.data[col_mapped * 3 + 1];
+                    buffer[i * 3 + 2] = pal.data[col_mapped * 3 + 2];
+                }
+            })
+            .ok();
+    }
+
+    pub fn render(&mut self,
+                  x: i32,
+                  y: i32,
+                  pal: &Palette,
+                  reindexing_table: Option<&[u8]>,
+                  renderer: &mut Renderer) {
+        let (w, h) = (self.grp.header.width as u32, self.grp.header.height as u32);
+        let frame = self.frame_idx();
+        // FIXME: cache this
+        let ref data = self.grp.frames[frame];
+        SCImage::update_texture(&mut self.texture, data, &pal, reindexing_table);
+
+        let iscript_state = &self.iscript_state;
+
+        // TODO: rel_x/y should probably done in the texture already
+        renderer.copy_ex(&self.texture,
+                     None,
+                     Some(Rect::new(x + iscript_state.rel_x as i32,
+                                    y + iscript_state.rel_y as i32,
+                                    w,
+                                    h)),
+                     0.,
+                     None,
+                     self.draw_flipped(),
+                     false)
+            .ok();
+    }
+
+    pub fn step(&mut self) {
+        self.iscript_state.interpret_iscript();
     }
 }
 
@@ -410,7 +465,7 @@ fn main() {
              sprite_id,
              image_id);
 
-    let iscript = IScript::read(&mut gd.open("scripts/iscript.bin").unwrap());
+    // let iscript = IScript::read(&mut gd.open("scripts/iscript.bin").unwrap());
 
     // sdl
     let sdl_context = sdl2::init().unwrap();
@@ -426,7 +481,7 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
 
     // FIXME: scimage should not require renderer
-    let mut img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
+    let mut img = SCImage::new(&gd, &mut renderer, image_id);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let interval = 1_000 / 60;
@@ -477,9 +532,9 @@ fn main() {
         }
 
 
-        img.interpret_iscript();
+        img.step();
         {
-            let anim = img.current_animation();
+            let anim = img.iscript_state.current_animation();
             if anim != current_anim {
                 println!("--- current animation: {:?} ---", anim);
                 current_anim = anim;
@@ -501,23 +556,27 @@ fn main() {
                         Keycode::Escape => break 'running,
                         Keycode::Q => {
                             // turn cc
-                            let new_dir = ((img.direction as i16 - 1) + 32) % 32;
-                            assert!(new_dir >= 0);
-                            img.set_direction(new_dir as u8);
+                            // let new_dir = ((img.direction as i16 - 1) + 32) % 32;
+                            // assert!(new_dir >= 0);
+                            // img.iscript_state.set_direction(new_dir as u8);
+                            img.iscript_state.turn_ccwise(1);
                         }
                         Keycode::E => {
                             // turn c
-                            let new_dir = (img.direction as i16 + 1) % 32;
-                            assert!(new_dir >= 0);
-                            img.set_direction(new_dir as u8);
+                            img.iscript_state.turn_cwise(1);
+                            // let new_dir = (img.direction as i16 + 1) % 32;
+                            // assert!(new_dir >= 0);
+                            // img.iscript_state.set_direction(new_dir as u8);
                         }
                         Keycode::A => {
                             // change animation
-                            img.set_animation(AnimationType::from_usize(next_anim_idx).unwrap());
+                            img.iscript_state
+                                .set_animation(AnimationType::from_usize(next_anim_idx).unwrap());
                             loop {
                                 next_anim_idx += 1;
-                                next_anim_idx = next_anim_idx % img.anim_count();
-                                if img.is_animation_valid(AnimationType::from_usize(next_anim_idx)
+                                next_anim_idx = next_anim_idx % img.iscript_state.anim_count();
+                                if img.iscript_state
+                                    .is_animation_valid(AnimationType::from_usize(next_anim_idx)
                                         .unwrap()) {
                                     break;
                                 }
@@ -530,7 +589,7 @@ fn main() {
                             let flingy_id = gd.units_dat.flingy_id[unit_id];
                             let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
                             let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-                            img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
+                            img = SCImage::new(&gd, &mut renderer, image_id);
 
                             unit_name_texture = fnt.render_textbox(&format!("Unit: {}",
                                                          gd.stat_txt_tbl[unit_id as usize]),
