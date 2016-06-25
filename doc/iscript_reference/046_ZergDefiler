@@ -1,0 +1,159 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 013 Defiler (zerg\defiler.grp)
+.headerstart
+IsId           	9
+Type           	26
+Init           	DefilerInit
+Death          	DefilerDeath
+GndAttkInit    	DefilerGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	DefilerGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	DefilerCastSpell
+GndAttkToIdle  	DefilerGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	DefilerWalking
+WalkingToIdle  	DefilerGndAttkToIdle
+SpecialState1  	[NONE]
+SpecialState2  	DefilerSpecialState2
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	DefilerBurrow
+UnBurrow       	DefilerUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DefilerInit:
+	imgul          	14 0 3	# DefilerShad (zerg\defiler.grp)
+	playfram       	0x00	# frame set 0
+	waitrand       	1 4
+DefilerGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	wait           	3
+	playfram       	0x11	# frame set 1
+	wait           	3
+	playfram       	0x22	# frame set 2
+	wait           	3
+	playfram       	0x11	# frame set 1
+	wait           	3
+	goto           	DefilerGndAttkToIdle
+
+DefilerDeath:
+	playsnd        	815	# Zerg\DEFILER\ZDeDth00.WAV
+	setfldirect    	0
+	playfram       	0x88	# frame set 8
+	wait           	2
+	playfram       	0x99	# frame set 9
+	wait           	2
+	playfram       	0xaa	# frame set 10
+	wait           	2
+	playfram       	0xbb	# frame set 11
+	wait           	2
+	lowsprul       	139 0 0	# DefilerDeath (zerg\zdeDeath.grp)
+	wait           	1
+	end            	
+
+DefilerGndAttkInit:
+	playsnd        	110	# Bullet\zdeAtt00.wav
+	imgoluselo     	518 0 0	# Unknown518 (thingy\eplMuzz.grp)
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	DefilerGndAttkToIdle
+
+DefilerCastSpell:
+	playfram       	0x00	# frame set 0
+	nobrkcodestart 	
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	castspell      	
+	nobrkcodeend   	
+	gotorepeatattk 	
+	sigorder       	2
+	goto           	DefilerGndAttkToIdle
+
+DefilerWalking:
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	goto           	DefilerWalking
+
+DefilerSpecialState2:
+	playfram       	0x110	# frame set 16
+	goto           	DefilerLocal00
+
+DefilerLocal00:
+	wait           	125
+	goto           	DefilerLocal00
+
+DefilerBurrow:
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0xdd	# frame set 13
+	wait           	1
+	playfram       	0xee	# frame set 14
+	wait           	1
+	playfram       	0xff	# frame set 15
+	wait           	1
+	playfram       	0x110	# frame set 16
+	wait           	1
+	sigorder       	4
+	goto           	DefilerLocal00
+
+DefilerUnBurrow:
+	waitrand       	1 5
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0xff	# frame set 15
+	wait           	1
+	playfram       	0xee	# frame set 14
+	wait           	1
+	playfram       	0xdd	# frame set 13
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	sigorder       	4
+	goto           	DefilerGndAttkToIdle
+

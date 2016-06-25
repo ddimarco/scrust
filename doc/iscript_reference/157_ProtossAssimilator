@@ -1,0 +1,75 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 158 Assimilator (protoss\assim.grp)
+.headerstart
+IsId           	167
+Type           	27
+Init           	AssimilatorInit
+Death          	AssimilatorDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	AssimilatorBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	AssimilatorBuilt
+WorkingToIdle  	AssimilatorBuilt
+WarpIn         	AssimilatorWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	AssimilatorDisable
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	AssimilatorDisable
+.headerend
+# ----------------------------------------------------------------------------- #
+
+AssimilatorInit:
+	imgul          	160 0 0	# Unknown160 (protoss\pasShad.grp)
+	playfram       	0
+	goto           	AssimilatorDisable
+
+AssimilatorDisable:
+	wait           	125
+	goto           	AssimilatorDisable
+
+AssimilatorDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	sprol          	222 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	end            	
+
+AssimilatorWarpIn:
+	imgol          	159 0 0	# Unknown159 (protoss\assim.grp)
+AssimilatorBuilt:
+	waitrand       	5 50
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	3
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	creategasoverlays	3
+	waitrand       	5 50
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	goto           	AssimilatorBuilt
+

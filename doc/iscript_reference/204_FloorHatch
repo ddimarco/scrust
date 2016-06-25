@@ -1,0 +1,106 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 754 InstallationDoodad20 (thingy\tileset\install\DIHatc1.grp)
+# 750 InstallationDoodad16 (thingy\tileset\install\DIDoor1.grp)
+# 742 InstallationDoodad8 (thingy\tileset\install\CRDoor1.grp)
+.headerstart
+IsId           	340
+Type           	27
+Init           	InstallationDoodadInit
+Death          	InstallationDoodadDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	InstallationDoodadAlmostBuilt
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	InstallationDoodadInitTurret
+Disable        	InstallationDoodadDisable
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	InstallationDoodadInitTurret
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InstallationDoodadInit:
+	playfram       	0
+	goto           	InstallationDoodadLocal00
+
+InstallationDoodadLocal00:
+	wait           	125
+	goto           	InstallationDoodadLocal00
+
+InstallationDoodadDeath:
+	wait           	1
+	end            	
+
+InstallationDoodadAlmostBuilt:
+	playfram       	9
+	goto           	InstallationDoodadLocal00
+
+InstallationDoodadInitTurret:
+	playfram       	9
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	sigorder       	1
+	goto           	InstallationDoodadLocal00
+
+InstallationDoodadDisable:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	sigorder       	1
+	goto           	InstallationDoodadLocal00
+

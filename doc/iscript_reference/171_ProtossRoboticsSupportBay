@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 204 RoboticsSupportBay (protoss\stasis.grp)
+.headerstart
+IsId           	188
+Type           	27
+Init           	RoboticsSupportBayInit
+Death          	RoboticsSupportBayDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	RoboticsSupportBayBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	RoboticsSupportBayBuilt
+WorkingToIdle  	RoboticsSupportBayBuilt
+WarpIn         	RoboticsSupportBayWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	RoboticsSupportBayBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	RoboticsSupportBayBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+RoboticsSupportBayInit:
+	imgul          	206 0 0	# RoboticsSupportBayShad (protoss\pstShad.grp)
+	playfram       	0
+	goto           	RoboticsSupportBayBuilt
+
+RoboticsSupportBayBuilt:
+	wait           	125
+	goto           	RoboticsSupportBayBuilt
+
+RoboticsSupportBayDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+RoboticsSupportBayWarpIn:
+	imgol          	205 0 0	# RoboticsSupportBayWarpFlash (protoss\stasis.grp)
+	goto           	RoboticsSupportBayBuilt
+

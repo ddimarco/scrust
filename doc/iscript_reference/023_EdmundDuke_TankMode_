@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 250 SiegeTankTankBase (terran\tank.grp)
+.headerstart
+IsId           	90
+Type           	23
+Init           	SiegeTank_Tank_BaseInit
+Death          	SiegeTank_Tank_BaseDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	SiegeTank_Tank_BaseWalking
+WalkingToIdle  	SiegeTank_Tank_BaseWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	SiegeTank_Tank_BaseInitTurret
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SiegeTank_Tank_BaseInitTurret:
+	setfldirect    	12
+	imgoluselo     	251 2 0	# SiegeTankTankTurret (terran\tankt.grp)
+SiegeTank_Tank_BaseInit:
+	wait           	1
+	imgul          	252 0 0	# SiegeTankTankShad (terran\ttaShad.grp)
+	setfldirect    	12
+SiegeTank_Tank_BaseWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	SiegeTank_Tank_BaseLocal00
+
+SiegeTank_Tank_BaseLocal00:
+	wait           	125
+	goto           	SiegeTank_Tank_BaseLocal00
+
+SiegeTank_Tank_BaseDeath:
+	playsnd        	317	# Terran\TANK\TTaDth00.WAV
+	imgol          	333 0 0	# TerranBuildingExplosionmedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+SiegeTank_Tank_BaseWalking:
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	goto           	SiegeTank_Tank_BaseWalking
+

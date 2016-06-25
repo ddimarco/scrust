@@ -1,0 +1,53 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 147 Scarab (protoss\sapper.grp)
+.headerstart
+IsId           	160
+Type           	13
+Init           	ScarabInit
+Death          	ScarabDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ScarabWalking
+WalkingToIdle  	ScarabInit
+SpecialState1  	ScarabSpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ScarabInit:
+	playfram       	0x00	# frame set 0
+	goto           	ScarabLocal00
+
+ScarabLocal00:
+	wait           	125
+	goto           	ScarabLocal00
+
+ScarabDeath:
+	imgol          	444 0 0	# ScarabExplosion (thingy\psaExplo.grp)
+	wait           	1
+	end            	
+
+ScarabWalking:
+	setflspeed     	2048
+	move           	16
+	sprol          	373 0 0	# ScarabTrail (thingy\HKTrail.grp)
+	wait           	1
+	goto           	ScarabWalking
+
+ScarabSpecialState1:
+	useweapon      	82	# Scarab
+	sigorder       	1
+	goto           	ScarabLocal00
+

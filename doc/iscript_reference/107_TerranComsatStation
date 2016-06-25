@@ -1,0 +1,72 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 271 ComsatStation (terran\ComSat.grp)
+.headerstart
+IsId           	99
+Type           	20
+Init           	ComsatStationInit
+Death          	ComsatStationDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	ComsatStationAlmostBuilt
+Built          	ComsatStationBuilt
+Landing        	ComsatStationLanding
+LiftOff        	ComsatStationLiftOff
+IsWorking      	ComsatStationLiftOff
+WorkingToIdle  	ComsatStationWorkingToIdle
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ComsatStationInit:
+	playfram       	0
+	imgul          	274 0 0	# ComsatStationShad (terran\tcsShad.grp)
+	goto           	ComsatStationLiftOff
+
+ComsatStationLiftOff:
+	wait           	125
+	goto           	ComsatStationLiftOff
+
+ComsatStationDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	ComsatStationLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+ComsatStationLocal00:
+	wait           	1
+	end            	
+
+ComsatStationAlmostBuilt:
+	playfram       	1
+	goto           	ComsatStationLiftOff
+
+ComsatStationBuilt:
+	imgol          	273 0 0	# ComsatStationOverlay (terran\ComSatT.grp)
+ComsatStationWorkingToIdle:
+	playfram       	0
+	goto           	ComsatStationLiftOff
+
+ComsatStationLanding:
+	imgol          	272 0 0	# ComsatStationAttachment (terran\ComSatC.grp)
+	goto           	ComsatStationLiftOff
+

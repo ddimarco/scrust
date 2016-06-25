@@ -1,0 +1,65 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 195 ShieldBattery (protoss\sbattery.grp)
+.headerstart
+IsId           	183
+Type           	27
+Init           	ShieldBatteryInit
+Death          	ShieldBatteryDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	ShieldBatteryBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	ShieldBatteryIsWorking
+WorkingToIdle  	ShieldBatteryIsWorking
+WarpIn         	ShieldBatteryWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	ShieldBatteryIsWorking
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	ShieldBatteryBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ShieldBatteryInit:
+	imgul          	198 0 0	# ShieldBatteryShad (protoss\pbaShad.grp)
+	playfram       	0
+	goto           	ShieldBatteryIsWorking
+
+ShieldBatteryIsWorking:
+	wait           	125
+	goto           	ShieldBatteryIsWorking
+
+ShieldBatteryDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	end            	
+
+ShieldBatteryBuilt:
+	imgol          	196 0 0	# ShieldBatteryGlow (protoss\pbaGlow.grp)
+	goto           	ShieldBatteryIsWorking
+
+ShieldBatteryWarpIn:
+	imgol          	197 0 0	# ShieldBatteryWarpFlash (protoss\sbattery.grp)
+	goto           	ShieldBatteryIsWorking
+

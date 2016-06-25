@@ -1,0 +1,72 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 949 PowerGenerater (neutral\Generate.grp)
+.headerstart
+IsId           	408
+Type           	20
+Init           	PowerGeneratorInit
+Death          	PowerGeneratorDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	PowerGeneratorBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	PowerGeneratorIsWorking
+WorkingToIdle  	PowerGeneratorIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+PowerGeneratorInit:
+	imgul          	950 0 0	# PowerGeneraterShad (neutral\tgnShad.grp)
+PowerGeneratorBuilt:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	goto           	PowerGeneratorBuilt
+
+PowerGeneratorDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	PowerGeneratorLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+PowerGeneratorLocal00:
+	wait           	1
+	end            	
+
+PowerGeneratorIsWorking:
+	wait           	125
+	goto           	PowerGeneratorIsWorking
+

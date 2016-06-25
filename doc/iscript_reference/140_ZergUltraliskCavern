@@ -1,0 +1,69 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 091 UltraliskCavern (zerg\RCluster.grp)
+.headerstart
+IsId           	55
+Type           	20
+Init           	UltraliskCavernInit
+Death          	UltraliskCavernDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	UltraliskCavernAlmostBuilt
+Built          	UltraliskCavernBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	UltraliskCavernIsWorking
+WorkingToIdle  	UltraliskCavernIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+UltraliskCavernInit:
+	imgul          	92 0 0	# UltraliskCavernShad (zerg\zrcShad.grp)
+	playfram       	0
+	goto           	UltraliskCavernLocal00
+
+UltraliskCavernLocal00:
+	wait           	125
+	goto           	UltraliskCavernLocal00
+
+UltraliskCavernDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+UltraliskCavernAlmostBuilt:
+	imgol          	107 0 0	# ZergBuildingSpawnSmall (zerg\zSpawn01.grp)
+UltraliskCavernBuilt:
+	playfram       	0
+	waitrand       	1 2
+UltraliskCavernIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	4
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	UltraliskCavernIsWorking
+

@@ -1,0 +1,75 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 099 SporeColony (zerg\SColony.grp)
+.headerstart
+IsId           	59
+Type           	20
+Init           	SporeColonyInit
+Death          	SporeColonyDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	SporeColonyAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	SporeColonyAirAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	SporeColonyAirAttkToIdle
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	SporeColonyAlmostBuilt
+Built          	SporeColonyBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	SporeColonyAirAttkToIdle
+WorkingToIdle  	SporeColonyAirAttkToIdle
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SporeColonyInit:
+	imgul          	100 0 0	# SporeColonyShad (zerg\zscShad.grp)
+	playfram       	0
+	goto           	SporeColonyLocal00
+
+SporeColonyLocal00:
+	wait           	125
+	goto           	SporeColonyLocal00
+
+SporeColonyDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+SporeColonyAirAttkInit:
+	wait           	1
+	attackwith     	2
+	gotorepeatattk 	
+	goto           	SporeColonyLocal00
+
+SporeColonyAlmostBuilt:
+	imgol          	108 0 0	# ZergBuildingSpawnMedium (zerg\zSpawn02.grp)
+	playfram       	0
+SporeColonyBuilt:
+	waitrand       	1 3
+SporeColonyAirAttkToIdle:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	goto           	SporeColonyAirAttkToIdle
+

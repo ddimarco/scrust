@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 401 ZergGasSac (neutral\GasSac.grp)
+.headerstart
+IsId           	223
+Type           	1
+Init           	GasSacInit
+Death          	GasSacDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GasSacInit:
+	playfram       	0x00	# frame set 0
+	pwrupcondjmp   	GasSacLocal00
+	imgul          	407 0 0	# ZergGasSackShad (neutral\ngsShad.grp)
+	goto           	GasSacLocal00
+
+GasSacLocal00:
+	wait           	125
+	goto           	GasSacLocal00
+
+GasSacDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

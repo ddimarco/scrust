@@ -1,0 +1,116 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 740 InstallationDoodad6 (thingy\tileset\install\DCGun2.grp)
+.headerstart
+IsId           	350
+Type           	27
+Init           	WallFlameTrapType1Init
+Death          	WallFlameTrapType1Death
+GndAttkInit    	WallFlameTrapType1GndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	WallFlameTrapType1GndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	WallFlameTrapType1GndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	WallFlameTrapType1SpecialState1
+SpecialState2  	WallFlameTrapType1SpecialState2
+AlmostBuilt    	WallFlameTrapType1GndAttkToIdle
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	WallFlameTrapType1SpecialState1
+Disable        	WallFlameTrapType1SpecialState2
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	WallFlameTrapType1GndAttkToIdle
+.headerend
+# ----------------------------------------------------------------------------- #
+
+WallFlameTrapType1Init:
+	playfram       	1
+	wait           	1
+	setfldirect    	12
+	goto           	WallFlameTrapType1GndAttkToIdle
+
+WallFlameTrapType1GndAttkToIdle:
+	wait           	125
+	goto           	WallFlameTrapType1GndAttkToIdle
+
+WallFlameTrapType1Death:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	1
+	end            	
+
+WallFlameTrapType1GndAttkInit:
+	wait           	1
+	nobrkcodestart 	
+	imgoluselo     	421 0 0	# FlameThrower (thingy\flamer.grp)
+	setfldirect    	12
+	attkshiftproj  	24
+	wait           	2
+	attkshiftproj  	52
+	wait           	1
+	attkshiftproj  	80
+	wait           	10
+	ignorerest     	
+	goto           	WallFlameTrapType1GndAttkToIdle
+
+WallFlameTrapType1SpecialState1:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	wait           	2
+	playfram       	10
+	sigorder       	1
+	goto           	WallFlameTrapType1GndAttkToIdle
+
+WallFlameTrapType1SpecialState2:
+	playfram       	9
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	sigorder       	1
+	goto           	WallFlameTrapType1GndAttkToIdle
+

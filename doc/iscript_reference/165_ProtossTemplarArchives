@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 155 TemplarArchives (protoss\archives.grp)
+.headerstart
+IsId           	166
+Type           	27
+Init           	TemplarArchivesInit
+Death          	TemplarArchivesDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	TemplarArchivesBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	TemplarArchivesBuilt
+WorkingToIdle  	TemplarArchivesBuilt
+WarpIn         	TemplarArchivesWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	TemplarArchivesBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	TemplarArchivesBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+TemplarArchivesInit:
+	imgul          	157 0 0	# TemplarArchivesShad (protoss\pacShad.grp)
+	playfram       	0
+	goto           	TemplarArchivesBuilt
+
+TemplarArchivesBuilt:
+	wait           	125
+	goto           	TemplarArchivesBuilt
+
+TemplarArchivesDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+TemplarArchivesWarpIn:
+	imgol          	156 0 0	# Unknown156 (protoss\archives.grp)
+	goto           	TemplarArchivesBuilt
+

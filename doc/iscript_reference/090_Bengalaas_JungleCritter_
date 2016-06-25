@@ -1,0 +1,98 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 342 BengalassJungle (neutral\Jcritter.grp)
+.headerstart
+IsId           	200
+Type           	12
+Init           	BengalaasInit
+Death          	BengalaasDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	BengalaasWalking
+WalkingToIdle  	BengalaasWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+BengalaasInit:
+	imgul          	343 0 0	# BengalassShad (neutral\njcShad.grp)
+BengalaasWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	BengalaasLocal00
+
+BengalaasLocal00:
+	wait           	125
+	goto           	BengalaasLocal00
+
+BengalaasDeath:
+	playsnd        	49	# Misc\CRITTERS\JCrDth00.wav
+	setfldirect    	0
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0xcd	# frame set 12
+	wait           	1
+	playfram       	0xce	# frame set 12
+	wait           	1
+	playfram       	0xcf	# frame set 12
+	wait           	1
+	playfram       	0xd0	# frame set 12
+	wait           	1
+	playfram       	0xd1	# frame set 12
+	wait           	1
+	playfram       	0xd2	# frame set 12
+	wait           	1
+	playfram       	0xd3	# frame set 12
+	wait           	1
+	end            	
+
+BengalaasWalking:
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	goto           	BengalaasWalking
+

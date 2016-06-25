@@ -1,0 +1,77 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 247 SCV (terran\SCV.grp)
+.headerstart
+IsId           	84
+Type           	15
+Init           	SCVInit
+Death          	SCVDeath
+GndAttkInit    	SCVGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	SCVGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	SCVGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	SCVWalking
+WalkingToIdle  	SCVWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	SCVAlmostBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SCVInit:
+	imgul          	248 0 7	# SCVShad (terran\SCV.grp)
+	playfram       	0x00	# frame set 0
+	goto           	SCVWalkingToIdle
+
+SCVWalkingToIdle:
+	wait           	125
+	goto           	SCVWalkingToIdle
+
+SCVDeath:
+	playsnd        	369	# Terran\SCV\TSCDth00.WAV
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+SCVGndAttkInit:
+	setvertpos     	0
+	wait           	1
+	playfram       	0x22	# frame set 2
+	attackwith     	1
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	gotorepeatattk 	
+	goto           	SCVWalkingToIdle
+
+SCVGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	SCVWalkingToIdle
+
+SCVWalking:
+	playfram       	0x00	# frame set 0
+	imgol          	249 0 0	# SCVGlow (thingy\tscGlow.grp)
+	setvertpos     	0
+	goto           	SCVWalkingToIdle
+
+SCVAlmostBuilt:
+	setvertpos     	0
+	wait           	1
+SCVLocal00:
+	playfram       	0x22	# frame set 2
+	useweapon      	14	# Fusion Cutter
+	wait           	1
+	playfram       	0x11	# frame set 1
+	waitrand       	8 10
+	goto           	SCVLocal00
+

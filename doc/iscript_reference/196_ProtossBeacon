@@ -1,0 +1,29 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 358 ProtossBeacon (protoss\pMarker.grp)
+.headerstart
+IsId           	212
+Type           	1
+Init           	ProtossBeaconInit
+Death          	ProtossBeaconDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ProtossBeaconInit:
+	playfram       	0
+	imgol          	359 0 0	# ProtossBeaconOverlay (protoss\pCirGlow.grp)
+	goto           	ProtossBeaconLocal00
+
+ProtossBeaconLocal00:
+	wait           	125
+	goto           	ProtossBeaconLocal00
+
+ProtossBeaconDeath:
+	wait           	1
+	end            	
+

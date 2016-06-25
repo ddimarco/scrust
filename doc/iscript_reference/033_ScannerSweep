@@ -1,0 +1,47 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 246 Unknown246 (terran\marine.grp)
+.headerstart
+IsId           	81
+Type           	1
+Init           	ScannerSweepInit
+Death          	ScannerSweepDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ScannerSweepInit:
+	sprol          	380 0 0	# Unknown546 (thingy\eveCast.grp)
+	wait           	6
+	sprol          	380 32 32	# Unknown546 (thingy\eveCast.grp)
+	wait           	2
+	sprol          	380 48 5	# Unknown546 (thingy\eveCast.grp)
+	wait           	5
+	sprol          	380 32 224	# Unknown546 (thingy\eveCast.grp)
+	wait           	2
+	sprol          	380 251 208	# Unknown546 (thingy\eveCast.grp)
+	wait           	2
+	sprol          	380 224 224	# Unknown546 (thingy\eveCast.grp)
+	wait           	5
+	sprol          	380 208 254	# Unknown546 (thingy\eveCast.grp)
+	wait           	3
+	sprol          	380 224 32	# Unknown546 (thingy\eveCast.grp)
+	wait           	5
+	sprol          	380 3 48	# Unknown546 (thingy\eveCast.grp)
+	wait           	63
+	wait           	63
+	sigorder       	4
+	goto           	ScannerSweepLocal00
+
+ScannerSweepLocal00:
+	wait           	125
+	goto           	ScannerSweepLocal00
+
+ScannerSweepDeath:
+	wait           	1
+	end            	
+

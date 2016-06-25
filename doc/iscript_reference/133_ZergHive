@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 072 Hive (Zerg\Hive.grp)
+.headerstart
+IsId           	44
+Type           	20
+Init           	HiveInit
+Death          	HiveDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	HiveAlmostBuilt
+Built          	HiveBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	HiveIsWorking
+WorkingToIdle  	HiveIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+HiveInit:
+	imgul          	73 0 0	# HiveShad (zerg\zhiShad.grp)
+	playfram       	0
+	goto           	HiveLocal00
+
+HiveLocal00:
+	wait           	125
+	goto           	HiveLocal00
+
+HiveDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	187 0 0	# ZergBuildingRubbleSmall (thingy\ZRubbleL.grp)
+	wait           	1
+	end            	
+
+HiveAlmostBuilt:
+	imgol          	109 0 0	# ZergBuildingSpawnLarge (zerg\zSpawn03.grp)
+HiveBuilt:
+	playfram       	0
+	waitrand       	1 5
+HiveIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	4
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	HiveIsWorking
+

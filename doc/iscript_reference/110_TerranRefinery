@@ -1,0 +1,88 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 307 Refinery (terran\refinery.grp)
+.headerstart
+IsId           	125
+Type           	20
+Init           	RefineryInit
+Death          	RefineryDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	RefinerySpecialState1
+SpecialState2  	RefinerySpecialState2
+AlmostBuilt    	RefineryAlmostBuilt
+Built          	RefineryBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	RefineryIsWorking
+WorkingToIdle  	RefineryBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+RefineryInit:
+	imgul          	308 0 0	# RefineryShad (terran\treShad.grp)
+	playfram       	1
+RefineryLocal00:
+	wait           	5
+	waitrand       	5 50
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	creategasoverlays	1
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	1
+	waitrand       	5 50
+	creategasoverlays	2
+	goto           	RefineryLocal00
+
+RefineryDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	sprol          	272 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	end            	
+
+RefinerySpecialState1:
+	playfram       	2
+	goto           	RefineryLocal00
+
+RefinerySpecialState2:
+	playfram       	3
+	goto           	RefineryLocal00
+
+RefineryAlmostBuilt:
+	playfram       	4
+	goto           	RefineryLocal00
+
+RefineryBuilt:
+	playfram       	0
+	wait           	5
+RefineryLocal01:
+	creategasoverlays	0
+	wait           	20
+	waitrand       	5 100
+	goto           	RefineryLocal01
+
+RefineryIsWorking:
+	wait           	125
+	goto           	RefineryIsWorking
+

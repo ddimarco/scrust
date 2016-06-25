@@ -1,0 +1,83 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 183 PhotonCannon (protoss\photon.grp)
+.headerstart
+IsId           	179
+Type           	27
+Init           	PhotonCannonInit
+Death          	PhotonCannonDeath
+GndAttkInit    	PhotonCannonGndAttkInit
+AirAttkInit    	PhotonCannonGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	PhotonCannonGndAttkRpt
+AirAttkRpt     	PhotonCannonGndAttkRpt
+CastSpell      	[NONE]
+GndAttkToIdle  	PhotonCannonGndAttkToIdle
+AirAttkToIdle  	PhotonCannonGndAttkToIdle
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	PhotonCannonBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	PhotonCannonBuilt
+WorkingToIdle  	PhotonCannonBuilt
+WarpIn         	PhotonCannonWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	PhotonCannonBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	PhotonCannonBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+PhotonCannonInit:
+	imgul          	184 0 0	# PhotonCannonShad (protoss\ppbShad.grp)
+PhotonCannonLocal00:
+	playfram       	0
+	goto           	PhotonCannonBuilt
+
+PhotonCannonBuilt:
+	wait           	125
+	goto           	PhotonCannonBuilt
+
+PhotonCannonDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+PhotonCannonGndAttkInit:
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	3
+	wait           	2
+PhotonCannonGndAttkRpt:
+	wait           	1
+	attack         	
+	gotorepeatattk 	
+	ignorerest     	
+PhotonCannonGndAttkToIdle:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	goto           	PhotonCannonLocal00
+
+PhotonCannonWarpIn:
+	imgol          	185 0 0	# PhotonCannonWarpFlash (protoss\photon.grp)
+	goto           	PhotonCannonBuilt
+

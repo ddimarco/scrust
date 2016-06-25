@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 923 OvermindCocoon (zerg\XOvermnd.grp)
+.headerstart
+IsId           	405
+Type           	20
+Init           	OvermindCocoonInit
+Death          	OvermindCocoonDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	OvermindCocoonAlmostBuilt
+Built          	OvermindCocoonBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	OvermindCocoonIsWorking
+WorkingToIdle  	OvermindCocoonIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+OvermindCocoonInit:
+	imgul          	924 0 0	# OvermindCocoonShad (zerg\ZovShad.grp)
+	playfram       	0
+	goto           	OvermindCocoonLocal00
+
+OvermindCocoonLocal00:
+	wait           	125
+	goto           	OvermindCocoonLocal00
+
+OvermindCocoonDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	187 0 0	# ZergBuildingRubbleSmall (thingy\ZRubbleL.grp)
+	wait           	1
+	end            	
+
+OvermindCocoonAlmostBuilt:
+	playfram       	0
+	goto           	OvermindCocoonBuilt
+
+OvermindCocoonBuilt:
+	waitrand       	1 3
+OvermindCocoonIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	4
+	wait           	1
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	OvermindCocoonIsWorking
+

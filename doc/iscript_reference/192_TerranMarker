@@ -1,0 +1,97 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 140 Scout (protoss\scout.grp)
+.headerstart
+IsId           	161
+Type           	21
+Init           	ScoutInit
+Death          	ScoutDeath
+GndAttkInit    	ScoutGndAttkInit
+AirAttkInit    	ScoutAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	ScoutGndAttkInit
+AirAttkRpt     	ScoutAirAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	ScoutGndAttkToIdle
+AirAttkToIdle  	ScoutGndAttkToIdle
+Unused2        	[NONE]
+Walking        	ScoutWalking
+WalkingToIdle  	ScoutWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ScoutWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ScoutInit:
+	imgul          	141 0 42	# ScoutShad (protoss\scout.grp)
+ScoutGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	ScoutWalkingToIdle
+
+ScoutWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	ScoutWalkingToIdle
+
+ScoutDeath:
+	playsnd        	533	# Protoss\Scout\PScDth00.WAV
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+ScoutGndAttkInit:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	attackwith     	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	gotorepeatattk 	
+	goto           	ScoutLocal00
+
+ScoutLocal00:
+	wait           	125
+	goto           	ScoutLocal00
+
+ScoutAirAttkInit:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	attackwith     	2
+	playfram       	0x00	# frame set 0
+	gotorepeatattk 	
+	goto           	ScoutLocal00
+
+ScoutWalking:
+	imgol          	142 0 0	# ScoutGlow (thingy\pscGlow.grp)
+	playfram       	0x00	# frame set 0
+	setvertpos     	0
+	goto           	ScoutLocal00
+
+ScoutWarpIn:
+	imgol          	143 0 0	# Unknown143 (protoss\scout.grp)
+	goto           	ScoutLocal00
+

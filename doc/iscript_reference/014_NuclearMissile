@@ -1,0 +1,75 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 316 NuclearMissile (terran\nukemiss.grp)
+.headerstart
+IsId           	131
+Type           	21
+Init           	NuclearMissileInit
+Death          	NuclearMissileDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	NuclearMissileWalking
+WalkingToIdle  	NuclearMissileWalkingToIdle
+SpecialState1  	NuclearMissileSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	NuclearMissileWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+NuclearMissileInit:
+	playfram       	0x00	# frame set 0
+	goto           	NuclearMissileWalkingToIdle
+
+NuclearMissileWalkingToIdle:
+	wait           	125
+	goto           	NuclearMissileWalkingToIdle
+
+NuclearMissileDeath:
+	imgol          	428 0 0	# Smallexplosion (thingy\small.grp)
+	wait           	1
+	end            	
+
+NuclearMissileWalking:
+	curdirectcondjmp	128 32 NuclearMissileLocal00
+NuclearMissileLocal01:
+	sprol          	309 0 10	# MissleTrail (thingy\smoke.grp)
+	wait           	3
+	goto           	NuclearMissileLocal01
+
+NuclearMissileLocal00:
+	wait           	3
+	sprol          	309 0 246	# MissleTrail (thingy\smoke.grp)
+	goto           	NuclearMissileLocal00
+
+NuclearMissileSpecialState1:
+	castspell      	
+	sigorder       	1
+	tmprmgraphicstart	
+	imgol          	428 0 0	# Smallexplosion (thingy\small.grp)
+	sprol          	267 0 214	# NuclearExplosion (thingy\NukeHit.grp)
+	goto           	NuclearMissileWalkingToIdle
+
+NuclearMissileWarpIn:
+	wait           	125
+	wait           	125
+	sigorder       	2
+	goto           	NuclearMissileWalkingToIdle
+

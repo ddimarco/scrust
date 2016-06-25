@@ -1,0 +1,79 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 025 Guardian (zerg\guardian.grp)
+.headerstart
+IsId           	15
+Type           	12
+Init           	GuardianInit
+Death          	GuardianDeath
+GndAttkInit    	GuardianGndAttkInit
+AirAttkInit    	GuardianGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	GuardianGndAttkInit
+AirAttkRpt     	GuardianGndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	GuardianGndAttkToIdle
+AirAttkToIdle  	GuardianGndAttkToIdle
+Unused2        	[NONE]
+Walking        	GuardianWalking
+WalkingToIdle  	GuardianGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GuardianInit:
+	imgul          	26 0 42	# GuardianShad (zerg\guardian.grp)
+	playfram       	0x00	# frame set 0
+	waitrand       	1 4
+GuardianGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	playfram       	0x55	# frame set 5
+	wait           	2
+	playfram       	0x66	# frame set 6
+	wait           	2
+	goto           	GuardianGndAttkToIdle
+
+GuardianDeath:
+	playsnd        	852	# Zerg\Guardian\ZGuDth00.WAV
+	imgol          	28 0 0	# GuardianDeath (zerg\zguDeath.grp)
+	wait           	1
+	end            	
+
+GuardianGndAttkInit:
+	playsnd        	71	# Bullet\ZGuFir00.wav
+	imgoluselo     	518 0 0	# Unknown518 (thingy\eplMuzz.grp)
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	GuardianGndAttkToIdle
+
+GuardianWalking:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	goto           	GuardianWalking
+

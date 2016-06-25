@@ -1,0 +1,86 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 254 SiegeTankSiegeTurret (terran\stankt.grp)
+.headerstart
+IsId           	93
+Type           	14
+Init           	SiegeTank_Siege_TurretInit
+Death          	SiegeTank_Siege_TurretDeath
+GndAttkInit    	SiegeTank_Siege_TurretGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	SiegeTank_Siege_TurretGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	SiegeTank_Siege_TurretGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	SiegeTank_Siege_TurretGndAttkToIdle
+SpecialState1  	SiegeTank_Siege_TurretGndAttkToIdle
+SpecialState2  	SiegeTank_Siege_TurretSpecialState2
+AlmostBuilt    	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SiegeTank_Siege_TurretInit:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	nobrkcodestart 	
+	wait           	38
+	playsnd        	318	# Terran\TANK\TTaTra00.WAV
+	wait           	3
+	playfram       	0x22	# frame set 2
+	wait           	3
+	playfram       	0x33	# frame set 3
+	wait           	3
+	playfram       	0x44	# frame set 4
+	wait           	3
+	playfram       	0x55	# frame set 5
+	wait           	3
+	setfldirect    	28
+	playfram       	0x00	# frame set 0
+	nobrkcodeend   	
+	goto           	SiegeTank_Siege_TurretGndAttkToIdle
+
+SiegeTank_Siege_TurretGndAttkToIdle:
+	wait           	125
+	goto           	SiegeTank_Siege_TurretGndAttkToIdle
+
+SiegeTank_Siege_TurretDeath:
+	wait           	1
+	end            	
+
+SiegeTank_Siege_TurretGndAttkInit:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	96	# Bullet\TTaFi200.wav
+	imgoluselo     	537 2 0	# Unknown537 (thingy\esiFire.grp)
+	wait           	2
+	attackwith     	1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+	goto           	SiegeTank_Siege_TurretGndAttkToIdle
+
+SiegeTank_Siege_TurretSpecialState2:
+	setfldirect    	12
+	playsnd        	318	# Terran\TANK\TTaTra00.WAV
+	playfram       	0x55	# frame set 5
+	wait           	3
+	playfram       	0x44	# frame set 4
+	wait           	3
+	playfram       	0x33	# frame set 3
+	wait           	3
+	playfram       	0x22	# frame set 2
+	wait           	3
+	playfram       	0x11	# frame set 1
+	goto           	SiegeTank_Siege_TurretGndAttkToIdle
+

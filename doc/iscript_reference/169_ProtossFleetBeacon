@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 208 FleetBeacon (protoss\warp.grp)
+.headerstart
+IsId           	190
+Type           	27
+Init           	FleetBeaconInit
+Death          	FleetBeaconDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	FleetBeaconBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	FleetBeaconBuilt
+WorkingToIdle  	FleetBeaconBuilt
+WarpIn         	FleetBeaconWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	FleetBeaconBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	FleetBeaconBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FleetBeaconInit:
+	imgul          	212 0 0	# FleetBeaconShad (protoss\pwaShad.grp)
+	playfram       	0
+	goto           	FleetBeaconBuilt
+
+FleetBeaconBuilt:
+	wait           	125
+	goto           	FleetBeaconBuilt
+
+FleetBeaconDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+FleetBeaconWarpIn:
+	imgol          	209 0 0	# Unknown209 (protoss\warp.grp)
+	goto           	FleetBeaconBuilt
+

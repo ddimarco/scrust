@@ -1,0 +1,106 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 751 InstallationDoodad17 (thingy\tileset\install\DIDoor1.grp)
+# 743 InstallationDoodad9 (thingy\tileset\install\CRDoor1.grp)
+.headerstart
+IsId           	341
+Type           	27
+Init           	InstallationDoodad2Init
+Death          	InstallationDoodad2Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	InstallationDoodad2AlmostBuilt
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	InstallationDoodad2InitTurret
+Disable        	InstallationDoodad2Disable
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	InstallationDoodad2InitTurret
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InstallationDoodad2Init:
+	playfram       	0
+	setflipstate   	1
+	goto           	InstallationDoodad2Local00
+
+InstallationDoodad2Local00:
+	wait           	125
+	goto           	InstallationDoodad2Local00
+
+InstallationDoodad2Death:
+	wait           	1
+	end            	
+
+InstallationDoodad2AlmostBuilt:
+	playfram       	9
+	setflipstate   	1
+	goto           	InstallationDoodad2Local00
+
+InstallationDoodad2InitTurret:
+	playfram       	9
+	setflipstate   	1
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	sigorder       	1
+	goto           	InstallationDoodad2Local00
+
+InstallationDoodad2Disable:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	sigorder       	1
+	goto           	InstallationDoodad2Local00
+

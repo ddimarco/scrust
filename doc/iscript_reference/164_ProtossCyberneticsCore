@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 174 CyberneticsCore (protoss\gencore.grp)
+.headerstart
+IsId           	174
+Type           	27
+Init           	CyberneticsCoreInit
+Death          	CyberneticsCoreDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	CyberneticsCoreBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	CyberneticsCoreIsWorking
+WorkingToIdle  	CyberneticsCoreIsWorking
+WarpIn         	CyberneticsCoreWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	CyberneticsCoreIsWorking
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	CyberneticsCoreIsWorking
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CyberneticsCoreInit:
+	imgul          	177 0 0	# CyberneticsCoreShad (protoss\pgcShad.grp)
+	playfram       	0
+	goto           	CyberneticsCoreIsWorking
+
+CyberneticsCoreIsWorking:
+	wait           	125
+	goto           	CyberneticsCoreIsWorking
+
+CyberneticsCoreDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+CyberneticsCoreBuilt:
+	imgol          	176 0 0	# CyberneticsCoreOverlay (protoss\gencoreT.grp)
+	goto           	CyberneticsCoreIsWorking
+
+CyberneticsCoreWarpIn:
+	imgol          	175 0 0	# CyberneticsCoreWarpFlash (protoss\gencore.grp)
+	goto           	CyberneticsCoreIsWorking
+

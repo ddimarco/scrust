@@ -1,0 +1,189 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 033 InfestedKerrigan (zerg\uikerr.grp)
+.headerstart
+IsId           	20
+Type           	26
+Init           	InfestedKerriganInit
+Death          	InfestedKerriganDeath
+GndAttkInit    	InfestedKerriganGndAttkInit
+AirAttkInit    	InfestedKerriganGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	InfestedKerriganGndAttkRpt
+AirAttkRpt     	InfestedKerriganGndAttkRpt
+CastSpell      	InfestedKerriganCastSpell
+GndAttkToIdle  	InfestedKerriganGndAttkToIdle
+AirAttkToIdle  	InfestedKerriganGndAttkToIdle
+Unused2        	[NONE]
+Walking        	InfestedKerriganWalking
+WalkingToIdle  	InfestedKerriganWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	InfestedKerriganBurrow
+UnBurrow       	InfestedKerriganUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InfestedKerriganInit:
+	imgul          	34 0 0	# InfestedKerriganShad (zerg\uikShad.grp)
+InfestedKerriganWalkingToIdle:
+	playfram       	0x88	# frame set 8
+InfestedKerriganLocal01:
+	waitrand       	63 75
+	randcondjmp    	128 InfestedKerriganLocal00
+	goto           	InfestedKerriganLocal01
+
+InfestedKerriganLocal00:
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	goto           	InfestedKerriganWalkingToIdle
+
+InfestedKerriganDeath:
+	playsnd        	967	# Zerg\ZERGKERRI\UKiDth00.wav
+	imgol          	231 0 0	# Unknown231 (terran\ghost.grp)
+	wait           	1
+	end            	
+
+InfestedKerriganGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+InfestedKerriganGndAttkRpt:
+	nobrkcodestart 	
+	playsnd        	112	# Bullet\UKiFir00.wav
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	playfram       	0x55	# frame set 5
+	wait           	2
+	playfram       	0x66	# frame set 6
+	wait           	2
+	playfram       	0x77	# frame set 7
+	attackmelee    	1 0	# <NONE>
+	wait           	3
+	playfram       	0x66	# frame set 6
+	wait           	2
+	playfram       	0x55	# frame set 5
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+InfestedKerriganGndAttkToIdle:
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x00	# frame set 0
+	wait           	2
+	goto           	InfestedKerriganWalkingToIdle
+
+InfestedKerriganCastSpell:
+	playfram       	0x00	# frame set 0
+	nobrkcodestart 	
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	castspell      	
+	sigorder       	2
+	wait           	2
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	InfestedKerriganLocal02
+
+InfestedKerriganLocal02:
+	wait           	125
+	goto           	InfestedKerriganLocal02
+
+InfestedKerriganWalking:
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	move           	4
+	wait           	1
+	playfram       	0xdd	# frame set 13
+	move           	4
+	wait           	1
+	playfram       	0xee	# frame set 14
+	move           	4
+	wait           	1
+	playfram       	0xff	# frame set 15
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	goto           	InfestedKerriganWalking
+
+InfestedKerriganBurrow:
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	sigorder       	4
+	goto           	InfestedKerriganLocal02
+
+InfestedKerriganUnBurrow:
+	waitrand       	1 5
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0x88	# frame set 8
+	sigorder       	4
+	goto           	InfestedKerriganLocal02
+

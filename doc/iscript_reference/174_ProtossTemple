@@ -1,0 +1,52 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 207 ProtossTemple (neutral\temple.grp)
+.headerstart
+IsId           	189
+Type           	20
+Init           	TempleInit
+Death          	TempleDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	TempleInit
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	TempleIsWorking
+WorkingToIdle  	TempleIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+TempleInit:
+	playfram       	0
+	goto           	TempleIsWorking
+
+TempleIsWorking:
+	wait           	125
+	goto           	TempleIsWorking
+
+TempleDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	224 0 0	# ProtossBuildingRubbleLarge (thingy\PRubbleL.grp)
+	wait           	1
+	end            	
+

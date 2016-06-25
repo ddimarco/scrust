@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 199 Stargate (protoss\stargate.grp)
+.headerstart
+IsId           	185
+Type           	27
+Init           	StargateInit
+Death          	StargateDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	StargateBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	StargateIsWorking
+WorkingToIdle  	StargateIsWorking
+WarpIn         	StargateWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	StargateIsWorking
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	StargateBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+StargateInit:
+	imgul          	202 0 0	# StargateShad (protoss\psgShad.grp)
+	playfram       	0
+	goto           	StargateIsWorking
+
+StargateIsWorking:
+	wait           	125
+	goto           	StargateIsWorking
+
+StargateDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+StargateBuilt:
+	imgol          	200 0 0	# StargateGlow (protoss\psgGlow.grp)
+	goto           	StargateIsWorking
+
+StargateWarpIn:
+	imgol          	201 0 0	# StargateWarpFlash (protoss\stargate.grp)
+	goto           	StargateIsWorking
+

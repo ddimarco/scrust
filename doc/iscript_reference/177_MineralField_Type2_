@@ -1,0 +1,64 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 349 MineralDeposit2 (neutral\min02.grp)
+.headerstart
+IsId           	205
+Type           	20
+Init           	MineralFieldType2Init
+Death          	MineralFieldType2Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	MineralFieldType2SpecialState1
+SpecialState2  	MineralFieldType2SpecialState2
+AlmostBuilt    	MineralFieldType2AlmostBuilt
+Built          	MineralFieldType2Built
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	MineralFieldType2Built
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MineralFieldType2Init:
+	imgul          	350 0 0	# MineralDeposit2Shad (neutral\min02Sha.grp)
+	goto           	MineralFieldType2Built
+
+MineralFieldType2Built:
+	playfram       	0
+	goto           	MineralFieldType2Local00
+
+MineralFieldType2Local00:
+	wait           	125
+	goto           	MineralFieldType2Local00
+
+MineralFieldType2Death:
+	wait           	1
+	end            	
+
+MineralFieldType2SpecialState1:
+	playfram       	3
+	goto           	MineralFieldType2Local00
+
+MineralFieldType2SpecialState2:
+	playfram       	2
+	goto           	MineralFieldType2Local00
+
+MineralFieldType2AlmostBuilt:
+	playfram       	1
+	goto           	MineralFieldType2Local00
+

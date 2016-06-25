@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 221 Civilian (neutral\civilian.grp)
+.headerstart
+IsId           	67
+Type           	12
+Init           	CivilianInit
+Death          	CivilianDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	CivilianWalking
+WalkingToIdle  	CivilianWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CivilianInit:
+	imgul          	222 0 0	# CivilianShad (neutral\nciShad.grp)
+CivilianWalkingToIdle:
+	playfram       	0x77	# frame set 7
+CivilianLocal01:
+	waitrand       	63 75
+	randcondjmp    	128 CivilianLocal00
+	goto           	CivilianLocal01
+
+CivilianLocal00:
+	turnrand       	3
+	goto           	CivilianWalkingToIdle
+
+CivilianDeath:
+	playsndbtwn    	276 277	# Terran\MARINE\TMaDth00.WAV, Terran\MARINE\TMaDth01.WAV
+	imgol          	242 0 0	# Unknown242 (terran\marine.grp)
+	wait           	1
+	end            	
+
+CivilianWalking:
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	goto           	CivilianWalking
+

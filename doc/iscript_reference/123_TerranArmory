@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 268 Armory (terran\chemlab.grp)
+.headerstart
+IsId           	97
+Type           	20
+Init           	ArmoryInit
+Death          	ArmoryDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	ArmoryAlmostBuilt
+Built          	ArmoryBuilt
+Landing        	ArmoryLanding
+LiftOff        	ArmoryLanding
+IsWorking      	ArmoryIsWorking
+WorkingToIdle  	ArmoryBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ArmoryInit:
+	imgul          	270 0 0	# ArmoryShad (terran\tclShad.grp)
+ArmoryBuilt:
+	playfram       	0
+	goto           	ArmoryLanding
+
+ArmoryLanding:
+	wait           	125
+	goto           	ArmoryLanding
+
+ArmoryDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	ArmoryLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+ArmoryLocal00:
+	wait           	1
+	end            	
+
+ArmoryAlmostBuilt:
+	playfram       	1
+	goto           	ArmoryLanding
+
+ArmoryIsWorking:
+	imgol          	269 0 0	# ArmoryOverlay (terran\chemlabT.grp)
+	goto           	ArmoryLanding
+

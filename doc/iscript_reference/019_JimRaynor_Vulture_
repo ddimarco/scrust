@@ -1,0 +1,55 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 256 Vulture (terran\Vulture.grp)
+.headerstart
+IsId           	86
+Type           	13
+Init           	VultureInit
+Death          	VultureDeath
+GndAttkInit    	VultureGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	VultureGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	VultureGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	VultureGndAttkToIdle
+WalkingToIdle  	VultureGndAttkToIdle
+SpecialState1  	VultureSpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+VultureInit:
+	imgul          	257 0 7	# VultureShad (terran\Vulture.grp)
+	playfram       	0x00	# frame set 0
+	goto           	VultureGndAttkToIdle
+
+VultureGndAttkToIdle:
+	wait           	125
+	goto           	VultureGndAttkToIdle
+
+VultureDeath:
+	playsnd        	353	# Terran\VULTURE\TVuDth00.WAV
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+VultureGndAttkInit:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	VultureGndAttkToIdle
+
+VultureSpecialState1:
+	attackwith     	1
+	sigorder       	1
+	wait           	1
+	end            	
+

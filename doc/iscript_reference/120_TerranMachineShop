@@ -1,0 +1,88 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 293 MachineShop (terran\machines.grp)
+.headerstart
+IsId           	117
+Type           	24
+Init           	MachineShopInit
+Death          	MachineShopDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	MachineShopAlmostBuilt
+Built          	MachineShopBuilt
+Landing        	MachineShopLanding
+LiftOff        	MachineShopLiftOff
+IsWorking      	MachineShopIsWorking
+WorkingToIdle  	MachineShopBuilt
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	MachineShopDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MachineShopInit:
+	playfram       	0
+	imgul          	295 0 0	# MachineShopShad (terran\tmsShad.grp)
+	goto           	MachineShopLiftOff
+
+MachineShopLiftOff:
+	wait           	125
+	goto           	MachineShopLiftOff
+
+MachineShopDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	MachineShopLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+MachineShopLocal00:
+	wait           	1
+	end            	
+
+MachineShopAlmostBuilt:
+	playfram       	4
+	goto           	MachineShopLiftOff
+
+MachineShopBuilt:
+	playfram       	0
+	goto           	MachineShopLiftOff
+
+MachineShopLanding:
+	imgol          	294 0 0	# MachineShopAttachment (terran\machineC.grp)
+	goto           	MachineShopLiftOff
+
+MachineShopIsWorking:
+	playfram       	0
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	3
+	wait           	1
+	goto           	MachineShopIsWorking
+
+MachineShopDisable:
+	goto           	MachineShopLiftOff
+

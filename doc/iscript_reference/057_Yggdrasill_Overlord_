@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 042 Overlord (zerg\overlord.grp)
+.headerstart
+IsId           	25
+Type           	12
+Init           	OverlordInit
+Death          	OverlordDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	OverlordWalking
+WalkingToIdle  	OverlordWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+OverlordInit:
+	imgul          	43 0 42	# OverlordShad (zerg\overlord.grp)
+	playfram       	0x00	# frame set 0
+	goto           	OverlordLocal00
+
+OverlordLocal00:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	OverlordLocal00
+
+OverlordDeath:
+	playsnd        	910	# Zerg\OVERLORD\ZOvDth00.WAV
+	imgol          	45 0 0	# OverlordDeath (zerg\zovDeath.grp)
+	wait           	1
+	end            	
+
+OverlordWalking:
+	setvertpos     	0
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+OverlordLocal01:
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	goto           	OverlordLocal01
+
+OverlordWalkingToIdle:
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x00	# frame set 0
+	wait           	2
+	goto           	OverlordLocal00
+

@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 137 Probe (protoss\probe.grp)
+.headerstart
+IsId           	156
+Type           	21
+Init           	ProbeInit
+Death          	ProbeDeath
+GndAttkInit    	ProbeGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	ProbeGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	ProbeGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ProbeWalking
+WalkingToIdle  	ProbeGndAttkToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	ProbeAlmostBuilt
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ProbeWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ProbeInit:
+	imgul          	138 0 7	# ProbeShad (protoss\probe.grp)
+	playfram       	0x00	# frame set 0
+	goto           	ProbeGndAttkToIdle
+
+ProbeGndAttkToIdle:
+	wait           	125
+	goto           	ProbeGndAttkToIdle
+
+ProbeDeath:
+	playsnd        	598	# Protoss\PROBE\PPrDth00.WAV
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+ProbeGndAttkInit:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	ProbeGndAttkToIdle
+
+ProbeWalking:
+	setvertpos     	0
+	goto           	ProbeGndAttkToIdle
+
+ProbeAlmostBuilt:
+	useweapon      	63	# Particle Beam
+	wait           	1
+	waitrand       	8 10
+	goto           	ProbeAlmostBuilt
+
+ProbeWarpIn:
+	imgol          	139 0 0	# Unknown139 (protoss\probe.grp)
+	goto           	ProbeGndAttkToIdle
+

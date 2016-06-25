@@ -1,0 +1,70 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 112 Carrier (protoss\carrier.grp)
+.headerstart
+IsId           	151
+Type           	21
+Init           	CarrierInit
+Death          	CarrierDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	CarrierWalking
+WalkingToIdle  	CarrierWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	CarrierWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CarrierInit:
+	imgulnextid    	0 42
+	playfram       	0x00	# frame set 0
+	goto           	CarrierWalkingToIdle
+
+CarrierWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	CarrierWalkingToIdle
+
+CarrierDeath:
+	playsndbtwn    	595 596	# Protoss\Carrier\PCaDth00.WAV, Protoss\Carrier\PCaDth01.WAV
+	imgol          	214 0 0	# ProtossBuildingExplosionMedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+CarrierWalking:
+	imgol          	114 0 0	# CarrierGlow (thingy\pcaGlow.grp)
+	goto           	CarrierLocal00
+
+CarrierLocal00:
+	wait           	125
+	goto           	CarrierLocal00
+
+CarrierWarpIn:
+	imgol          	115 0 0	# Unknown115 (protoss\carrier.grp)
+	goto           	CarrierLocal00
+

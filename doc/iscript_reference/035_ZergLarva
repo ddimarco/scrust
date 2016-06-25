@@ -1,0 +1,60 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 036 Larva (zerg\larva.grp)
+.headerstart
+IsId           	21
+Type           	12
+Init           	LarvaInit
+Death          	LarvaDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	LarvaWalking
+WalkingToIdle  	LarvaInit
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+LarvaInit:
+	playfram       	0x00	# frame set 0
+	goto           	LarvaLocal00
+
+LarvaLocal00:
+	wait           	125
+	goto           	LarvaLocal00
+
+LarvaDeath:
+	playsnd        	849	# Zerg\Larva\ZLaDth00.WAV
+	lowsprul       	150 0 0	# LarvaDeath (zerg\zlaDeath.grp)
+	wait           	1
+	end            	
+
+LarvaWalking:
+	move           	2
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	2
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	2
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	2
+	wait           	1
+	playfram       	0x44	# frame set 4
+	goto           	LarvaWalking
+

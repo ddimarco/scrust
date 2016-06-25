@@ -1,0 +1,137 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 929 Corsair (protoss\corsair.grp)
+.headerstart
+IsId           	369
+Type           	21
+Init           	CorsairInit
+Death          	CorsairDeath
+GndAttkInit    	CorsairGndAttkInit
+AirAttkInit    	CorsairAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	CorsairGndAttkInit
+AirAttkRpt     	CorsairAirAttkInit
+CastSpell      	CorsairCastSpell
+GndAttkToIdle  	CorsairGndAttkToIdle
+AirAttkToIdle  	CorsairGndAttkToIdle
+Unused2        	[NONE]
+Walking        	CorsairWalking
+WalkingToIdle  	CorsairGndAttkToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	CorsairWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CorsairInit:
+	imgul          	930 0 42	# CorsairShad (protoss\corsair.grp)
+CorsairGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	CorsairLocal00
+
+CorsairLocal00:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	CorsairLocal00
+
+CorsairDeath:
+	playsnd        	533	# Protoss\Scout\PScDth00.WAV
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+CorsairGndAttkInit:
+	nobrkcodestart 	
+	playfram       	0x11	# frame set 1
+	wait           	1
+	attackwith     	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	CorsairGndAttkToIdle
+
+CorsairAirAttkInit:
+	nobrkcodestart 	
+	playfram       	0x11	# frame set 1
+	wait           	1
+	attackwith     	2
+	playsnd        	1060	# Protoss\Corsair\PCorlasr2.wav
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	CorsairGndAttkToIdle
+
+CorsairCastSpell:
+	playfram       	0x00	# frame set 0
+	nobrkcodestart 	
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playsnd        	1059	# Protoss\Corsair\PCorWeb1.wav
+	castspell      	
+	nobrkcodeend   	
+	gotorepeatattk 	
+	sigorder       	2
+	goto           	CorsairGndAttkToIdle
+
+CorsairWalking:
+	imgol          	931 0 0	# CorsairOverlay (thingy\pcsGlow.grp)
+	playfram       	0x00	# frame set 0
+	setvertpos     	0
+	goto           	CorsairLocal01
+
+CorsairLocal01:
+	wait           	125
+	goto           	CorsairLocal01
+
+CorsairWarpIn:
+	imgol          	143 0 0	# Unknown143 (protoss\scout.grp)
+	goto           	CorsairLocal01
+

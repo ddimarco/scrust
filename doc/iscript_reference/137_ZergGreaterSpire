@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 080 GreaterSpire (zerg\MutaCham.grp)
+.headerstart
+IsId           	48
+Type           	20
+Init           	GreaterSpireInit
+Death          	GreaterSpireDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	GreaterSpireAlmostBuilt
+Built          	GreaterSpireBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	GreaterSpireIsWorking
+WorkingToIdle  	GreaterSpireIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GreaterSpireInit:
+	imgul          	81 0 0	# GreaterSpireShad (zerg\zmcShad.grp)
+	playfram       	0
+	goto           	GreaterSpireLocal00
+
+GreaterSpireLocal00:
+	wait           	125
+	goto           	GreaterSpireLocal00
+
+GreaterSpireDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+GreaterSpireAlmostBuilt:
+	imgol          	107 0 0	# ZergBuildingSpawnSmall (zerg\zSpawn01.grp)
+GreaterSpireBuilt:
+	playfram       	0
+	waitrand       	1 5
+GreaterSpireIsWorking:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	goto           	GreaterSpireIsWorking
+

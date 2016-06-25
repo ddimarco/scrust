@@ -1,0 +1,102 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 046 Queen (zerg\queen.grp)
+.headerstart
+IsId           	27
+Type           	12
+Init           	QueenInit
+Death          	QueenDeath
+GndAttkInit    	QueenGndAttkInit
+AirAttkInit    	QueenGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	QueenGndAttkInit
+AirAttkRpt     	QueenGndAttkInit
+CastSpell      	QueenCastSpell
+GndAttkToIdle  	QueenGndAttkToIdle
+AirAttkToIdle  	QueenGndAttkToIdle
+Unused2        	[NONE]
+Walking        	QueenWalking
+WalkingToIdle  	QueenGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+QueenInit:
+	imgul          	47 0 42	# QueenShad (zerg\queen.grp)
+	playfram       	0x00	# frame set 0
+	waitrand       	1 4
+QueenGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	goto           	QueenGndAttkToIdle
+
+QueenDeath:
+	playsndbtwn    	925 927	# Zerg\Queen\ZQuDth00.WAV, Zerg\Queen\ZQuDth02.WAV
+	sprol          	156 0 0	# QueenBirth (zerg\zquDeath.grp)
+	wait           	1
+	end            	
+
+QueenGndAttkInit:
+	setvertpos     	0
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0x88	# frame set 8
+	playsnd        	90	# Bullet\ZQuFir00.wav
+	attackwith     	1
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	gotorepeatattk 	
+	goto           	QueenGndAttkToIdle
+
+QueenCastSpell:
+	setvertpos     	0
+	playfram       	0x55	# frame set 5
+	nobrkcodestart 	
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0x88	# frame set 8
+	castspell      	
+	sigorder       	2
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	QueenGndAttkToIdle
+
+QueenWalking:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	goto           	QueenWalking
+

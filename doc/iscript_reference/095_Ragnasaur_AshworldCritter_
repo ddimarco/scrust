@@ -1,0 +1,89 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 338 RagnasaurAshworld (neutral\Acritter.grp)
+.headerstart
+IsId           	198
+Type           	12
+Init           	RagnasaurInit
+Death          	RagnasaurDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	RagnasaurWalking
+WalkingToIdle  	RagnasaurWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+RagnasaurInit:
+	imgul          	339 0 0	# RagnasaurShad (neutral\nacShad.grp)
+RagnasaurWalkingToIdle:
+	playfram       	0x66	# frame set 6
+	goto           	RagnasaurLocal00
+
+RagnasaurLocal00:
+	wait           	125
+	goto           	RagnasaurLocal00
+
+RagnasaurDeath:
+	playsnd        	53	# Misc\CRITTERS\LCrDth00.wav
+	setfldirect    	0
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0x9a	# frame set 9
+	wait           	1
+	playfram       	0x9b	# frame set 9
+	wait           	1
+	playfram       	0x9c	# frame set 9
+	wait           	1
+	playfram       	0x9d	# frame set 9
+	wait           	1
+	playfram       	0x9e	# frame set 9
+	wait           	1
+	playfram       	0x9f	# frame set 9
+	wait           	1
+	playfram       	0xa0	# frame set 9
+	wait           	1
+	end            	
+
+RagnasaurWalking:
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	goto           	RagnasaurWalking
+

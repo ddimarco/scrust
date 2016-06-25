@@ -1,0 +1,61 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 179 Nexus (protoss\nexus.grp)
+.headerstart
+IsId           	177
+Type           	21
+Init           	NexusInit
+Death          	NexusDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	NexusBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	NexusIsWorking
+WorkingToIdle  	NexusIsWorking
+WarpIn         	NexusWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+NexusInit:
+	imgul          	182 0 0	# NexusShad (protoss\pneShad.grp)
+	playfram       	0
+	goto           	NexusIsWorking
+
+NexusIsWorking:
+	wait           	125
+	goto           	NexusIsWorking
+
+NexusDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	224 0 0	# ProtossBuildingRubbleLarge (thingy\PRubbleL.grp)
+	wait           	1
+	end            	
+
+NexusBuilt:
+	imgol          	181 0 0	# NexusGlow (protoss\pneGlow.grp)
+	goto           	NexusIsWorking
+
+NexusWarpIn:
+	imgol          	180 0 0	# NexusWarpFlash (protoss\nexus.grp)
+	goto           	NexusIsWorking
+

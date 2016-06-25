@@ -1,0 +1,52 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 251 SiegeTankTankTurret (terran\tankt.grp)
+.headerstart
+IsId           	91
+Type           	13
+Init           	SiegeTank_Tank_TurretInit
+Death          	SiegeTank_Tank_TurretDeath
+GndAttkInit    	SiegeTank_Tank_TurretGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	SiegeTank_Tank_TurretGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	SiegeTank_Tank_TurretGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	SiegeTank_Tank_TurretGndAttkToIdle
+WalkingToIdle  	SiegeTank_Tank_TurretGndAttkToIdle
+SpecialState1  	SiegeTank_Tank_TurretGndAttkToIdle
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SiegeTank_Tank_TurretInit:
+	wait           	1
+	setfldirect    	12
+	goto           	SiegeTank_Tank_TurretGndAttkToIdle
+
+SiegeTank_Tank_TurretGndAttkToIdle:
+	wait           	125
+	goto           	SiegeTank_Tank_TurretGndAttkToIdle
+
+SiegeTank_Tank_TurretDeath:
+	wait           	1
+	end            	
+
+SiegeTank_Tank_TurretGndAttkInit:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	68	# Bullet\TTaFir00.wav
+	imgol          	536 0 0	# Unknown536 (thingy\ettFlash.grp)
+	wait           	2
+	attackwith     	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	SiegeTank_Tank_TurretGndAttkToIdle
+

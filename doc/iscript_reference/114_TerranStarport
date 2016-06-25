@@ -1,0 +1,102 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 319 Starport (terran\starport.grp)
+.headerstart
+IsId           	134
+Type           	20
+Init           	StarportInit
+Death          	StarportDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	StarportWalking
+WalkingToIdle  	StarportWalking
+SpecialState1  	StarportSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	StarportAlmostBuilt
+Built          	StarportBuilt
+Landing        	StarportLanding
+LiftOff        	StarportLiftOff
+IsWorking      	StarportIsWorking
+WorkingToIdle  	StarportBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+StarportInit:
+	imgul          	321 0 0	# StarportShad (terran\tspShad.grp)
+StarportBuilt:
+	playfram       	0
+	goto           	StarportWalking
+
+StarportWalking:
+	wait           	125
+	goto           	StarportWalking
+
+StarportDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	StarportLocal00
+	lowsprul       	274 0 0	# TerranBuildingRubblelarge (thingy\RubbleL.grp)
+	wait           	1
+	end            	
+
+StarportLocal00:
+	wait           	1
+	end            	
+
+StarportSpecialState1:
+	playfram       	3
+	goto           	StarportWalking
+
+StarportAlmostBuilt:
+	playfram       	5
+	goto           	StarportWalking
+
+StarportLanding:
+	nobrkcodestart 	
+	wait           	20
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	1
+	wait           	5
+	playfram       	4
+	wait           	5
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	StarportWalking
+
+StarportLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	4
+	wait           	5
+	playfram       	1
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	3
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	StarportWalking
+
+StarportIsWorking:
+	imgol          	320 0 0	# StarportOverlay (terran\StarpoT.grp)
+	goto           	StarportWalking
+

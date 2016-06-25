@@ -1,0 +1,220 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 076 SunkenColony (zerg\Lurker.grp)
+.headerstart
+IsId           	46
+Type           	20
+Init           	SunkenColonyInit
+Death          	SunkenColonyDeath
+GndAttkInit    	SunkenColonyGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	SunkenColonyGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	SunkenColonyGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	SunkenColonyAlmostBuilt
+Built          	SunkenColonyBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	SunkenColonyIsWorking
+WorkingToIdle  	SunkenColonyIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SunkenColonyInit:
+	playfram       	0
+	imgul          	77 0 0	# SunkenColonyShad (zerg\zluShad.grp)
+	goto           	SunkenColonyLocal00
+
+SunkenColonyLocal00:
+	wait           	125
+	goto           	SunkenColonyLocal00
+
+SunkenColonyDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+SunkenColonyGndAttkInit:
+	trgtarccondjmp 	74 42 SunkenColonyLocal01
+	trgtarccondjmp 	159 42 SunkenColonyLocal02
+	nobrkcodestart 	
+	playsnd        	78	# Bullet\ZLuFir00.wav
+	playfram       	24
+	wait           	1
+	playfram       	25
+	wait           	1
+	playfram       	26
+	wait           	1
+	playfram       	27
+	wait           	1
+	playfram       	28
+	wait           	1
+	playfram       	29
+	wait           	1
+	playfram       	30
+	wait           	1
+	playfram       	31
+	wait           	1
+	playfram       	32
+	wait           	1
+	playfram       	33
+	wait           	1
+	attackwith     	1
+	wait           	6
+	playfram       	32
+	wait           	1
+	playfram       	31
+	wait           	1
+	playfram       	30
+	wait           	1
+	playfram       	29
+	wait           	1
+	playfram       	28
+	wait           	1
+	playfram       	27
+	wait           	1
+	playfram       	26
+	wait           	1
+	playfram       	25
+	wait           	1
+	playfram       	24
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+SunkenColonyGndAttkToIdle:
+	goto           	SunkenColonyIsWorking
+
+SunkenColonyLocal01:
+	nobrkcodestart 	
+	playsnd        	78	# Bullet\ZLuFir00.wav
+	playfram       	3
+	wait           	1
+	playfram       	4
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	6
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	10
+	wait           	1
+	playfram       	11
+	wait           	1
+	playfram       	12
+	wait           	1
+	playfram       	13
+	wait           	1
+	attackwith     	1
+	wait           	6
+	playfram       	12
+	wait           	1
+	playfram       	11
+	wait           	1
+	playfram       	10
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	6
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	4
+	wait           	1
+	playfram       	3
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+	goto           	SunkenColonyIsWorking
+
+SunkenColonyLocal02:
+	nobrkcodestart 	
+	playsnd        	78	# Bullet\ZLuFir00.wav
+	playfram       	14
+	wait           	1
+	playfram       	15
+	wait           	1
+	playfram       	16
+	wait           	1
+	playfram       	17
+	wait           	1
+	playfram       	18
+	wait           	1
+	playfram       	19
+	wait           	1
+	playfram       	20
+	wait           	1
+	playfram       	21
+	wait           	1
+	playfram       	22
+	wait           	1
+	playfram       	23
+	wait           	1
+	attackwith     	1
+	wait           	6
+	playfram       	23
+	wait           	1
+	playfram       	22
+	wait           	1
+	playfram       	21
+	wait           	1
+	playfram       	20
+	wait           	1
+	playfram       	19
+	wait           	1
+	playfram       	18
+	wait           	1
+	playfram       	17
+	wait           	1
+	playfram       	16
+	wait           	1
+	playfram       	15
+	wait           	1
+	playfram       	14
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+	goto           	SunkenColonyIsWorking
+
+SunkenColonyAlmostBuilt:
+	imgol          	107 0 0	# ZergBuildingSpawnSmall (zerg\zSpawn01.grp)
+SunkenColonyBuilt:
+	playfram       	0
+	waitrand       	1 2
+SunkenColonyIsWorking:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	goto           	SunkenColonyIsWorking
+

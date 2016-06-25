@@ -1,0 +1,49 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 353 Unusedscoutcopy (protoss\scout.grp)
+.headerstart
+IsId           	207
+Type           	20
+Init           	Unknown207Init
+Death          	Unknown207Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	Unknown207Init
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	Unknown207IsWorking
+WorkingToIdle  	Unknown207IsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+Unknown207Init:
+	playfram       	0
+	goto           	Unknown207IsWorking
+
+Unknown207IsWorking:
+	wait           	125
+	goto           	Unknown207IsWorking
+
+Unknown207Death:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

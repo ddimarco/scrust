@@ -1,0 +1,60 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 337 DarkSwarm (thingy\Dswarm.grp)
+.headerstart
+IsId           	299
+Type           	1
+Init           	DarkSwarmInit
+Death          	DarkSwarmDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DarkSwarmInit:
+	playsnd        	922	# Zerg\Queen\ZQuSwm00.WAV
+	playfram       	0
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	4
+	wait           	1
+DarkSwarmLocal00:
+	playfram       	5
+	wait           	3
+	playfram       	6
+	wait           	3
+	playfram       	7
+	wait           	3
+	playfram       	8
+	wait           	3
+	playfram       	9
+	wait           	3
+	playfram       	8
+	wait           	3
+	playfram       	7
+	wait           	3
+	playfram       	6
+	wait           	3
+	goto           	DarkSwarmLocal00
+
+DarkSwarmDeath:
+	playfram       	4
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	0
+	wait           	1
+	end            	
+

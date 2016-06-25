@@ -64,6 +64,7 @@ impl IScript {
 }
 
 enum_from_primitive! {
+#[derive(PartialEq)]
 #[derive(Debug)]
 pub enum AnimationType {
     Init = 0,

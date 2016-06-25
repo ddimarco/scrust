@@ -1,0 +1,95 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 235 GoliathTurret (terran\goliathT.grp)
+.headerstart
+IsId           	76
+Type           	12
+Init           	Goliath_Turret_Init
+Death          	Goliath_Turret_Death
+GndAttkInit    	Goliath_Turret_GndAttkInit
+AirAttkInit    	Goliath_Turret_AirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	Goliath_Turret_GndAttkInit
+AirAttkRpt     	Goliath_Turret_AirAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	Goliath_Turret_Init
+AirAttkToIdle  	Goliath_Turret_Init
+Unused2        	[NONE]
+Walking        	Goliath_Turret_Walking
+WalkingToIdle  	Goliath_Turret_Init
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+Goliath_Turret_Init:
+	playfram       	0x77	# frame set 7
+	goto           	Goliath_Turret_Local00
+
+Goliath_Turret_Local00:
+	wait           	125
+	goto           	Goliath_Turret_Local00
+
+Goliath_Turret_Death:
+	wait           	1
+	end            	
+
+Goliath_Turret_GndAttkInit:
+	playfram       	0xaa	# frame set 10
+	playsnd        	70	# Bullet\TGoFir00.wav
+	attackwith     	1
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	gotorepeatattk 	
+	goto           	Goliath_Turret_Init
+
+Goliath_Turret_AirAttkInit:
+	wait           	1
+	attackwith     	2
+	gotorepeatattk 	
+	goto           	Goliath_Turret_Init
+
+Goliath_Turret_Walking:
+	move           	0
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	0
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	0
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	0
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	0
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	0
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	0
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	0
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	0
+	wait           	1
+	playfram       	0x77	# frame set 7
+	goto           	Goliath_Turret_Walking
+

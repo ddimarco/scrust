@@ -1,0 +1,121 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 258 SpiderMine (terran\Spider.grp)
+.headerstart
+IsId           	87
+Type           	26
+Init           	SpiderMineInit
+Death          	SpiderMineDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	SpiderMineWalking
+WalkingToIdle  	SpiderMineWalkingToIdle
+SpecialState1  	SpiderMineSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	SpiderMineBurrow
+UnBurrow       	SpiderMineUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SpiderMineInit:
+	imgul          	259 0 0	# SpiderMineShad (terran\tsmShad.grp)
+SpiderMineWalkingToIdle:
+	playfram       	0
+	goto           	SpiderMineLocal00
+
+SpiderMineLocal00:
+	wait           	125
+	goto           	SpiderMineLocal00
+
+SpiderMineDeath:
+	imgol          	429 0 0	# Spidermineexplosion (thingy\tmnExplo.grp)
+	wait           	1
+	end            	
+
+SpiderMineWalking:
+	playsnd        	355	# Terran\VULTURE\TVuMin00.WAV
+	move           	16
+	wait           	1
+	playfram       	0
+	move           	16
+	wait           	1
+	playfram       	1
+	move           	16
+	wait           	1
+	playfram       	2
+	move           	16
+	wait           	1
+	playfram       	3
+	move           	16
+	wait           	1
+	playfram       	4
+	move           	16
+	wait           	1
+	playfram       	5
+	move           	16
+	wait           	1
+	playfram       	6
+	move           	16
+	wait           	1
+	playfram       	7
+	goto           	SpiderMineWalking
+
+SpiderMineSpecialState1:
+	castspell      	
+	sigorder       	1
+	goto           	SpiderMineLocal00
+
+SpiderMineBurrow:
+	nobrkcodestart 	
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playsnd        	354	# Terran\VULTURE\TVuMin01.WAV
+	playfram       	8
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	10
+	wait           	1
+	playfram       	11
+	wait           	1
+	sigorder       	4
+	nobrkcodeend   	
+	goto           	SpiderMineLocal00
+
+SpiderMineUnBurrow:
+	nobrkcodestart 	
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playsnd        	354	# Terran\VULTURE\TVuMin01.WAV
+	playfram       	10
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	0
+	sigorder       	4
+	nobrkcodeend   	
+	goto           	SpiderMineWalkingToIdle
+

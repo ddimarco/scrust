@@ -1,0 +1,75 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 278 SupplyDepot (terran\Depot.grp)
+.headerstart
+IsId           	105
+Type           	24
+Init           	SupplyDepotInit
+Death          	SupplyDepotDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	SupplyDepotAlmostBuilt
+Built          	SupplyDepotBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	SupplyDepotIsWorking
+WorkingToIdle  	SupplyDepotWorkingToIdle
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	SupplyDepotDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SupplyDepotInit:
+	imgul          	280 0 0	# SupplyDepotShad (terran\tdeShad.grp)
+	playfram       	0
+	goto           	SupplyDepotIsWorking
+
+SupplyDepotIsWorking:
+	wait           	125
+	goto           	SupplyDepotIsWorking
+
+SupplyDepotDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	SupplyDepotLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+SupplyDepotLocal00:
+	wait           	1
+	end            	
+
+SupplyDepotAlmostBuilt:
+	playfram       	1
+	goto           	SupplyDepotIsWorking
+
+SupplyDepotBuilt:
+	imgol          	279 0 0	# SupplyDepotOverlay (terran\DepotT.grp)
+SupplyDepotWorkingToIdle:
+	playfram       	0
+	goto           	SupplyDepotIsWorking
+
+SupplyDepotDisable:
+	goto           	SupplyDepotIsWorking
+

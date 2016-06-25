@@ -1,0 +1,96 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 005 Broodling (zerg\brood.grp)
+.headerstart
+IsId           	4
+Type           	12
+Init           	BroodlingInit
+Death          	BroodlingDeath
+GndAttkInit    	BroodlingGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	BroodlingGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	BroodlingGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	BroodlingWalking
+WalkingToIdle  	BroodlingGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+BroodlingInit:
+	imgul          	6 0 0	# BroodlingShad (zerg\zbrShad.grp)
+BroodlingGndAttkToIdle:
+	playfram       	0x11	# frame set 1
+	waitrand       	25 30
+	playfram       	0x22	# frame set 2
+	waitrand       	25 30
+	goto           	BroodlingGndAttkToIdle
+
+BroodlingDeath:
+	playsnd        	785	# Zerg\BROODLING\ZBrDth00.WAV
+	lowsprul       	134 0 0	# BroodlingDeath (zerg\zbrDeath.grp)
+	wait           	1
+	end            	
+
+BroodlingGndAttkInit:
+	playfram       	0x77	# frame set 7
+	wait           	1
+	nobrkcodestart 	
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x99	# frame set 9
+	attackmelee    	1 786	# Zerg\BROODLING\ZBrAtt00.WAV
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	BroodlingGndAttkToIdle
+
+BroodlingWalking:
+	call           	BroodlingLocal00
+	call           	BroodlingLocal00
+	waitrand       	3 6
+	call           	BroodlingLocal00
+	waitrand       	3 6
+	call           	BroodlingLocal00
+	call           	BroodlingLocal00
+	call           	BroodlingLocal00
+	waitrand       	3 6
+	goto           	BroodlingWalking
+
+BroodlingLocal00:
+	move           	8
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	8
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	8
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	8
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	8
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	8
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	8
+	wait           	1
+	playfram       	0x00	# frame set 0
+	return         	
+

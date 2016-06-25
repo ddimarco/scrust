@@ -1,0 +1,62 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 351 MineralDeposit3 (neutral\min03.grp)
+.headerstart
+IsId           	206
+Type           	20
+Init           	MineralFieldType3Init
+Death          	MineralFieldType3Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	MineralFieldType3SpecialState1
+SpecialState2  	MineralFieldType3SpecialState2
+AlmostBuilt    	MineralFieldType3AlmostBuilt
+Built          	MineralFieldType3Built
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	MineralFieldType3Built
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MineralFieldType3Init:
+	imgul          	352 0 0	# MineralDeposit3Shad (neutral\min03Sha.grp)
+MineralFieldType3Built:
+	playfram       	0
+	goto           	MineralFieldType3Local00
+
+MineralFieldType3Local00:
+	wait           	125
+	goto           	MineralFieldType3Local00
+
+MineralFieldType3Death:
+	wait           	1
+	end            	
+
+MineralFieldType3SpecialState1:
+	playfram       	3
+	goto           	MineralFieldType3Local00
+
+MineralFieldType3SpecialState2:
+	playfram       	2
+	goto           	MineralFieldType3Local00
+
+MineralFieldType3AlmostBuilt:
+	playfram       	1
+	goto           	MineralFieldType3Local00
+

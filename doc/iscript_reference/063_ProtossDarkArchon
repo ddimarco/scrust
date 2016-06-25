@@ -1,0 +1,128 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 925 DarkArchonEnergy (protoss\darchn.grp)
+.headerstart
+IsId           	365
+Type           	13
+Init           	DarkArchonEnergyInit
+Death          	DarkArchonEnergyDeath
+GndAttkInit    	DarkArchonEnergyGndAttkInit
+AirAttkInit    	DarkArchonEnergyGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	DarkArchonEnergyGndAttkInit
+AirAttkRpt     	DarkArchonEnergyGndAttkInit
+CastSpell      	DarkArchonEnergyCastSpell
+GndAttkToIdle  	DarkArchonEnergyGndAttkInit
+AirAttkToIdle  	DarkArchonEnergyGndAttkInit
+Unused2        	[NONE]
+Walking        	DarkArchonEnergyGndAttkInit
+WalkingToIdle  	DarkArchonEnergyGndAttkInit
+SpecialState1  	DarkArchonEnergySpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DarkArchonEnergyInit:
+	playfram       	18
+	wait           	1
+	nobrkcodestart 	
+	wait           	1
+	playfram       	19
+	wait           	2
+	playfram       	20
+	wait           	2
+	playfram       	21
+	wait           	2
+	playfram       	22
+	wait           	2
+	playfram       	23
+	wait           	2
+	playfram       	24
+	wait           	2
+	playfram       	25
+	wait           	2
+	playfram       	26
+	wait           	2
+	imgol          	926 0 0	# DarkArchonBeing (protoss\darchnT.grp)
+	imgol          	927 0 0	# DarkArchonTeamColors (protoss\darchnT2.grp)
+	sigorder       	4
+	nobrkcodeend   	
+	wait           	2
+DarkArchonEnergyGndAttkInit:
+	playfram       	0
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	4
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	6
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	1
+	wait           	1
+	goto           	DarkArchonEnergyGndAttkInit
+
+DarkArchonEnergyDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	928 0 0	# DarkArchonDeath (protoss\PdaDeath.grp)
+	wait           	3
+	end            	
+
+DarkArchonEnergyCastSpell:
+	nobrkcodestart 	
+	castspell      	
+	sigorder       	2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	DarkArchonEnergyGndAttkInit
+
+DarkArchonEnergySpecialState1:
+	playsnd        	617	# Protoss\TEMPLAR\PTeSum00.WAV
+	playfram       	10
+	wait           	2
+	playfram       	11
+	wait           	2
+DarkArchonEnergyLocal00:
+	playfram       	12
+	wait           	2
+	playfram       	13
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	17
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	13
+	wait           	2
+	goto           	DarkArchonEnergyLocal00
+

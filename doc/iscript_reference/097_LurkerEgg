@@ -1,0 +1,107 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 914 LurkerEgg (zerg\Lurkegg.grp)
+.headerstart
+IsId           	353
+Type           	14
+Init           	LurkerEggInit
+Death          	LurkerEggDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	LurkerEggSpecialState1
+SpecialState2  	LurkerEggSpecialState2
+AlmostBuilt    	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+LurkerEggInit:
+	imgul          	22 0 0	# ZergEggShad (zerg\zegShad.grp)
+	playfram       	12
+	wait           	2
+	playfram       	13
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	17
+	wait           	2
+	playfram       	18
+	waitrand       	1 3
+LurkerEggLocal00:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	wait           	2
+	playfram       	10
+	wait           	2
+	playfram       	11
+	wait           	2
+	goto           	LurkerEggLocal00
+
+LurkerEggDeath:
+	playsnd        	830	# Zerg\Egg\ZEgDth00.WAV
+	lowsprul       	143 0 0	# ZergEggDeath (zerg\zegDeath.grp)
+	wait           	1
+	end            	
+
+LurkerEggSpecialState1:
+	sigorder       	4
+	goto           	LurkerEggLocal01
+
+LurkerEggLocal01:
+	wait           	125
+	goto           	LurkerEggLocal01
+
+LurkerEggSpecialState2:
+	playfram       	19
+	wait           	2
+	playfram       	18
+	wait           	2
+	playfram       	17
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	13
+	wait           	2
+	playfram       	12
+	wait           	2
+	sigorder       	4
+	goto           	LurkerEggLocal01
+

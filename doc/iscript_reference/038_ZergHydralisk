@@ -1,0 +1,227 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 029 Hydralisk (zerg\hydra.grp)
+.headerstart
+IsId           	18
+Type           	26
+Init           	HydraliskInit
+Death          	HydraliskDeath
+GndAttkInit    	HydraliskGndAttkInit
+AirAttkInit    	HydraliskGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	HydraliskGndAttkRpt
+AirAttkRpt     	HydraliskGndAttkRpt
+CastSpell      	[NONE]
+GndAttkToIdle  	HydraliskGndAttkToIdle
+AirAttkToIdle  	HydraliskGndAttkToIdle
+Unused2        	[NONE]
+Walking        	HydraliskWalking
+WalkingToIdle  	HydraliskWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	HydraliskSpecialState2
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	HydraliskBurrow
+UnBurrow       	HydraliskUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+HydraliskInit:
+	imgul          	30 0 0	# HydraliskShad (zerg\zhyShad.grp)
+HydraliskWalkingToIdle:
+	playfram       	0x55	# frame set 5
+HydraliskLocal03:
+	waitrand       	63 75
+	randcondjmp    	25 HydraliskLocal00
+	randcondjmp    	128 HydraliskLocal01
+	goto           	HydraliskLocal03
+
+HydraliskLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	25
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	HydraliskWalkingToIdle
+
+HydraliskLocal01:
+	randcondjmp    	128 HydraliskLocal02
+	playfram       	0x66	# frame set 6
+	wait           	1
+	turnccwise     	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	turnccwise     	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	turnccwise     	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	turnccwise     	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	turnccwise     	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	turnccwise     	1
+	goto           	HydraliskWalkingToIdle
+
+HydraliskLocal02:
+	playfram       	0x66	# frame set 6
+	wait           	1
+	turncwise      	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	turncwise      	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	turncwise      	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	turncwise      	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	turncwise      	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	turncwise      	1
+	goto           	HydraliskWalkingToIdle
+
+HydraliskDeath:
+	playsnd        	867	# Zerg\Hydra\ZHyDth00.WAV
+	setfldirect    	0
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0xcd	# frame set 12
+	wait           	2
+	playfram       	0xce	# frame set 12
+	wait           	2
+	playfram       	0xcf	# frame set 12
+	wait           	2
+	playfram       	0xd0	# frame set 12
+	wait           	2
+	playfram       	0xd1	# frame set 12
+	wait           	2
+	playfram       	0xd2	# frame set 12
+	wait           	2
+	playfram       	0xd3	# frame set 12
+	wait           	2
+	lowsprul       	147 0 0	# HydraliskDeath (zerg\zhyDeath.grp)
+	wait           	1
+	end            	
+
+HydraliskGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	nobrkcodestart 	
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+HydraliskGndAttkRpt:
+	wait           	1
+	playfram       	0x44	# frame set 4
+	playsnd        	64	# Bullet\SpoogHit.wav
+	sproluselo     	332 0	# NeedleSpines (thingy\spooge.grp)
+	attack         	
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+HydraliskGndAttkToIdle:
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	HydraliskWalkingToIdle
+
+HydraliskWalking:
+	move           	2
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	2
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	2
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	6
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	6
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	6
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	2
+	wait           	1
+	playfram       	0x55	# frame set 5
+	goto           	HydraliskWalking
+
+HydraliskSpecialState2:
+	playfram       	0x118	# frame set 16
+	goto           	HydraliskLocal04
+
+HydraliskLocal04:
+	wait           	125
+	goto           	HydraliskLocal04
+
+HydraliskBurrow:
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0xd4	# frame set 12
+	wait           	1
+	playfram       	0xe5	# frame set 13
+	wait           	1
+	playfram       	0xf6	# frame set 14
+	wait           	1
+	playfram       	0x107	# frame set 15
+	wait           	1
+	playfram       	0x118	# frame set 16
+	wait           	1
+	sigorder       	4
+	goto           	HydraliskLocal04
+
+HydraliskUnBurrow:
+	waitrand       	1 5
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0x107	# frame set 15
+	wait           	1
+	playfram       	0xf6	# frame set 14
+	wait           	1
+	playfram       	0xe5	# frame set 13
+	wait           	1
+	playfram       	0xd4	# frame set 12
+	wait           	1
+	sigorder       	4
+	goto           	HydraliskWalkingToIdle
+

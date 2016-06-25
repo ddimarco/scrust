@@ -1,0 +1,68 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 116 Interceptor (protoss\Intercep.grp)
+.headerstart
+IsId           	155
+Type           	12
+Init           	InterceptorInit
+Death          	InterceptorDeath
+GndAttkInit    	InterceptorGndAttkInit
+AirAttkInit    	InterceptorGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	InterceptorGndAttkInit
+AirAttkRpt     	InterceptorGndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	InterceptorGndAttkToIdle
+AirAttkToIdle  	InterceptorGndAttkToIdle
+Unused2        	[NONE]
+Walking        	InterceptorWalking
+WalkingToIdle  	InterceptorWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InterceptorInit:
+	imgul          	117 0 42	# InterceptorShad (protoss\Intercep.grp)
+	playfram       	0x00	# frame set 0
+	goto           	InterceptorWalkingToIdle
+
+InterceptorWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	InterceptorWalkingToIdle
+
+InterceptorDeath:
+	playsnd        	8	# Misc\ExploMed.wav
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+InterceptorGndAttkInit:
+	wait           	1
+	attackwith     	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	gotorepeatattk 	
+	goto           	InterceptorGndAttkToIdle
+
+InterceptorGndAttkToIdle:
+	wait           	125
+	goto           	InterceptorGndAttkToIdle
+
+InterceptorWalking:
+	playfram       	0x00	# frame set 0
+	setvertpos     	0
+	goto           	InterceptorGndAttkToIdle
+

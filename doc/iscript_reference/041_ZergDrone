@@ -1,0 +1,151 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 017 Drone (zerg\drone.grp)
+.headerstart
+IsId           	11
+Type           	26
+Init           	DroneInit
+Death          	DroneDeath
+GndAttkInit    	DroneGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	DroneGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	DroneGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	DroneWalking
+WalkingToIdle  	DroneGndAttkToIdle
+SpecialState1  	[NONE]
+SpecialState2  	DroneSpecialState2
+AlmostBuilt    	DroneAlmostBuilt
+Built          	[NONE]
+Landing        	DroneWalking
+LiftOff        	DroneLiftOff
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	DroneBurrow
+UnBurrow       	DroneUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DroneInit:
+	imgul          	18 0 7	# DroneShad (zerg\drone.grp)
+	playfram       	0x00	# frame set 0
+	goto           	DroneGndAttkToIdle
+
+DroneGndAttkToIdle:
+	wait           	125
+	goto           	DroneGndAttkToIdle
+
+DroneDeath:
+	playsnd        	833	# Zerg\DRONE\ZDrDth00.WAV
+	setfldirect    	0
+	playfram       	0xaa	# frame set 10
+	wait           	2
+	playfram       	0xbb	# frame set 11
+	wait           	2
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xee	# frame set 14
+	wait           	2
+	playfram       	0xff	# frame set 15
+	wait           	2
+	playfram       	0x110	# frame set 16
+	wait           	2
+	playfram       	0x121	# frame set 17
+	wait           	2
+	lowsprul       	141 0 0	# DroneDeath (zerg\zdrDeath.grp)
+	wait           	1
+	end            	
+
+DroneGndAttkInit:
+	setvertpos     	0
+	playsnd        	64	# Bullet\SpoogHit.wav
+	sproluselo     	332 0	# NeedleSpines (thingy\spooge.grp)
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	DroneGndAttkToIdle
+
+DroneWalking:
+	setvertpos     	0
+DroneLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	goto           	DroneLocal00
+
+DroneSpecialState2:
+	playfram       	0x176	# frame set 22
+	goto           	DroneGndAttkToIdle
+
+DroneAlmostBuilt:
+	setvertpos     	0
+	waitrand       	5 8
+	playsnd        	847	# Zerg\DRONE\ZDrMin00.wav
+	playfram       	0x55	# frame set 5
+	wait           	2
+	playfram       	0x66	# frame set 6
+	wait           	2
+	playfram       	0x77	# frame set 7
+	wait           	2
+	playfram       	0x88	# frame set 8
+	wait           	2
+	playfram       	0x55	# frame set 5
+	goto           	DroneAlmostBuilt
+
+DroneLiftOff:
+	sigorder       	16
+	goto           	DroneGndAttkToIdle
+
+DroneBurrow:
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0x132	# frame set 18
+	wait           	1
+	playfram       	0x143	# frame set 19
+	wait           	1
+	playfram       	0x154	# frame set 20
+	wait           	1
+	playfram       	0x165	# frame set 21
+	wait           	1
+	playfram       	0x176	# frame set 22
+	wait           	1
+	sigorder       	4
+	goto           	DroneGndAttkToIdle
+
+DroneUnBurrow:
+	waitrand       	1 5
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0x165	# frame set 21
+	wait           	1
+	playfram       	0x154	# frame set 20
+	wait           	1
+	playfram       	0x143	# frame set 19
+	wait           	1
+	playfram       	0x132	# frame set 18
+	wait           	1
+	playfram       	0x00	# frame set 0
+	sigorder       	4
+	goto           	DroneGndAttkToIdle
+

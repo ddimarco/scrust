@@ -1,0 +1,69 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 082 DefilerMound (zerg\Mutapit.grp)
+.headerstart
+IsId           	49
+Type           	20
+Init           	DefilerMoundInit
+Death          	DefilerMoundDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	DefilerMoundAlmostBuilt
+Built          	DefilerMoundBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	DefilerMoundIsWorking
+WorkingToIdle  	DefilerMoundIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DefilerMoundInit:
+	imgul          	83 0 0	# DefilerMoundShad (zerg\zmhShad.grp)
+	playfram       	0
+	goto           	DefilerMoundLocal00
+
+DefilerMoundLocal00:
+	wait           	125
+	goto           	DefilerMoundLocal00
+
+DefilerMoundDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+DefilerMoundAlmostBuilt:
+	imgol          	108 0 0	# ZergBuildingSpawnMedium (zerg\zSpawn02.grp)
+DefilerMoundBuilt:
+	playfram       	0
+	waitrand       	1 5
+DefilerMoundIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	2
+	goto           	DefilerMoundIsWorking
+

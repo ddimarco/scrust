@@ -1,0 +1,56 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 189 Pylon (protoss\pylon.grp)
+.headerstart
+IsId           	181
+Type           	21
+Init           	PylonInit
+Death          	PylonDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	PylonBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	PylonIsWorking
+WorkingToIdle  	PylonIsWorking
+WarpIn         	PylonWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+PylonInit:
+	imgul          	191 0 0	# PylonShad (protoss\ppyShad.grp)
+PylonBuilt:
+	playfram       	0
+	goto           	PylonIsWorking
+
+PylonIsWorking:
+	wait           	125
+	goto           	PylonIsWorking
+
+PylonDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	end            	
+
+PylonWarpIn:
+	imgol          	190 0 0	# PylonWarpFlash (protoss\pylon.grp)
+	goto           	PylonIsWorking
+

@@ -1,0 +1,181 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 239 Marine (terran\marine.grp)
+.headerstart
+IsId           	78
+Type           	12
+Init           	MarineInit
+Death          	MarineDeath
+GndAttkInit    	MarineGndAttkInit
+AirAttkInit    	MarineGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	MarineGndAttkRpt
+AirAttkRpt     	MarineGndAttkRpt
+CastSpell      	[NONE]
+GndAttkToIdle  	MarineGndAttkToIdle
+AirAttkToIdle  	MarineGndAttkToIdle
+Unused2        	[NONE]
+Walking        	MarineWalking
+WalkingToIdle  	MarineWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MarineInit:
+	imgul          	240 0 0	# MarineShad (terran\tmaShad.grp)
+MarineWalkingToIdle:
+	playfram       	0x44	# frame set 4
+MarineLocal04:
+	waitrand       	63 75
+	randcondjmp    	25 MarineLocal00
+	randcondjmp    	128 MarineLocal03
+	goto           	MarineLocal04
+
+MarineLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	randcondjmp    	192 MarineLocal01
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	wait           	6
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	wait           	6
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	goto           	MarineLocal02
+
+MarineLocal03:
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	goto           	MarineWalkingToIdle
+
+MarineLocal01:
+	wait           	13
+MarineLocal02:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	MarineWalkingToIdle
+
+MarineDeath:
+	playsndbtwn    	276 277	# Terran\MARINE\TMaDth00.WAV, Terran\MARINE\TMaDth01.WAV
+	setfldirect    	0
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xde	# frame set 13
+	wait           	2
+	playfram       	0xdf	# frame set 13
+	wait           	2
+	playfram       	0xe0	# frame set 13
+	wait           	2
+	playfram       	0xe1	# frame set 13
+	wait           	2
+	playfram       	0xe2	# frame set 13
+	wait           	2
+	playfram       	0xe3	# frame set 13
+	wait           	2
+	playfram       	0xe4	# frame set 13
+	wait           	2
+	lowsprul       	236 0 0	# MarineDeath (terran\tmaDeath.grp)
+	wait           	1
+	end            	
+
+MarineGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+MarineGndAttkRpt:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	69	# Bullet\TMaFir00.wav
+	attackwith     	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+MarineGndAttkToIdle:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	MarineWalkingToIdle
+
+MarineWalking:
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	goto           	MarineWalking
+

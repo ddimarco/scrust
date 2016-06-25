@@ -1,0 +1,86 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 253 SiegeTankSiegeBase (terran\stank.grp)
+.headerstart
+IsId           	92
+Type           	23
+Init           	SiegeTank_Siege_BaseInit
+Death          	SiegeTank_Siege_BaseDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	SiegeTank_Siege_BaseSpecialState2
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	SiegeTank_Siege_BaseInitTurret
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SiegeTank_Siege_BaseInitTurret:
+	imgoluselo     	254 2 0	# SiegeTankSiegeTurret (terran\stankt.grp)
+SiegeTank_Siege_BaseInit:
+	imgul          	255 0 0	# SiegeTankSiegeShad (terran\tstShad.grp)
+	wait           	1
+	setflspeed     	0
+	playsnd        	319	# Terran\TANK\TTaTra01.WAV
+	playfram       	0
+	wait           	5
+	playfram       	1
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	4
+	wait           	5
+	playfram       	5
+	wait           	38
+	sigorder       	1
+	goto           	SiegeTank_Siege_BaseLocal00
+
+SiegeTank_Siege_BaseLocal00:
+	wait           	125
+	goto           	SiegeTank_Siege_BaseLocal00
+
+SiegeTank_Siege_BaseDeath:
+	playsnd        	317	# Terran\TANK\TTaDth00.WAV
+	imgol          	333 0 0	# TerranBuildingExplosionmedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+SiegeTank_Siege_BaseSpecialState2:
+	wait           	38
+	playsnd        	319	# Terran\TANK\TTaTra01.WAV
+	playfram       	4
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	1
+	wait           	5
+	playfram       	0
+	wait           	5
+	sigorder       	1
+	goto           	SiegeTank_Siege_BaseLocal00
+

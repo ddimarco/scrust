@@ -1,0 +1,57 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 178 KhaydarinCrystal (neutral\Khyad01.grp)
+.headerstart
+IsId           	176
+Type           	20
+Init           	KhaydarinCrystalFormationInit
+Death          	KhaydarinCrystalFormationDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	KhaydarinCrystalFormationInit
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	KhaydarinCrystalFormationIsWorking
+WorkingToIdle  	KhaydarinCrystalFormationIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+KhaydarinCrystalFormationInit:
+	playfram       	0
+	goto           	KhaydarinCrystalFormationIsWorking
+
+KhaydarinCrystalFormationIsWorking:
+	wait           	125
+	goto           	KhaydarinCrystalFormationIsWorking
+
+KhaydarinCrystalFormationDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	KhaydarinCrystalFormationLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+KhaydarinCrystalFormationLocal00:
+	wait           	1
+	end            	
+

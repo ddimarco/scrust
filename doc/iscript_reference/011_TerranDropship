@@ -1,0 +1,59 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 223 Dropship (terran\dropship.grp)
+.headerstart
+IsId           	68
+Type           	12
+Init           	DropshipInit
+Death          	DropshipDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	DropshipWalking
+WalkingToIdle  	DropshipWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DropshipInit:
+	imgul          	224 0 42	# DropshipShad (terran\dropship.grp)
+	playfram       	0x00	# frame set 0
+	goto           	DropshipWalkingToIdle
+
+DropshipWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	DropshipWalkingToIdle
+
+DropshipDeath:
+	playsnd        	210	# Terran\DROPSHIP\TDrDth00.wav
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+DropshipWalking:
+	imgol          	225 0 0	# DropshipGlow (thingy\tdrGlow.grp)
+	setvertpos     	0
+	goto           	DropshipLocal00
+
+DropshipLocal00:
+	wait           	125
+	goto           	DropshipLocal00
+

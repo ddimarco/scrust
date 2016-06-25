@@ -1,0 +1,109 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 954 Kakaru (neutral\Scritter.grp)
+.headerstart
+IsId           	376
+Type           	12
+Init           	KakaruInit
+Death          	KakaruDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	KakaruWalking
+WalkingToIdle  	KakaruWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+KakaruInit:
+	imgul          	955 0 42	# KakaruShad (neutral\Scritter.grp)
+KakaruWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	playfram       	0x55	# frame set 5
+	wait           	2
+	playfram       	0x66	# frame set 6
+	wait           	2
+	playfram       	0x77	# frame set 7
+	wait           	2
+	playfram       	0x88	# frame set 8
+	wait           	2
+	playfram       	0x99	# frame set 9
+	wait           	2
+	playfram       	0xaa	# frame set 10
+	wait           	2
+	playfram       	0xbb	# frame set 11
+	wait           	2
+	goto           	KakaruWalkingToIdle
+
+KakaruDeath:
+	playsnd        	979	# Misc\CRITTERS\TerDeath01.wav
+	setfldirect    	0
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0xcd	# frame set 12
+	wait           	2
+	playfram       	0xce	# frame set 12
+	wait           	2
+	playfram       	0xcf	# frame set 12
+	wait           	2
+	playfram       	0xd0	# frame set 12
+	wait           	2
+	playfram       	0xd1	# frame set 12
+	wait           	2
+	playfram       	0xd2	# frame set 12
+	wait           	2
+	playfram       	0xd3	# frame set 12
+	wait           	2
+	playfram       	0xd4	# frame set 12
+	wait           	2
+	playfram       	0xd5	# frame set 12
+	wait           	2
+	end            	
+
+KakaruWalking:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	goto           	KakaruWalking
+

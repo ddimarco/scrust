@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 038 Mutalisk (zerg\mutalid.grp)
+.headerstart
+IsId           	23
+Type           	12
+Init           	MutaliskInit
+Death          	MutaliskDeath
+GndAttkInit    	MutaliskGndAttkInit
+AirAttkInit    	MutaliskGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	MutaliskGndAttkInit
+AirAttkRpt     	MutaliskGndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	MutaliskGndAttkToIdle
+AirAttkToIdle  	MutaliskGndAttkToIdle
+Unused2        	[NONE]
+Walking        	MutaliskWalking
+WalkingToIdle  	MutaliskGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MutaliskInit:
+	imgul          	39 0 42	# MutaliskShad (zerg\mutalid.grp)
+	playfram       	0x00	# frame set 0
+	waitrand       	1 4
+MutaliskGndAttkToIdle:
+	playfram       	0x00	# frame set 0
+	wait           	2
+	playfram       	0x11	# frame set 1
+	wait           	2
+	playfram       	0x22	# frame set 2
+	wait           	2
+	playfram       	0x33	# frame set 3
+	wait           	2
+	playfram       	0x44	# frame set 4
+	wait           	2
+	goto           	MutaliskGndAttkToIdle
+
+MutaliskDeath:
+	playsnd        	942	# Zerg\Mutalid\ZMuDth00.WAV
+	imgol          	41 0 0	# MutaliskDeath (zerg\zmuDeath.grp)
+	wait           	1
+	end            	
+
+MutaliskGndAttkInit:
+	playsnd        	113	# Bullet\zmuFir00.wav
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	MutaliskGndAttkToIdle
+
+MutaliskWalking:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	goto           	MutaliskWalking
+

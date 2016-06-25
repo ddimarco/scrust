@@ -1,0 +1,65 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 934 WarpGate (protoss\XwarpGat.grp)
+.headerstart
+IsId           	406
+Type           	20
+Init           	WarpGateInit
+Death          	WarpGateDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	WarpGateAlmostBuilt
+Built          	WarpGateBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	WarpGateIsWorking
+WorkingToIdle  	WarpGateIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+WarpGateInit:
+	imgul          	935 0 0	# WarpGateShad (protoss\pwgShad.grp)
+	playfram       	0
+	goto           	WarpGateLocal00
+
+WarpGateLocal00:
+	wait           	125
+	goto           	WarpGateLocal00
+
+WarpGateDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	224 0 0	# ProtossBuildingRubbleLarge (thingy\PRubbleL.grp)
+	wait           	1
+	end            	
+
+WarpGateAlmostBuilt:
+	playfram       	0
+	goto           	WarpGateBuilt
+
+WarpGateBuilt:
+	imgol          	936 0 0	# WarpGateOverlay (protoss\XwarpFir.grp)
+	goto           	WarpGateLocal00
+
+WarpGateIsWorking:
+	playfram       	0
+	goto           	WarpGateIsWorking
+

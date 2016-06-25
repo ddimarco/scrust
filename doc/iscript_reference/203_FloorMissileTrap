@@ -1,0 +1,142 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 736 InstallationDoodad2 (thingy\tileset\install\CLPlate1.grp)
+.headerstart
+IsId           	345
+Type           	27
+Init           	FloorMissileTrapInit
+Death          	FloorMissileTrapDeath
+GndAttkInit    	FloorMissileTrapGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	FloorMissileTrapGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	FloorMissileTrapGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	FloorMissileTrapSpecialState1
+SpecialState2  	FloorMissileTrapSpecialState2
+AlmostBuilt    	FloorMissileTrapGndAttkToIdle
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	FloorMissileTrapInitTurret
+Disable        	FloorMissileTrapSpecialState2
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	FloorMissileTrapGndAttkToIdle
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FloorMissileTrapInit:
+	playfram       	1
+	goto           	FloorMissileTrapGndAttkToIdle
+
+FloorMissileTrapGndAttkToIdle:
+	wait           	125
+	goto           	FloorMissileTrapGndAttkToIdle
+
+FloorMissileTrapDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	1
+	end            	
+
+FloorMissileTrapGndAttkInit:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	ignorerest     	
+	goto           	FloorMissileTrapGndAttkToIdle
+
+FloorMissileTrapSpecialState1:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	wait           	2
+	playfram       	10
+	wait           	2
+	playfram       	11
+	imgol          	737 0 0	# InstallationDoodad3 (thingy\tileset\install\CLPlat1T.grp)
+	sigorder       	1
+	goto           	FloorMissileTrapGndAttkToIdle
+
+FloorMissileTrapSpecialState2:
+	setspawnframe  	20
+	wait           	1
+FloorMissileTrapLocal01:
+	curdirectcondjmp	160 10 FloorMissileTrapLocal00
+	wait           	2
+	goto           	FloorMissileTrapLocal01
+
+FloorMissileTrapLocal00:
+	wait           	1
+	playfram       	10
+	wait           	2
+	playfram       	9
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	sigorder       	1
+	goto           	FloorMissileTrapGndAttkToIdle
+
+FloorMissileTrapInitTurret:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	wait           	2
+	playfram       	10
+	goto           	FloorMissileTrapGndAttkToIdle
+

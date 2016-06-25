@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 161 Observatory (protoss\beacon.grp)
+.headerstart
+IsId           	168
+Type           	27
+Init           	ObservatoryInit
+Death          	ObservatoryDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	ObservatoryBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	ObservatoryBuilt
+WorkingToIdle  	ObservatoryBuilt
+WarpIn         	ObservatoryWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	ObservatoryBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	ObservatoryBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ObservatoryInit:
+	imgul          	163 0 0	# ObservatoryShad (protoss\pbeShad.grp)
+	playfram       	0
+	goto           	ObservatoryBuilt
+
+ObservatoryBuilt:
+	wait           	125
+	goto           	ObservatoryBuilt
+
+ObservatoryDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+ObservatoryWarpIn:
+	imgol          	162 0 0	# ObservatoryWarpFlash (protoss\beacon.grp)
+	goto           	ObservatoryBuilt
+

@@ -1,0 +1,72 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 064 SpawningPool (zerg\chrysal.grp)
+.headerstart
+IsId           	40
+Type           	20
+Init           	SpawningPoolInit
+Death          	SpawningPoolDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	SpawningPoolAlmostBuilt
+Built          	SpawningPoolBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	SpawningPoolIsWorking
+WorkingToIdle  	SpawningPoolIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SpawningPoolInit:
+	playfram       	0
+	imgul          	65 0 0	# SpawningPoolShad (zerg\zchShad.grp)
+	goto           	SpawningPoolLocal00
+
+SpawningPoolLocal00:
+	wait           	125
+	goto           	SpawningPoolLocal00
+
+SpawningPoolDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+SpawningPoolAlmostBuilt:
+	imgol          	108 0 0	# ZergBuildingSpawnMedium (zerg\zSpawn02.grp)
+	playfram       	0
+	goto           	SpawningPoolBuilt
+
+SpawningPoolBuilt:
+	playfram       	0
+	waitrand       	1 3
+SpawningPoolIsWorking:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	goto           	SpawningPoolIsWorking
+

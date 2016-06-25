@@ -1,0 +1,24 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 588 StartLocation (thingy\StartLoc.grp)
+.headerstart
+IsId           	335
+Type           	0
+Init           	StartLocationInit
+Death          	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+StartLocationInit:
+	playfram       	0
+	goto           	StartLocationLocal00
+
+StartLocationLocal00:
+	wait           	125
+	goto           	StartLocationLocal00
+

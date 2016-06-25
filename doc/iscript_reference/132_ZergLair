@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 074 Lair (zerg\Lair.grp)
+.headerstart
+IsId           	45
+Type           	20
+Init           	LairInit
+Death          	LairDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	LairAlmostBuilt
+Built          	LairBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	LairIsWorking
+WorkingToIdle  	LairIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+LairInit:
+	imgul          	75 0 0	# LairShad (zerg\zlrShad.grp)
+	playfram       	0
+	goto           	LairLocal00
+
+LairLocal00:
+	wait           	125
+	goto           	LairLocal00
+
+LairDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	187 0 0	# ZergBuildingRubbleSmall (thingy\ZRubbleL.grp)
+	wait           	1
+	end            	
+
+LairAlmostBuilt:
+	imgol          	109 0 0	# ZergBuildingSpawnLarge (zerg\zSpawn03.grp)
+LairBuilt:
+	playfram       	0
+	waitrand       	1 5
+LairIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	4
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	LairIsWorking
+

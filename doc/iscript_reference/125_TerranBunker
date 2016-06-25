@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 304 Bunker (terran\PillBox.grp)
+.headerstart
+IsId           	123
+Type           	24
+Init           	BunkerInit
+Death          	BunkerDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	BunkerAlmostBuilt
+Built          	BunkerBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	BunkerDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+BunkerInit:
+	imgul          	305 0 0	# BunkerShad (terran\tpbShad.grp)
+BunkerBuilt:
+	playfram       	0
+	goto           	BunkerDisable
+
+BunkerDisable:
+	wait           	125
+	goto           	BunkerDisable
+
+BunkerDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	BunkerLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+BunkerLocal00:
+	wait           	1
+	end            	
+
+BunkerAlmostBuilt:
+	playfram       	1
+	goto           	BunkerDisable
+

@@ -1,0 +1,149 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 944 Medic (terran\medic.grp)
+.headerstart
+IsId           	360
+Type           	13
+Init           	MedicInit
+Death          	MedicDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	MedicCastSpell
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	MedicWalking
+WalkingToIdle  	MedicWalkingToIdle
+SpecialState1  	MedicSpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MedicInit:
+	imgul          	945 0 0	# MedicShad (terran\tmeShad.grp)
+MedicLocal01:
+	playfram       	0x00	# frame set 0
+MedicLocal02:
+	waitrand       	63 75
+	randcondjmp    	128 MedicLocal00
+	goto           	MedicLocal02
+
+MedicLocal00:
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	goto           	MedicLocal01
+
+MedicDeath:
+	playsnd        	1000	# Terran\Medic\TMdDth00.wav
+	setfldirect    	0
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xde	# frame set 13
+	wait           	2
+	playfram       	0xdf	# frame set 13
+	wait           	2
+	playfram       	0xe0	# frame set 13
+	wait           	2
+	playfram       	0xe1	# frame set 13
+	wait           	2
+	playfram       	0xe2	# frame set 13
+	wait           	2
+	playfram       	0xe3	# frame set 13
+	wait           	2
+	playfram       	0xe4	# frame set 13
+	wait           	4
+	playfram       	0xe5	# frame set 13
+	wait           	4
+	lowsprul       	490 0 0	# MedicDeath (terran\tmeDeath.grp)
+	wait           	1
+	end            	
+
+MedicCastSpell:
+	orderdone      	1
+	nobrkcodestart 	
+	playfram       	0x11	# frame set 1
+	wait           	3
+	playfram       	0x22	# frame set 2
+	castspell      	
+	sigorder       	2
+	wait           	3
+	playfram       	0x11	# frame set 1
+	wait           	3
+	nobrkcodeend   	
+	gotorepeatattk 	
+	playfram       	0x00	# frame set 0
+	goto           	MedicLocal03
+
+MedicLocal03:
+	wait           	125
+	goto           	MedicLocal03
+
+MedicWalking:
+	orderdone      	1
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	goto           	MedicWalking
+
+MedicWalkingToIdle:
+	orderdone      	1
+	goto           	MedicLocal01
+
+MedicSpecialState1:
+	playfram       	0x33	# frame set 3
+	wait           	1
+MedicLocal04:
+	sigorder       	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playsnd        	1018	# Terran\Medic\TMedHeal.wav
+	goto           	MedicLocal04
+

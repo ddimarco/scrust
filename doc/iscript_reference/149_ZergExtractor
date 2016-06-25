@@ -1,0 +1,84 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 093 Extractor (zerg\Extract.grp)
+.headerstart
+IsId           	56
+Type           	20
+Init           	ExtractorInit
+Death          	ExtractorDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	ExtractorAlmostBuilt
+Built          	ExtractorBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	ExtractorIsWorking
+WorkingToIdle  	ExtractorIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ExtractorInit:
+	imgul          	94 0 0	# ExtractorShad (zerg\zreShad.grp)
+	playfram       	0
+	goto           	ExtractorLocal00
+
+ExtractorLocal00:
+	wait           	125
+	goto           	ExtractorLocal00
+
+ExtractorDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	sprol          	185 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	end            	
+
+ExtractorAlmostBuilt:
+	imgol          	109 0 0	# ZergBuildingSpawnLarge (zerg\zSpawn03.grp)
+ExtractorBuilt:
+	playfram       	0
+	waitrand       	1 5
+ExtractorIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	creategasoverlays	0
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	2
+	goto           	ExtractorIsWorking
+

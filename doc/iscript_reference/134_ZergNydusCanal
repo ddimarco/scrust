@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 086 NydusCanal (zerg\NydusPit.grp)
+.headerstart
+IsId           	51
+Type           	20
+Init           	NydusCanalInit
+Death          	NydusCanalDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	NydusCanalAlmostBuilt
+Built          	NydusCanalBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	NydusCanalIsWorking
+WorkingToIdle  	NydusCanalIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+NydusCanalInit:
+	playfram       	0
+	imgul          	87 0 0	# NydusCanalShad (zerg\znyShad.grp)
+	goto           	NydusCanalLocal00
+
+NydusCanalLocal00:
+	wait           	125
+	goto           	NydusCanalLocal00
+
+NydusCanalDeath:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	lowsprul       	186 0 0	# ZergBuildingRubbleLarge (thingy\ZRubbleS.grp)
+	wait           	1
+	end            	
+
+NydusCanalAlmostBuilt:
+	imgol          	108 0 0	# ZergBuildingSpawnMedium (zerg\zSpawn02.grp)
+NydusCanalBuilt:
+	playfram       	0
+	waitrand       	1 5
+NydusCanalIsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	4
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	NydusCanalIsWorking
+

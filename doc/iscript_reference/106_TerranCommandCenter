@@ -1,0 +1,102 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 275 CommandCenter (terran\control.grp)
+.headerstart
+IsId           	102
+Type           	20
+Init           	CommandCenterInit
+Death          	CommandCenterDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	CommandCenterWalking
+WalkingToIdle  	CommandCenterWalking
+SpecialState1  	CommandCenterSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	CommandCenterAlmostBuilt
+Built          	CommandCenterBuilt
+Landing        	CommandCenterLanding
+LiftOff        	CommandCenterLiftOff
+IsWorking      	CommandCenterIsWorking
+WorkingToIdle  	CommandCenterBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CommandCenterInit:
+	imgul          	277 0 0	# CommandCenterShad (terran\tccShad.grp)
+CommandCenterBuilt:
+	playfram       	0
+	goto           	CommandCenterWalking
+
+CommandCenterWalking:
+	wait           	125
+	goto           	CommandCenterWalking
+
+CommandCenterDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	CommandCenterLocal00
+	lowsprul       	274 0 0	# TerranBuildingRubblelarge (thingy\RubbleL.grp)
+	wait           	1
+	end            	
+
+CommandCenterLocal00:
+	wait           	1
+	end            	
+
+CommandCenterSpecialState1:
+	playfram       	4
+	goto           	CommandCenterWalking
+
+CommandCenterAlmostBuilt:
+	playfram       	1
+	goto           	CommandCenterWalking
+
+CommandCenterLanding:
+	nobrkcodestart 	
+	wait           	18
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	4
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	5
+	wait           	5
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	CommandCenterWalking
+
+CommandCenterLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	5
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	4
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	CommandCenterWalking
+
+CommandCenterIsWorking:
+	imgol          	276 0 0	# CommandCenterOverlay (terran\controlT.grp)
+	goto           	CommandCenterWalking
+

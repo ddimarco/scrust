@@ -1,0 +1,82 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 218 Battlecruiser (terran\BattleCr.grp)
+.headerstart
+IsId           	66
+Type           	12
+Init           	BattlecruiserInit
+Death          	BattlecruiserDeath
+GndAttkInit    	BattlecruiserGndAttkInit
+AirAttkInit    	BattlecruiserAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	BattlecruiserGndAttkInit
+AirAttkRpt     	BattlecruiserAirAttkInit
+CastSpell      	BattlecruiserCastSpell
+GndAttkToIdle  	BattlecruiserGndAttkToIdle
+AirAttkToIdle  	BattlecruiserGndAttkToIdle
+Unused2        	[NONE]
+Walking        	BattlecruiserWalking
+WalkingToIdle  	BattlecruiserWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+BattlecruiserInit:
+	imgul          	219 0 42	# BattlecruiserShad (terran\BattleCr.grp)
+	playfram       	0x00	# frame set 0
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserGndAttkToIdle:
+	wait           	125
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserDeath:
+	playsnd        	177	# Terran\BATTLE\tbaDth00.wav
+	imgol          	333 0 0	# TerranBuildingExplosionmedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+BattlecruiserGndAttkInit:
+	imgol          	446 0 0	# BCLaserFireOverlay (thingy\elbBat.grp)
+	goto           	BattlecruiserLocal00
+
+BattlecruiserLocal00:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserAirAttkInit:
+	imgol          	446 0 0	# BCLaserFireOverlay (thingy\elbBat.grp)
+	goto           	BattlecruiserLocal01
+
+BattlecruiserLocal01:
+	wait           	1
+	attackwith     	2
+	gotorepeatattk 	
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserCastSpell:
+	imgolorig      	543	# Unknown543 (thingy\eycBlast.grp)
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserWalking:
+	imgol          	220 0 0	# BattlecruiserGlow (thingy\tbaGlow.grp)
+	goto           	BattlecruiserGndAttkToIdle
+
+BattlecruiserWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	BattlecruiserWalkingToIdle
+

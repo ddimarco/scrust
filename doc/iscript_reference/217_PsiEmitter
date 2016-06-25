@@ -1,0 +1,48 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 394 PsiEmmiter (neutral\PsiEmit.grp)
+.headerstart
+IsId           	217
+Type           	1
+Init           	PsiEmitterInit
+Death          	PsiEmitterDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+PsiEmitterInit:
+	pwrupcondjmp   	PsiEmitterLocal00
+	imgul          	417 0 0	# PsiEmitterShadGround (neutral\npsShad.grp)
+	goto           	PsiEmitterLocal01
+
+PsiEmitterLocal00:
+	wait           	1
+	switchul       	418
+	goto           	PsiEmitterLocal01
+
+PsiEmitterLocal01:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	goto           	PsiEmitterLocal01
+
+PsiEmitterDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

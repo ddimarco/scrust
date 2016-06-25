@@ -1,0 +1,99 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 063 InfestedCommandCenter (terran\control.grp)
+.headerstart
+IsId           	39
+Type           	20
+Init           	InfestedCommandCenterInit
+Death          	InfestedCommandCenterDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	InfestedCommandCenterWalking
+WalkingToIdle  	InfestedCommandCenterWalking
+SpecialState1  	InfestedCommandCenterSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	InfestedCommandCenterBuilt
+Landing        	InfestedCommandCenterLanding
+LiftOff        	InfestedCommandCenterLiftOff
+IsWorking      	InfestedCommandCenterIsWorking
+WorkingToIdle  	InfestedCommandCenterBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InfestedCommandCenterInit:
+	imgul          	277 0 0	# CommandCenterShad (terran\tccShad.grp)
+	imgol          	101 0 0	# InfestedCommandCenterOverlay (zerg\Infest03.grp)
+InfestedCommandCenterBuilt:
+	playfram       	0
+	goto           	InfestedCommandCenterWalking
+
+InfestedCommandCenterWalking:
+	wait           	125
+	goto           	InfestedCommandCenterWalking
+
+InfestedCommandCenterDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	InfestedCommandCenterLocal00
+	lowsprul       	274 0 0	# TerranBuildingRubblelarge (thingy\RubbleL.grp)
+	wait           	1
+	end            	
+
+InfestedCommandCenterLocal00:
+	wait           	1
+	end            	
+
+InfestedCommandCenterSpecialState1:
+	playfram       	4
+	goto           	InfestedCommandCenterWalking
+
+InfestedCommandCenterLanding:
+	nobrkcodestart 	
+	wait           	18
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	4
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	5
+	wait           	5
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	InfestedCommandCenterWalking
+
+InfestedCommandCenterLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	5
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	4
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	InfestedCommandCenterWalking
+
+InfestedCommandCenterIsWorking:
+	imgol          	276 0 0	# CommandCenterOverlay (terran\controlT.grp)
+	goto           	InfestedCommandCenterWalking
+

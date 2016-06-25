@@ -1,0 +1,52 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 951 DisruptionWeb (thingy\Disrupt.grp)
+.headerstart
+IsId           	374
+Type           	1
+Init           	DisruptionWebInit
+Death          	DisruptionWebDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DisruptionWebInit:
+	playfram       	0
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	4
+DisruptionWebLocal00:
+	playfram       	5
+	wait           	3
+	playfram       	6
+	wait           	3
+	playfram       	7
+	wait           	3
+	playfram       	8
+	wait           	3
+	playfram       	9
+	wait           	3
+	goto           	DisruptionWebLocal00
+
+DisruptionWebDeath:
+	playfram       	4
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	0
+	wait           	1
+	end            	
+

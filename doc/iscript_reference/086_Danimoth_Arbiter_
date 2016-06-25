@@ -1,0 +1,102 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 130 Arbiter (protoss\arbiter.grp)
+.headerstart
+IsId           	146
+Type           	21
+Init           	ArbiterInit
+Death          	ArbiterDeath
+GndAttkInit    	ArbiterGndAttkInit
+AirAttkInit    	ArbiterGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	ArbiterGndAttkRpt
+AirAttkRpt     	ArbiterGndAttkRpt
+CastSpell      	ArbiterCastSpell
+GndAttkToIdle  	ArbiterGndAttkToIdle
+AirAttkToIdle  	ArbiterGndAttkToIdle
+Unused2        	[NONE]
+Walking        	ArbiterWalking
+WalkingToIdle  	ArbiterGndAttkToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ArbiterWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ArbiterInit:
+	imgul          	131 0 42	# ArbiterShad (protoss\arbiter.grp)
+	playfram       	0x00	# frame set 0
+	goto           	ArbiterGndAttkToIdle
+
+ArbiterGndAttkToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	ArbiterGndAttkToIdle
+
+ArbiterDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+ArbiterGndAttkInit:
+	setvertpos     	0
+ArbiterGndAttkRpt:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	nobrkcodestart 	
+	attackwith     	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	ArbiterLocal00
+
+ArbiterLocal00:
+	wait           	125
+	goto           	ArbiterLocal00
+
+ArbiterCastSpell:
+	nobrkcodestart 	
+	wait           	1
+	playsnd        	548	# Protoss\ARBITER\PAbCag00.WAV
+	castspell      	
+	nobrkcodeend   	
+	gotorepeatattk 	
+	sigorder       	2
+	goto           	ArbiterLocal00
+
+ArbiterWalking:
+	imgol          	132 0 0	# ArbiterGlow (thingy\pabGlow.grp)
+	playfram       	0x00	# frame set 0
+	setvertpos     	0
+	goto           	ArbiterLocal00
+
+ArbiterWarpIn:
+	imgol          	133 0 0	# Unknown133 (protoss\arbiter.grp)
+	goto           	ArbiterLocal00
+

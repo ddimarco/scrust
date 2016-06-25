@@ -1,0 +1,110 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 322 EngineeringBay (terran\weaponpl.grp)
+.headerstart
+IsId           	136
+Type           	24
+Init           	EngineeringBayInit
+Death          	EngineeringBayDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	EngineeringBayWalking
+WalkingToIdle  	EngineeringBayWalking
+SpecialState1  	EngineeringBaySpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	EngineeringBayAlmostBuilt
+Built          	EngineeringBayBuilt
+Landing        	EngineeringBayLanding
+LiftOff        	EngineeringBayLiftOff
+IsWorking      	EngineeringBayWalking
+WorkingToIdle  	EngineeringBayWorkingToIdle
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	EngineeringBayDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+EngineeringBayInit:
+	playfram       	0
+	imgul          	324 0 0	# EngineeringBayShad (terran\twpShad.grp)
+	goto           	EngineeringBayWalking
+
+EngineeringBayWalking:
+	wait           	125
+	goto           	EngineeringBayWalking
+
+EngineeringBayDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	EngineeringBayLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+EngineeringBayLocal00:
+	wait           	1
+	end            	
+
+EngineeringBaySpecialState1:
+	playfram       	4
+	goto           	EngineeringBayWalking
+
+EngineeringBayAlmostBuilt:
+	playfram       	1
+	goto           	EngineeringBayWalking
+
+EngineeringBayBuilt:
+	imgol          	323 0 0	# EngineeringBayOverlay (terran\weaponpT.grp)
+EngineeringBayWorkingToIdle:
+	playfram       	0
+	goto           	EngineeringBayWalking
+
+EngineeringBayLanding:
+	nobrkcodestart 	
+	wait           	25
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	4
+	wait           	4
+	playfram       	2
+	wait           	4
+	playfram       	3
+	wait           	4
+	playfram       	5
+	wait           	4
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	EngineeringBayWalking
+
+EngineeringBayLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	5
+	wait           	4
+	playfram       	3
+	wait           	4
+	playfram       	2
+	wait           	4
+	playfram       	4
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	EngineeringBayWalking
+
+EngineeringBayDisable:
+	goto           	EngineeringBayWalking
+

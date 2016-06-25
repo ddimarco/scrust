@@ -1,0 +1,64 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 192 RoboticsFacility (protoss\robotic.grp)
+.headerstart
+IsId           	182
+Type           	27
+Init           	RoboticsFacilityInit
+Death          	RoboticsFacilityDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	RoboticsFacilityBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	RoboticsFacilityIsWorking
+WorkingToIdle  	RoboticsFacilityIsWorking
+WarpIn         	RoboticsFacilityWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	RoboticsFacilityIsWorking
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	RoboticsFacilityIsWorking
+.headerend
+# ----------------------------------------------------------------------------- #
+
+RoboticsFacilityInit:
+	imgul          	194 0 0	# RoboticsFacilityShad (protoss\proShad.grp)
+RoboticsFacilityBuilt:
+	playfram       	0
+	goto           	RoboticsFacilityIsWorking
+
+RoboticsFacilityIsWorking:
+	wait           	125
+	goto           	RoboticsFacilityIsWorking
+
+RoboticsFacilityDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+RoboticsFacilityWarpIn:
+	imgol          	193 0 0	# RoboticsFacilityWarpFlash (protoss\robotic.grp)
+	goto           	RoboticsFacilityIsWorking
+

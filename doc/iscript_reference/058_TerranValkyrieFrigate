@@ -1,0 +1,85 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 939 Valkyrie (terran\bomber.grp)
+.headerstart
+IsId           	362
+Type           	12
+Init           	ValkyrieInit
+Death          	ValkyrieDeath
+GndAttkInit    	ValkyrieGndAttkInit
+AirAttkInit    	ValkyrieAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	ValkyrieGndAttkInit
+AirAttkRpt     	ValkyrieAirAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	ValkyrieGndAttkToIdle
+AirAttkToIdle  	ValkyrieGndAttkToIdle
+Unused2        	[NONE]
+Walking        	ValkyrieWalking
+WalkingToIdle  	ValkyrieWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ValkyrieInit:
+	imgul          	940 0 42	# ValkyrieShad (terran\bomber.grp)
+	playfram       	0x00	# frame set 0
+	goto           	ValkyrieGndAttkToIdle
+
+ValkyrieGndAttkToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	ValkyrieGndAttkToIdle
+
+ValkyrieDeath:
+	playsnd        	1040	# Terran\FRIGATE\TVkDth00.WAV
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+ValkyrieGndAttkInit:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	ValkyrieLocal00
+
+ValkyrieLocal00:
+	wait           	125
+	goto           	ValkyrieLocal00
+
+ValkyrieAirAttkInit:
+	wait           	1
+	nobrkcodestart 	
+	attackwith     	2
+	wait           	10
+	attackwith     	2
+	wait           	10
+	attackwith     	2
+	wait           	10
+	attackwith     	2
+	wait           	10
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	ValkyrieGndAttkToIdle
+
+ValkyrieWalking:
+	imgol          	941 0 0	# ValkyrieOverlay (thingy\tbmGlow.grp)
+	sigorder       	64
+	setvertpos     	0
+	goto           	ValkyrieLocal00
+
+ValkyrieWalkingToIdle:
+	orderdone      	64
+	goto           	ValkyrieGndAttkToIdle
+

@@ -1,0 +1,57 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 292 IonCannon (neutral\ion.grp)
+.headerstart
+IsId           	116
+Type           	20
+Init           	IonCannonInit
+Death          	IonCannonDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	IonCannonInit
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	IonCannonIsWorking
+WorkingToIdle  	IonCannonIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+IonCannonInit:
+	playfram       	0
+	goto           	IonCannonIsWorking
+
+IonCannonIsWorking:
+	wait           	125
+	goto           	IonCannonIsWorking
+
+IonCannonDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	IonCannonLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+IonCannonLocal00:
+	wait           	1
+	end            	
+

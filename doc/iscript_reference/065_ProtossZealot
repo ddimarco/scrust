@@ -1,0 +1,125 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 151 Zealot (protoss\zealot.grp)
+.headerstart
+IsId           	163
+Type           	21
+Init           	ZealotInit
+Death          	ZealotDeath
+GndAttkInit    	ZealotGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	ZealotGndAttkRpt
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	ZealotGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ZealotWalking
+WalkingToIdle  	ZealotWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ZealotWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ZealotInit:
+	imgul          	152 0 0	# ZealotShad (protoss\pzeShad.grp)
+ZealotWalkingToIdle:
+	playfram       	0x55	# frame set 5
+	goto           	ZealotLocal00
+
+ZealotLocal00:
+	wait           	125
+	goto           	ZealotLocal00
+
+ZealotDeath:
+	playsnd        	678	# Protoss\ZEALOT\PZeDth00.WAV
+	setfldirect    	0
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xde	# frame set 13
+	wait           	2
+	playfram       	0xdf	# frame set 13
+	wait           	2
+	playfram       	0xe0	# frame set 13
+	wait           	2
+	playfram       	0xe1	# frame set 13
+	wait           	2
+	playfram       	0xe2	# frame set 13
+	wait           	2
+	playfram       	0xe3	# frame set 13
+	wait           	2
+	end            	
+
+ZealotGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	1
+ZealotGndAttkRpt:
+	playsndrand    	2 662 663	# Protoss\ZEALOT\pzeAtt00.WAV, Protoss\ZEALOT\pzeAtt01.WAV
+	playfram       	0x11	# frame set 1
+	wait           	1
+	nobrkcodestart 	
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	attackmelee    	1 664	# Protoss\ZEALOT\pzeHit00.WAV
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x22	# frame set 2
+	attackmelee    	1 664	# Protoss\ZEALOT\pzeHit00.WAV
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+ZealotGndAttkToIdle:
+	goto           	ZealotWalkingToIdle
+
+ZealotWalking:
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	goto           	ZealotWalking
+
+ZealotWarpIn:
+	imgol          	154 0 0	# Unknown154 (protoss\zealot.grp)
+	goto           	ZealotLocal00
+

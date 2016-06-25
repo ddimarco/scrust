@@ -1,0 +1,59 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 947 PsiDisruptor (neutral\PsiDisr.grp)
+.headerstart
+IsId           	407
+Type           	20
+Init           	PsiDisrupterInit
+Death          	PsiDisrupterDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	PsiDisrupterBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	PsiDisrupterIsWorking
+WorkingToIdle  	PsiDisrupterIsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+PsiDisrupterInit:
+	imgul          	948 0 0	# PsiDisruptorShad (neutral\tpdShad.grp)
+PsiDisrupterBuilt:
+	playfram       	0
+	goto           	PsiDisrupterIsWorking
+
+PsiDisrupterIsWorking:
+	wait           	125
+	goto           	PsiDisrupterIsWorking
+
+PsiDisrupterDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	PsiDisrupterLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+PsiDisrupterLocal00:
+	wait           	1
+	end            	
+

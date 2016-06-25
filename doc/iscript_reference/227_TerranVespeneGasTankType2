@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 404 Unknown404 (neutral\GasTank.grp)
+.headerstart
+IsId           	228
+Type           	1
+Init           	GasTank2Init
+Death          	GasTank2Death
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GasTank2Init:
+	playfram       	1
+	pwrupcondjmp   	GasTank2Local00
+	imgul          	408 0 0	# TerranGasTankShad (neutral\ngcShad.grp)
+	goto           	GasTank2Local00
+
+GasTank2Local00:
+	wait           	125
+	goto           	GasTank2Local00
+
+GasTank2Death:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

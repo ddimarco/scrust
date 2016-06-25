@@ -1,0 +1,78 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 281 ControlTower (terran\DryDocks.grp)
+.headerstart
+IsId           	107
+Type           	24
+Init           	ControlTowerInit
+Death          	ControlTowerDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	ControlTowerAlmostBuilt
+Built          	ControlTowerBuilt
+Landing        	ControlTowerLanding
+LiftOff        	ControlTowerLiftOff
+IsWorking      	ControlTowerIsWorking
+WorkingToIdle  	ControlTowerBuilt
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	ControlTowerDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ControlTowerInit:
+	imgul          	284 0 0	# ControlTowerShad (terran\tddShad.grp)
+ControlTowerBuilt:
+	playfram       	0
+	goto           	ControlTowerLiftOff
+
+ControlTowerLiftOff:
+	wait           	125
+	goto           	ControlTowerLiftOff
+
+ControlTowerDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	ControlTowerLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+ControlTowerLocal00:
+	wait           	1
+	end            	
+
+ControlTowerAlmostBuilt:
+	playfram       	1
+	goto           	ControlTowerLiftOff
+
+ControlTowerLanding:
+	imgol          	282 0 0	# ControlTowerAttachment (terran\DryDockC.grp)
+	goto           	ControlTowerLiftOff
+
+ControlTowerIsWorking:
+	imgol          	283 0 0	# ControlTowerOverlay (terran\DryDockT.grp)
+	goto           	ControlTowerLiftOff
+
+ControlTowerDisable:
+	goto           	ControlTowerLiftOff
+

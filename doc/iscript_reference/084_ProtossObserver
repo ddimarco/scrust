@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 148 Observer (protoss\witness.grp)
+.headerstart
+IsId           	165
+Type           	21
+Init           	ObserverInit
+Death          	ObserverDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ObserverWalking
+WalkingToIdle  	ObserverWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ObserverWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ObserverInit:
+	imgul          	149 0 42	# ObserverShad (protoss\witness.grp)
+	playfram       	0x00	# frame set 0
+	goto           	ObserverWalkingToIdle
+
+ObserverWalkingToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	ObserverWalkingToIdle
+
+ObserverDeath:
+	playsndbtwn    	651 652	# Protoss\Witness\PWiDth00.WAV, Protoss\Witness\PWiDth01.WAV
+	imgol          	214 0 0	# ProtossBuildingExplosionMedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+ObserverWalking:
+	playfram       	0x00	# frame set 0
+	setvertpos     	0
+	goto           	ObserverLocal00
+
+ObserverLocal00:
+	wait           	125
+	goto           	ObserverLocal00
+
+ObserverWarpIn:
+	imgol          	150 0 0	# Unknown150 (protoss\witness.grp)
+	goto           	ObserverLocal00
+

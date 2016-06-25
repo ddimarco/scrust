@@ -1,0 +1,45 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 392 Flag (neutral\Flag.grp)
+.headerstart
+IsId           	216
+Type           	1
+Init           	FlagInit
+Death          	FlagDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FlagInit:
+	playfram       	0
+	pwrupcondjmp   	FlagLocal00
+	imgul          	411 0 0	# FlagShadGround (neutral\nflShad.grp)
+	goto           	FlagLocal01
+
+FlagLocal00:
+	wait           	1
+	switchul       	412
+FlagLocal01:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	goto           	FlagLocal01
+
+FlagDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

@@ -1,0 +1,89 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 234 GoliathBase (terran\goliath.grp)
+.headerstart
+IsId           	75
+Type           	23
+Init           	Goliath_Base_Init
+Death          	Goliath_Base_Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	Goliath_Base_Walking
+WalkingToIdle  	Goliath_Base_WalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	Goliath_Base_InitTurret
+.headerend
+# ----------------------------------------------------------------------------- #
+
+Goliath_Base_InitTurret:
+	imgol          	235 0 0	# GoliathTurret (terran\goliathT.grp)
+Goliath_Base_Init:
+	imgul          	236 0 0	# GoliathShad (terran\tgoShad.grp)
+Goliath_Base_WalkingToIdle:
+	playfram       	0x77	# frame set 7
+	goto           	Goliath_Base_Local00
+
+Goliath_Base_Local00:
+	wait           	125
+	goto           	Goliath_Base_Local00
+
+Goliath_Base_Death:
+	playsnd        	8	# Misc\ExploMed.wav
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+Goliath_Base_Walking:
+	move           	6
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	3
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	3
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	3
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	5
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	5
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	8
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	6
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	goto           	Goliath_Base_Walking
+

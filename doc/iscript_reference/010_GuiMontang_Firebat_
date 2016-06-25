@@ -1,0 +1,139 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 226 Firebat (terran\firebat.grp)
+.headerstart
+IsId           	69
+Type           	12
+Init           	FirebatInit
+Death          	FirebatDeath
+GndAttkInit    	FirebatGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	FirebatGndAttkRpt
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	FirebatGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	FirebatWalking
+WalkingToIdle  	FirebatWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FirebatInit:
+	imgul          	227 0 0	# FirebatShad (terran\tfbShad.grp)
+FirebatWalkingToIdle:
+	playfram       	0x22	# frame set 2
+FirebatLocal03:
+	waitrand       	63 75
+	randcondjmp    	25 FirebatLocal00
+	randcondjmp    	128 FirebatLocal02
+	goto           	FirebatLocal03
+
+FirebatLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	randcondjmp    	192 FirebatLocal01
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	wait           	6
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	wait           	6
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	goto           	FirebatWalkingToIdle
+
+FirebatLocal02:
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	goto           	FirebatWalkingToIdle
+
+FirebatLocal01:
+	wait           	13
+	goto           	FirebatWalkingToIdle
+
+FirebatDeath:
+	playsndbtwn    	296 298	# Terran\Firebat\TFBDth00.WAV, Terran\Firebat\TFBDth02.WAV
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+FirebatGndAttkInit:
+	playfram       	0x00	# frame set 0
+FirebatGndAttkRpt:
+	wait           	1
+	nobrkcodestart 	
+	imgol          	421 0 0	# FlameThrower (thingy\flamer.grp)
+	playfram       	0x11	# frame set 1
+	attkshiftproj  	24
+	wait           	1
+	attkshiftproj  	52
+	wait           	1
+	attkshiftproj  	80
+	wait           	5
+	playfram       	0x00	# frame set 0
+	wait           	2
+	ignorerest     	
+FirebatGndAttkToIdle:
+	goto           	FirebatWalkingToIdle
+
+FirebatWalking:
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	goto           	FirebatWalking
+

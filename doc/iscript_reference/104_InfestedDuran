@@ -1,0 +1,198 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 228 Ghost (terran\ghost.grp)
+.headerstart
+IsId           	70
+Type           	13
+Init           	GhostInit
+Death          	GhostDeath
+GndAttkInit    	GhostGndAttkInit
+AirAttkInit    	GhostGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	GhostGndAttkRpt
+AirAttkRpt     	GhostGndAttkRpt
+CastSpell      	GhostCastSpell
+GndAttkToIdle  	GhostGndAttkToIdle
+AirAttkToIdle  	GhostGndAttkToIdle
+Unused2        	[NONE]
+Walking        	GhostWalking
+WalkingToIdle  	GhostWalkingToIdle
+SpecialState1  	GhostSpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GhostInit:
+	imgul          	229 0 0	# GhostShad (terran\tghShad.grp)
+GhostWalkingToIdle:
+	playfram       	0x33	# frame set 3
+GhostLocal04:
+	waitrand       	63 75
+	randcondjmp    	25 GhostLocal00
+	randcondjmp    	128 GhostLocal03
+	goto           	GhostLocal04
+
+GhostLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	randcondjmp    	192 GhostLocal01
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	wait           	6
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	wait           	6
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	goto           	GhostLocal02
+
+GhostLocal03:
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	goto           	GhostWalkingToIdle
+
+GhostLocal01:
+	wait           	13
+GhostLocal02:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	GhostWalkingToIdle
+
+GhostDeath:
+	playsnd        	238	# Terran\GHOST\TGhDth00.wav
+	setfldirect    	0
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xde	# frame set 13
+	wait           	2
+	playfram       	0xdf	# frame set 13
+	wait           	2
+	playfram       	0xe0	# frame set 13
+	wait           	2
+	playfram       	0xe1	# frame set 13
+	wait           	2
+	playfram       	0xe2	# frame set 13
+	wait           	2
+	playfram       	0xe3	# frame set 13
+	wait           	2
+	playfram       	0xe4	# frame set 13
+	wait           	2
+	lowsprul       	230 0 0	# GhostDeath (terran\tghDeath.grp)
+	wait           	1
+	end            	
+
+GhostGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+GhostGndAttkRpt:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	98	# Bullet\TGhFir00.wav
+	attack         	
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0x22	# frame set 2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+GhostGndAttkToIdle:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	GhostWalkingToIdle
+
+GhostCastSpell:
+	nobrkcodestart 	
+	wait           	1
+	playsnd        	240	# Terran\GHOST\TGhLkd00.wav
+	castspell      	
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0x22	# frame set 2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	sigorder       	2
+	goto           	GhostGndAttkToIdle
+
+GhostWalking:
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	goto           	GhostWalking
+
+GhostSpecialState1:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	goto           	GhostLocal05
+
+GhostLocal05:
+	wait           	125
+	goto           	GhostLocal05
+

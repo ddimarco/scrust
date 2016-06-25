@@ -1,0 +1,29 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 356 TerranBeacon (terran\tMarker.grp)
+.headerstart
+IsId           	213
+Type           	1
+Init           	TerranBeaconInit
+Death          	TerranBeaconDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+TerranBeaconInit:
+	playfram       	0
+	imgol          	357 0 0	# TerranBeaconOverlay (terran\tCirGlow.grp)
+	goto           	TerranBeaconLocal00
+
+TerranBeaconLocal00:
+	wait           	125
+	goto           	TerranBeaconLocal00
+
+TerranBeaconDeath:
+	wait           	1
+	end            	
+

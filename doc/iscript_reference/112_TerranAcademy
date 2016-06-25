@@ -1,0 +1,70 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 263 Academy (terran\Academy.grp)
+.headerstart
+IsId           	94
+Type           	20
+Init           	AcademyInit
+Death          	AcademyDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	AcademyAlmostBuilt
+Built          	AcademyBuilt
+Landing        	AcademyLanding
+LiftOff        	AcademyLanding
+IsWorking      	AcademyIsWorking
+WorkingToIdle  	AcademyBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+AcademyInit:
+	playfram       	0
+	imgul          	265 0 0	# AcademyShad (terran\tacShad.grp)
+	goto           	AcademyLanding
+
+AcademyLanding:
+	wait           	125
+	goto           	AcademyLanding
+
+AcademyDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	AcademyLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+AcademyLocal00:
+	wait           	1
+	end            	
+
+AcademyAlmostBuilt:
+	playfram       	1
+	goto           	AcademyLanding
+
+AcademyBuilt:
+	playfram       	0
+	goto           	AcademyLanding
+
+AcademyIsWorking:
+	imgol          	264 0 0	# AcademyOverlay (terran\AcademyT.grp)
+	goto           	AcademyLanding
+

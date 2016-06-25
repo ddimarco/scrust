@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 344 VespeneGeyser (neutral\geyser.grp)
+.headerstart
+IsId           	201
+Type           	20
+Init           	VespeneGeyserInit
+Death          	VespeneGeyserDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	VespeneGeyserSpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	VespeneGeyserBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	VespeneGeyserSpecialState1
+WorkingToIdle  	VespeneGeyserSpecialState1
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+VespeneGeyserInit:
+	playframtile   	0
+	imgul          	346 0 0	# VespeneGeyserShad (neutral\geyShad.grp)
+VespeneGeyserBuilt:
+	wait           	15
+VespeneGeyserSpecialState1:
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	creategasoverlays	1
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	creategasoverlays	0
+	waitrand       	5 50
+	creategasoverlays	1
+	waitrand       	5 50
+	creategasoverlays	2
+	waitrand       	5 50
+	goto           	VespeneGeyserSpecialState1
+
+VespeneGeyserDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

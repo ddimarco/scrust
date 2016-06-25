@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 398 Unknown398 (neutral\OreChunk.grp)
+.headerstart
+IsId           	222
+Type           	1
+Init           	OreChunk2Init
+Death          	OreChunk2Death
+.headerend
+# ----------------------------------------------------------------------------- #
+
+OreChunk2Init:
+	playfram       	0x00	# frame set 0
+	pwrupcondjmp   	OreChunk2Local00
+	imgul          	405 0 0	# MineralChunkShad (neutral\norShad.grp)
+	goto           	OreChunk2Local00
+
+OreChunk2Local00:
+	wait           	125
+	goto           	OreChunk2Local00
+
+OreChunk2Death:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

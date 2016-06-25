@@ -1,0 +1,96 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 144 Reaver (protoss\trilob.grp)
+.headerstart
+IsId           	159
+Type           	21
+Init           	ReaverInit
+Death          	ReaverDeath
+GndAttkInit    	ReaverGndAttkInit
+AirAttkInit    	ReaverGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	ReaverGndAttkInit
+AirAttkRpt     	ReaverGndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	ReaverGndAttkToIdle
+AirAttkToIdle  	ReaverGndAttkToIdle
+Unused2        	[NONE]
+Walking        	ReaverWalking
+WalkingToIdle  	ReaverWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ReaverWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ReaverInit:
+	imgul          	145 0 0	# ReaverShad (protoss\ptrShad.grp)
+ReaverWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	ReaverLocal00
+
+ReaverLocal00:
+	wait           	125
+	goto           	ReaverLocal00
+
+ReaverDeath:
+	playsnd        	638	# Protoss\TRILOBYTE\PTrDth00.WAV
+	imgol          	214 0 0	# ProtossBuildingExplosionMedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+ReaverGndAttkInit:
+	wait           	1
+	playsndbtwn    	102 103	# Bullet\pTrFir00.wav, Bullet\pTrFir01.wav
+	attackwith     	1
+	wait           	1
+	gotorepeatattk 	
+	ignorerest     	
+ReaverGndAttkToIdle:
+	goto           	ReaverWalkingToIdle
+
+ReaverWalking:
+	move           	0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	0
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	1
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	1
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	2
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	2
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	3
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	1
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	6
+	wait           	1
+	playfram       	0x00	# frame set 0
+	goto           	ReaverWalking
+
+ReaverWarpIn:
+	imgol          	146 0 0	# Unknown146 (protoss\trilob.grp)
+	goto           	ReaverLocal00
+

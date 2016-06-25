@@ -1,0 +1,128 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 134 ArchonEnergy (protoss\archon.grp)
+.headerstart
+IsId           	147
+Type           	13
+Init           	ArchonEnergyInit
+Death          	ArchonEnergyDeath
+GndAttkInit    	ArchonEnergyGndAttkInit
+AirAttkInit    	ArchonEnergyGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	ArchonEnergyGndAttkInit
+AirAttkRpt     	ArchonEnergyGndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	ArchonEnergyGndAttkInit
+AirAttkToIdle  	ArchonEnergyGndAttkInit
+Unused2        	[NONE]
+Walking        	ArchonEnergyGndAttkInit
+WalkingToIdle  	ArchonEnergyGndAttkInit
+SpecialState1  	ArchonEnergySpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ArchonEnergyInit:
+	playfram       	18
+	wait           	1
+	nobrkcodestart 	
+	wait           	1
+	playfram       	19
+	wait           	2
+	playfram       	20
+	wait           	2
+	playfram       	21
+	wait           	2
+	playfram       	22
+	wait           	2
+	playfram       	23
+	wait           	2
+	playfram       	24
+	wait           	2
+	playfram       	25
+	wait           	2
+	playfram       	26
+	wait           	2
+	imgol          	135 0 0	# ArchonBeing (protoss\archonT.grp)
+	imgol          	136 0 0	# ArchonTeamColors (protoss\archonT2.grp)
+	sigorder       	4
+	nobrkcodeend   	
+	wait           	2
+ArchonEnergyGndAttkInit:
+	playfram       	0
+	wait           	1
+	playfram       	1
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	4
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	6
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	9
+	wait           	1
+	playfram       	8
+	wait           	1
+	playfram       	7
+	wait           	1
+	playfram       	6
+	wait           	1
+	playfram       	5
+	wait           	1
+	playfram       	4
+	wait           	1
+	playfram       	3
+	wait           	1
+	playfram       	2
+	wait           	1
+	playfram       	1
+	wait           	1
+	goto           	ArchonEnergyGndAttkInit
+
+ArchonEnergyDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	214 0 0	# ProtossBuildingExplosionMedium (thingy\tBangL.grp)
+	wait           	3
+	end            	
+
+ArchonEnergySpecialState1:
+	playsnd        	617	# Protoss\TEMPLAR\PTeSum00.WAV
+	playfram       	10
+	wait           	2
+	playfram       	11
+	wait           	2
+ArchonEnergyLocal00:
+	playfram       	12
+	wait           	2
+	playfram       	13
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	17
+	wait           	2
+	playfram       	16
+	wait           	2
+	playfram       	15
+	wait           	2
+	playfram       	14
+	wait           	2
+	playfram       	13
+	wait           	2
+	goto           	ArchonEnergyLocal00
+

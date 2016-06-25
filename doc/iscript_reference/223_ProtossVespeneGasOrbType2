@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 400 Unknown400 (neutral\GasOrb.grp)
+.headerstart
+IsId           	226
+Type           	1
+Init           	GasOrb2Init
+Death          	GasOrb2Death
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GasOrb2Init:
+	playfram       	0x11	# frame set 1
+	pwrupcondjmp   	GasOrb2Local00
+	imgul          	406 0 0	# ProtossGasOrbShad (neutral\ngoShad.grp)
+	goto           	GasOrb2Local00
+
+GasOrb2Local00:
+	wait           	125
+	goto           	GasOrb2Local00
+
+GasOrb2Death:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

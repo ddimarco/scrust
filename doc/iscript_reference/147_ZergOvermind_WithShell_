@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 088 Overmindwshell (zerg\Over1.grp)
+.headerstart
+IsId           	52
+Type           	20
+Init           	Overmind_withShell_Init
+Death          	Overmind_withShell_Death
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	Overmind_withShell_AlmostBuilt
+Built          	Overmind_withShell_Built
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	Overmind_withShell_IsWorking
+WorkingToIdle  	Overmind_withShell_IsWorking
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+Overmind_withShell_Init:
+	playfram       	0
+	goto           	Overmind_withShell_Local00
+
+Overmind_withShell_Local00:
+	wait           	125
+	goto           	Overmind_withShell_Local00
+
+Overmind_withShell_Death:
+	playsnd        	774	# Zerg\Bldg\ZBldgDth.WAV
+	imgol          	60 0 0	# ZergBuildingDeath (thingy\zBldDthS.grp)
+	wait           	3
+	imgol          	89 0 0	# OvermindShad (zerg\Over2.grp)
+	wait           	1
+	end            	
+
+Overmind_withShell_AlmostBuilt:
+	imgol          	108 0 0	# ZergBuildingSpawnMedium (zerg\zSpawn02.grp)
+	playfram       	0
+	goto           	Overmind_withShell_Built
+
+Overmind_withShell_Built:
+	waitrand       	1 3
+Overmind_withShell_IsWorking:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	4
+	wait           	1
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	0
+	wait           	4
+	goto           	Overmind_withShell_IsWorking
+

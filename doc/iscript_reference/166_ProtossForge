@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 167 Forge (protoss\forge.grp)
+.headerstart
+IsId           	171
+Type           	27
+Init           	ForgeInit
+Death          	ForgeDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	ForgeBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	ForgeIsWorking
+WorkingToIdle  	ForgeIsWorking
+WarpIn         	ForgeWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	ForgeIsWorking
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	ForgeIsWorking
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ForgeInit:
+	imgul          	170 0 0	# ForgeShad (protoss\pfoShad.grp)
+	playfram       	0
+	goto           	ForgeIsWorking
+
+ForgeIsWorking:
+	wait           	125
+	goto           	ForgeIsWorking
+
+ForgeDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+ForgeBuilt:
+	imgol          	168 0 0	# ForgeOverlay (protoss\forgeT.grp)
+	goto           	ForgeIsWorking
+
+ForgeWarpIn:
+	imgol          	169 0 0	# ForgeWarpFlash (protoss\forge.grp)
+	goto           	ForgeIsWorking
+

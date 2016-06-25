@@ -1,0 +1,29 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 354 ZergBeacon (zerg\zmarker.grp)
+.headerstart
+IsId           	211
+Type           	1
+Init           	ZergBeaconInit
+Death          	ZergBeaconDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ZergBeaconInit:
+	playfram       	0
+	imgol          	355 0 0	# ZergBeaconOverlay (zerg\zCirGlow.grp)
+	goto           	ZergBeaconLocal00
+
+ZergBeaconLocal00:
+	wait           	125
+	goto           	ZergBeaconLocal00
+
+ZergBeaconDeath:
+	wait           	1
+	end            	
+

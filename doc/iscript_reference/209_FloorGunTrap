@@ -1,0 +1,122 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 735 InstallationDoodad (thingy\tileset\install\CLPlate2.grp)
+.headerstart
+IsId           	347
+Type           	27
+Init           	FloorGunTrapInit
+Death          	FloorGunTrapDeath
+GndAttkInit    	FloorGunTrapGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	FloorGunTrapGndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	FloorGunTrapGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	FloorGunTrapSpecialState1
+SpecialState2  	FloorGunTrapSpecialState2
+AlmostBuilt    	FloorGunTrapAlmostBuilt
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	FloorGunTrapSpecialState1
+Disable        	FloorGunTrapSpecialState2
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	FloorGunTrapAlmostBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FloorGunTrapInit:
+	playfram       	1
+	goto           	FloorGunTrapAlmostBuilt
+
+FloorGunTrapAlmostBuilt:
+	wait           	125
+	goto           	FloorGunTrapAlmostBuilt
+
+FloorGunTrapDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	1
+	end            	
+
+FloorGunTrapGndAttkInit:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	70	# Bullet\TGoFir00.wav
+	attackwith     	1
+	playfram       	11
+	wait           	1
+	playfram       	10
+	wait           	1
+	playfram       	11
+	wait           	1
+	playfram       	10
+	wait           	1
+	playfram       	11
+	wait           	1
+	playfram       	10
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+	goto           	FloorGunTrapAlmostBuilt
+
+FloorGunTrapSpecialState1:
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	9
+	wait           	2
+	sigorder       	1
+FloorGunTrapGndAttkToIdle:
+	playfram       	10
+	goto           	FloorGunTrapAlmostBuilt
+
+FloorGunTrapSpecialState2:
+	playfram       	9
+	wait           	2
+	playfram       	8
+	wait           	2
+	playfram       	7
+	wait           	2
+	playfram       	6
+	wait           	2
+	playfram       	5
+	wait           	2
+	playfram       	4
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	sigorder       	1
+	goto           	FloorGunTrapAlmostBuilt
+

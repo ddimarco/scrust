@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 164 CitadelofAdun (protoss\citadel.grp)
+.headerstart
+IsId           	170
+Type           	27
+Init           	CitadelOfAdunInit
+Death          	CitadelOfAdunDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	CitadelOfAdunBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	CitadelOfAdunBuilt
+WorkingToIdle  	CitadelOfAdunBuilt
+WarpIn         	CitadelOfAdunWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	CitadelOfAdunBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	CitadelOfAdunBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CitadelOfAdunInit:
+	imgul          	166 0 0	# CitadelofAdunShad (protoss\pciShad.grp)
+	playfram       	0
+	goto           	CitadelOfAdunBuilt
+
+CitadelOfAdunBuilt:
+	wait           	125
+	goto           	CitadelOfAdunBuilt
+
+CitadelOfAdunDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+CitadelOfAdunWarpIn:
+	imgol          	165 0 0	# CitadelofAdunWarpFlash (protoss\citadel.grp)
+	goto           	CitadelOfAdunBuilt
+

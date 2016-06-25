@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 288 CovertOps (terran\GeneLab.grp)
+.headerstart
+IsId           	113
+Type           	20
+Init           	CovertOpsInit
+Death          	CovertOpsDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	CovertOpsAlmostBuilt
+Built          	CovertOpsBuilt
+Landing        	CovertOpsLanding
+LiftOff        	CovertOpsLiftOff
+IsWorking      	CovertOpsIsWorking
+WorkingToIdle  	CovertOpsBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+CovertOpsInit:
+	imgul          	291 0 0	# CovertOpsShad (terran\tglShad.grp)
+CovertOpsBuilt:
+	playfram       	0
+	goto           	CovertOpsLiftOff
+
+CovertOpsLiftOff:
+	wait           	125
+	goto           	CovertOpsLiftOff
+
+CovertOpsDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	CovertOpsLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+CovertOpsLocal00:
+	wait           	1
+	end            	
+
+CovertOpsAlmostBuilt:
+	playfram       	1
+	goto           	CovertOpsLiftOff
+
+CovertOpsLanding:
+	imgol          	289 0 0	# CovertOpsAttachment (terran\GeneLabC.grp)
+	goto           	CovertOpsLiftOff
+
+CovertOpsIsWorking:
+	imgol          	290 0 0	# CovertOpsOverlay (terran\GeneLabT.grp)
+	goto           	CovertOpsLiftOff
+

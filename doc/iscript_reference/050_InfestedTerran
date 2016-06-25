@@ -1,0 +1,146 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 008 InfestedTerran (zerg\bugguy.grp)
+.headerstart
+IsId           	6
+Type           	26
+Init           	InfestedTerranInit
+Death          	InfestedTerranDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	InfestedTerranWalking
+WalkingToIdle  	InfestedTerranWalkingToIdle
+SpecialState1  	InfestedTerranSpecialState1
+SpecialState2  	InfestedTerranSpecialState2
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	[NONE]
+Burrow         	InfestedTerranBurrow
+UnBurrow       	InfestedTerranUnBurrow
+Enable         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+InfestedTerranInit:
+	imgul          	9 0 0	# InfestedTerranShad (zerg\zbgShad.grp)
+InfestedTerranWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	InfestedTerranLocal00
+
+InfestedTerranLocal00:
+	wait           	125
+	goto           	InfestedTerranLocal00
+
+InfestedTerranDeath:
+	playsnd        	67	# Bullet\ZBGHit00.wav
+	setfldirect    	0
+	playfram       	0xee	# frame set 14
+	wait           	1
+	playfram       	0xef	# frame set 14
+	wait           	1
+	playfram       	0xf0	# frame set 14
+	wait           	1
+	playfram       	0xf1	# frame set 14
+	wait           	1
+	playfram       	0xf2	# frame set 14
+	wait           	1
+	playfram       	0xf3	# frame set 14
+	wait           	1
+	playfram       	0xf4	# frame set 14
+	wait           	1
+	playfram       	0xf5	# frame set 14
+	wait           	1
+	lowsprul       	236 0 0	# MarineDeath (terran\tmaDeath.grp)
+	wait           	1
+	end            	
+
+InfestedTerranWalking:
+	move           	6
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	6
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	6
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	6
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	6
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	6
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	6
+	wait           	1
+	playfram       	0x00	# frame set 0
+	goto           	InfestedTerranWalking
+
+InfestedTerranSpecialState1:
+	attackwith     	1
+	sprol          	136 0 0	# InfestedTerranExplosion (thingy\zbgExplo.grp)
+	sigorder       	1
+	goto           	InfestedTerranLocal00
+
+InfestedTerranSpecialState2:
+	playfram       	0xdd	# frame set 13
+	goto           	InfestedTerranLocal00
+
+InfestedTerranBurrow:
+	imgol          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0xdd	# frame set 13
+	wait           	1
+	sigorder       	4
+	goto           	InfestedTerranLocal00
+
+InfestedTerranUnBurrow:
+	waitrand       	1 5
+	imgul          	423 0 0	# Unknown423 (thingy\bDust.grp)
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x00	# frame set 0
+	sigorder       	4
+	goto           	InfestedTerranLocal00
+

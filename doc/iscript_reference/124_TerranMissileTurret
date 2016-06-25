@@ -1,0 +1,68 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 296 MissleTurretBase (terran\missile.grp)
+.headerstart
+IsId           	119
+Type           	20
+Init           	MissileTurret_Base_Init
+Death          	MissileTurret_Base_Death
+GndAttkInit    	MissileTurret_Base_GndAttkInit
+AirAttkInit    	MissileTurret_Base_GndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	MissileTurret_Base_GndAttkInit
+AirAttkRpt     	MissileTurret_Base_GndAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	MissileTurret_Base_GndAttkInit
+AirAttkToIdle  	MissileTurret_Base_GndAttkInit
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	MissileTurret_Base_AlmostBuilt
+Built          	MissileTurret_Base_Built
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	MissileTurret_Base_GndAttkInit
+WorkingToIdle  	MissileTurret_Base_WorkingToIdle
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MissileTurret_Base_Init:
+	playfram       	2
+	imgul          	298 0 0	# MissleTurretShad (terran\tmiShad.grp)
+	goto           	MissileTurret_Base_GndAttkInit
+
+MissileTurret_Base_GndAttkInit:
+	wait           	125
+	goto           	MissileTurret_Base_GndAttkInit
+
+MissileTurret_Base_Death:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	MissileTurret_Base_Local00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+MissileTurret_Base_Local00:
+	wait           	1
+	end            	
+
+MissileTurret_Base_AlmostBuilt:
+	playfram       	1
+	goto           	MissileTurret_Base_GndAttkInit
+
+MissileTurret_Base_Built:
+	imgol          	297 0 0	# MissleTurretTurret (terran\missileT.grp)
+MissileTurret_Base_WorkingToIdle:
+	playfram       	2
+	goto           	MissileTurret_Base_GndAttkInit
+

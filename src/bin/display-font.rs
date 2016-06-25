@@ -18,76 +18,8 @@ use read_pcx::gamedata::GameData;
 use std::fs::File;
 use std::io::Write;
 
-pub trait RenderText {
-    fn render_textbox(&self,
-                      text: &str,
-                      color_idx: usize,
-                      renderer: &mut Renderer,
-                      pal: &Palette,
-                      reindexing_table: &[u8],
-                      width: u32,
-                      height: u32)
-                      -> sdl2::render::Texture;
-}
-impl RenderText for Font {
-    fn render_textbox(&self,
-                      text: &str,
-                      color_idx: usize,
-                      renderer: &mut Renderer,
-                      pal: &Palette,
-                      reindexing_table: &[u8],
-                      width: u32,
-                      height: u32)
-                      -> sdl2::render::Texture {
-        let mut texture =
-            renderer.create_texture_streaming(PixelFormatEnum::RGB24, width, height).unwrap();
+use read_pcx::font::RenderText;
 
-        // for now, assume only single lines
-        texture.with_lock(None, |buffer: &mut [u8], pitch: usize| {
-            let mut y = 0;
-            let mut x: usize = 0;
-
-            // let mut outfile = File::create("/tmp/font.ppm").unwrap();
-            // outfile.write_fmt(format_args!("P3\n")).ok();
-            // outfile.write_fmt(format_args!("{0} {1}\n", width, height)).ok();
-            // outfile.write_fmt(format_args!("255\n")).ok();
-
-            for c in text.chars() {
-                if c != ' ' {
-                    let ref letter = self.get_letter(c);
-                    for yl in (letter.yoffset as u32)..(letter.yoffset as u32 + letter.height as u32) {
-                        for xl in letter.xoffset as u32..(letter.xoffset as u32 + letter.width as u32) {
-                            let col = letter.data[(((yl - letter.yoffset as u32) * letter.width as u32) +
-                                                   (xl - letter.xoffset as u32)) as usize];
-
-
-                            let outpos = ((y + yl as usize)*width as usize) + (x + xl as usize);
-                            let offset = outpos * 3;
-
-                            let col_mapped = reindexing_table[col as usize + (color_idx * 8)] as usize;
-                            buffer[offset + 0] = pal.data[col_mapped*3 + 0];
-                            buffer[offset + 1] = pal.data[col_mapped*3 + 1];
-                            buffer[offset + 2] = pal.data[col_mapped*3 + 2];
-                        }
-                    }
-                }
-                let letterwidth = self.letter_width(c);
-                x = x + 1 + letterwidth as usize;
-            }
-
-            // let pixelsize = 3;
-            // for i in 0..buffer.len()/pixelsize {
-            //     outfile.write_fmt(format_args!("{0} {1} {2}\n",
-            //                                    buffer[i * pixelsize + 0],
-            //                                    buffer[i * pixelsize + 1],
-            //                                    buffer[i * pixelsize + 2],
-            //                                    )).ok();
-            // }
-            })
-            .ok();
-        return texture;
-    }
-}
 
 fn main() {
     println!("opening mpq...");

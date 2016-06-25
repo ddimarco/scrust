@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 118 Shuttle (protoss\shuttle.grp)
+.headerstart
+IsId           	157
+Type           	21
+Init           	ShuttleInit
+Death          	ShuttleDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ShuttleWalking
+WalkingToIdle  	ShuttleWalkingToIdle
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	[NONE]
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	[NONE]
+WorkingToIdle  	[NONE]
+WarpIn         	ShuttleWarpIn
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ShuttleInit:
+	imgul          	119 0 42	# ShuttleShad (protoss\shuttle.grp)
+ShuttleWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	ShuttleLocal00
+
+ShuttleLocal00:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	ShuttleLocal00
+
+ShuttleDeath:
+	playsnd        	514	# Protoss\SHUTTLE\PShDth00.WAV
+	imgol          	213 0 0	# ProtossBuildingExplosionSmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+ShuttleWalking:
+	imgol          	120 0 0	# ShuttleGlow (thingy\pshGlow.grp)
+	setvertpos     	0
+	playfram       	0x00	# frame set 0
+	goto           	ShuttleLocal01
+
+ShuttleLocal01:
+	wait           	125
+	goto           	ShuttleLocal01
+
+ShuttleWarpIn:
+	imgol          	121 0 0	# Unknown121 (protoss\shuttle.grp)
+	goto           	ShuttleLocal01
+

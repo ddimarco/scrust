@@ -1,0 +1,100 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 309 ScienceFacility (terran\research.grp)
+.headerstart
+IsId           	126
+Type           	20
+Init           	ScienceFacilityInit
+Death          	ScienceFacilityDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	ScienceFacilityWalking
+WalkingToIdle  	ScienceFacilityWalking
+SpecialState1  	ScienceFacilitySpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	ScienceFacilityAlmostBuilt
+Built          	ScienceFacilityBuilt
+Landing        	ScienceFacilityLanding
+LiftOff        	ScienceFacilityLiftOff
+IsWorking      	ScienceFacilityIsWorking
+WorkingToIdle  	ScienceFacilityBuilt
+WarpIn         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+ScienceFacilityInit:
+	imgul          	311 0 0	# ScienceFacilityShad (terran\trlShad.grp)
+ScienceFacilityBuilt:
+	playfram       	0
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityWalking:
+	wait           	125
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	ScienceFacilityLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+ScienceFacilityLocal00:
+	wait           	1
+	end            	
+
+ScienceFacilitySpecialState1:
+	playfram       	5
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityAlmostBuilt:
+	playfram       	1
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityLanding:
+	nobrkcodestart 	
+	wait           	18
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	4
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	2
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	4
+	wait           	5
+	playfram       	5
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	ScienceFacilityWalking
+
+ScienceFacilityIsWorking:
+	imgol          	310 0 0	# ScienceFacilityOverlay (terran\ResearcT.grp)
+	goto           	ScienceFacilityWalking
+

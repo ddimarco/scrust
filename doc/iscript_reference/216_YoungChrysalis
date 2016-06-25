@@ -1,0 +1,36 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:08 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 393 Chrysalis (neutral\KerrEgg.grp)
+.headerstart
+IsId           	220
+Type           	1
+Init           	YoungChrysalisInit
+Death          	YoungChrysalisDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+YoungChrysalisInit:
+	playfram       	0x00	# frame set 0
+	pwrupcondjmp   	YoungChrysalisLocal00
+	imgul          	415 0 0	# ChrysalisShadGround (neutral\nkeShad.grp)
+	goto           	YoungChrysalisLocal01
+
+YoungChrysalisLocal00:
+	wait           	1
+	switchul       	416
+	goto           	YoungChrysalisLocal01
+
+YoungChrysalisLocal01:
+	wait           	125
+	goto           	YoungChrysalisLocal01
+
+YoungChrysalisDeath:
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+

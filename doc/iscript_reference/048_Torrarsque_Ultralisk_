@@ -1,0 +1,122 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 050 Ultralisk (zerg\ultra.grp)
+.headerstart
+IsId           	29
+Type           	12
+Init           	UltraliskInit
+Death          	UltraliskDeath
+GndAttkInit    	UltraliskGndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	UltraliskGndAttkRpt
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	UltraliskGndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	UltraliskWalking
+WalkingToIdle  	UltraliskGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+UltraliskInit:
+	imgul          	51 0 0	# UltraliskShad (zerg\zulShad.grp)
+UltraliskGndAttkToIdle:
+	playfram       	0x99	# frame set 9
+	goto           	UltraliskLocal00
+
+UltraliskLocal00:
+	wait           	125
+	goto           	UltraliskLocal00
+
+UltraliskDeath:
+	playsnd        	878	# Zerg\Ultra\ZUlDth00.WAV
+	setfldirect    	0
+	playfram       	0xff	# frame set 15
+	wait           	2
+	playfram       	0x100	# frame set 15
+	wait           	2
+	playfram       	0x101	# frame set 15
+	wait           	2
+	playfram       	0x102	# frame set 15
+	wait           	2
+	playfram       	0x103	# frame set 15
+	wait           	2
+	playfram       	0x104	# frame set 15
+	wait           	2
+	playfram       	0x105	# frame set 15
+	wait           	2
+	playfram       	0x106	# frame set 15
+	wait           	2
+	playfram       	0x107	# frame set 15
+	wait           	2
+	playfram       	0x108	# frame set 15
+	wait           	2
+	lowsprul       	158 0 0	# UltraliskDeath (zerg\zulDeath.grp)
+	wait           	1
+	end            	
+
+UltraliskGndAttkInit:
+	playfram       	0xee	# frame set 14
+UltraliskGndAttkRpt:
+	wait           	1
+	nobrkcodestart 	
+	playsndrand    	3 891 892 893	# Zerg\Ultra\zulAtt00.WAV, Zerg\Ultra\zulAtt01.WAV, Zerg\Ultra\zulAtt02.WAV
+	wait           	2
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xcc	# frame set 12
+	attackmelee    	2 894 895	# Zerg\Ultra\zulHit00.WAV, Zerg\Ultra\zulHit01.WAV
+	wait           	2
+	playfram       	0xbb	# frame set 11
+	wait           	2
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0xdd	# frame set 13
+	wait           	2
+	playfram       	0xee	# frame set 14
+	wait           	2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	UltraliskGndAttkToIdle
+
+UltraliskWalking:
+	move           	2
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	6
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	3
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	2
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	7
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	8
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	7
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	8
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	7
+	wait           	1
+	playfram       	0x99	# frame set 9
+	goto           	UltraliskWalking
+

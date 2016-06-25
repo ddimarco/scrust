@@ -1,0 +1,36 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 582 MapRevealer (neutral\maprev.grp)
+.headerstart
+IsId           	352
+Type           	1
+Init           	MapRevealerInit
+Death          	MapRevealerDeath
+.headerend
+# ----------------------------------------------------------------------------- #
+
+MapRevealerInit:
+	playfram       	0
+MapRevealerLocal00:
+	playfram       	0
+	wait           	2
+	playfram       	1
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	3
+	wait           	2
+	playfram       	2
+	wait           	2
+	playfram       	1
+	wait           	2
+	goto           	MapRevealerLocal00
+
+MapRevealerDeath:
+	end            	
+

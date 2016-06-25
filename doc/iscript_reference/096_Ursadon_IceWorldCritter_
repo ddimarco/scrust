@@ -1,0 +1,86 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 956 Ursadon (neutral\Icritter.grp)
+.headerstart
+IsId           	377
+Type           	12
+Init           	UrsadonInit
+Death          	UrsadonDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	UrsadonWalking
+WalkingToIdle  	UrsadonWalkingToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+UrsadonInit:
+	imgul          	957 0 0	# UrsadonShad (neutral\ncicShad.grp)
+UrsadonWalkingToIdle:
+	playfram       	0x00	# frame set 0
+	goto           	UrsadonLocal00
+
+UrsadonLocal00:
+	wait           	125
+	goto           	UrsadonLocal00
+
+UrsadonDeath:
+	playsnd        	971	# Misc\CRITTERS\PBDeath01.wav
+	setfldirect    	0
+	playfram       	0x88	# frame set 8
+	wait           	2
+	playfram       	0x89	# frame set 8
+	wait           	2
+	playfram       	0x8a	# frame set 8
+	wait           	2
+	playfram       	0x8b	# frame set 8
+	wait           	2
+	playfram       	0x8c	# frame set 8
+	wait           	50
+	playfram       	0x8d	# frame set 8
+	wait           	50
+	playfram       	0x8e	# frame set 8
+	wait           	50
+	playfram       	0x8f	# frame set 8
+	wait           	50
+	end            	
+
+UrsadonWalking:
+	move           	4
+	wait           	1
+	playfram       	0x00	# frame set 0
+	move           	4
+	wait           	1
+	playfram       	0x11	# frame set 1
+	move           	4
+	wait           	1
+	playfram       	0x22	# frame set 2
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	goto           	UrsadonWalking
+

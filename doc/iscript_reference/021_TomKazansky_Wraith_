@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 243 Wraith (terran\phoenix.grp)
+.headerstart
+IsId           	82
+Type           	12
+Init           	WraithInit
+Death          	WraithDeath
+GndAttkInit    	WraithGndAttkInit
+AirAttkInit    	WraithAirAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	WraithGndAttkInit
+AirAttkRpt     	WraithAirAttkInit
+CastSpell      	[NONE]
+GndAttkToIdle  	WraithGndAttkToIdle
+AirAttkToIdle  	WraithGndAttkToIdle
+Unused2        	[NONE]
+Walking        	WraithWalking
+WalkingToIdle  	WraithGndAttkToIdle
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+WraithInit:
+	imgul          	244 0 42	# WraithShad (terran\phoenix.grp)
+	playfram       	0x00	# frame set 0
+	goto           	WraithGndAttkToIdle
+
+WraithGndAttkToIdle:
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	2
+	waitrand       	8 10
+	setvertpos     	1
+	waitrand       	8 10
+	setvertpos     	0
+	waitrand       	8 10
+	goto           	WraithGndAttkToIdle
+
+WraithDeath:
+	playsnd        	257	# Terran\PHOENIX\TPhDth00.WAV
+	imgol          	332 0 0	# TerranBuildingExplosionsmall (thingy\tBangS.grp)
+	wait           	3
+	end            	
+
+WraithGndAttkInit:
+	wait           	1
+	attackwith     	1
+	gotorepeatattk 	
+	goto           	WraithLocal00
+
+WraithLocal00:
+	wait           	125
+	goto           	WraithLocal00
+
+WraithAirAttkInit:
+	wait           	1
+	attackwith     	2
+	gotorepeatattk 	
+	goto           	WraithLocal00
+
+WraithWalking:
+	imgol          	245 0 0	# WraithGlow (thingy\tphGlow.grp)
+	setvertpos     	0
+	goto           	WraithLocal00
+

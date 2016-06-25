@@ -1,0 +1,63 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:07 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 171 Gateway (protoss\gateway.grp)
+.headerstart
+IsId           	173
+Type           	27
+Init           	GatewayInit
+Death          	GatewayDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	[NONE]
+Built          	GatewayBuilt
+Landing        	[NONE]
+LiftOff        	[NONE]
+IsWorking      	GatewayBuilt
+WorkingToIdle  	GatewayBuilt
+WarpIn         	GatewayWarpIn
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	GatewayBuilt
+Burrow         	[NONE]
+UnBurrow       	[NONE]
+Enable         	GatewayBuilt
+.headerend
+# ----------------------------------------------------------------------------- #
+
+GatewayInit:
+	imgul          	173 0 0	# GatewayShad (protoss\pgaShad.grp)
+	playfram       	0
+	goto           	GatewayBuilt
+
+GatewayBuilt:
+	wait           	125
+	goto           	GatewayBuilt
+
+GatewayDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	215 0 0	# ProtossBuildingExplosionLarge (thingy\tBangX.grp)
+	wait           	3
+	lowsprul       	223 0 0	# ProtossBuildingRubbleSmall (thingy\PRubbleS.grp)
+	wait           	1
+	end            	
+
+GatewayWarpIn:
+	imgol          	172 0 0	# GatewayWarpFlash (protoss\gateway.grp)
+	goto           	GatewayBuilt
+

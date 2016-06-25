@@ -1,0 +1,116 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 285 Factory (terran\factory.grp)
+.headerstart
+IsId           	111
+Type           	24
+Init           	FactoryInit
+Death          	FactoryDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	FactoryWalking
+WalkingToIdle  	FactoryWalking
+SpecialState1  	FactorySpecialState1
+SpecialState2  	[NONE]
+AlmostBuilt    	FactoryAlmostBuilt
+Built          	FactoryBuilt
+Landing        	FactoryLanding
+LiftOff        	FactoryLiftOff
+IsWorking      	FactoryIsWorking
+WorkingToIdle  	FactoryBuilt
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	FactoryDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+FactoryInit:
+	playfram       	0
+	imgul          	287 0 0	# FactoryShad (terran\tfaShad.grp)
+	goto           	FactoryWalking
+
+FactoryWalking:
+	wait           	125
+	goto           	FactoryWalking
+
+FactoryDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	FactoryLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+FactoryLocal00:
+	wait           	1
+	end            	
+
+FactorySpecialState1:
+	playfram       	5
+	goto           	FactoryWalking
+
+FactoryAlmostBuilt:
+	playfram       	1
+	goto           	FactoryWalking
+
+FactoryBuilt:
+	playfram       	0
+	goto           	FactoryWalking
+
+FactoryLanding:
+	nobrkcodestart 	
+	wait           	15
+	playsnd        	472	# Misc\Land.WAV
+	playfram       	5
+	wait           	5
+	playfram       	4
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	6
+	wait           	5
+	playfram       	0
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	FactoryWalking
+
+FactoryLiftOff:
+	nobrkcodestart 	
+	playsnd        	471	# Misc\LiftOff.WAV
+	playfram       	6
+	wait           	5
+	playfram       	2
+	wait           	5
+	playfram       	3
+	wait           	5
+	playfram       	4
+	wait           	5
+	playfram       	5
+	sigorder       	16
+	nobrkcodeend   	
+	goto           	FactoryWalking
+
+FactoryIsWorking:
+	imgol          	286 0 0	# FactoryOverlay (terran\factoryT.grp)
+	goto           	FactoryWalking
+
+FactoryDisable:
+	goto           	FactoryWalking
+

@@ -1,0 +1,103 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:05 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 129 DarkTemplarHero (protoss\dtemplar.grp)
+.headerstart
+IsId           	152
+Type           	12
+Init           	DarkTemplar_Hero_Init
+Death          	DarkTemplar_Hero_Death
+GndAttkInit    	DarkTemplar_Hero_GndAttkInit
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	DarkTemplar_Hero_GndAttkInit
+AirAttkRpt     	[NONE]
+CastSpell      	DarkTemplar_Hero_CastSpell
+GndAttkToIdle  	DarkTemplar_Hero_GndAttkToIdle
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	DarkTemplar_Hero_Walking
+WalkingToIdle  	DarkTemplar_Hero_Init
+SpecialState1  	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+DarkTemplar_Hero_Init:
+	playfram       	0xdd	# frame set 13
+	goto           	DarkTemplar_Hero_GndAttkToIdle
+
+DarkTemplar_Hero_GndAttkToIdle:
+	wait           	125
+	goto           	DarkTemplar_Hero_GndAttkToIdle
+
+DarkTemplar_Hero_Death:
+	playsnd        	741	# Protoss\DARKTEMPLAR\PDTDth00.WAV
+	imgol          	153 0 0	# Unknown153 (protoss\zealot.grp)
+	wait           	1
+	end            	
+
+DarkTemplar_Hero_GndAttkInit:
+	playsnd        	111	# Bullet\UZeFir00.wav
+	playfram       	0x00	# frame set 0
+	wait           	1
+	nobrkcodestart 	
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	playfram       	0x33	# frame set 3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	attackwith     	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	playfram       	0x66	# frame set 6
+	wait           	1
+	playfram       	0x77	# frame set 7
+	wait           	1
+	playfram       	0x88	# frame set 8
+	wait           	1
+	playfram       	0x99	# frame set 9
+	wait           	1
+	nobrkcodeend   	
+	gotorepeatattk 	
+	goto           	DarkTemplar_Hero_Init
+
+DarkTemplar_Hero_CastSpell:
+	castspell      	
+	sigorder       	2
+	gotorepeatattk 	
+	goto           	DarkTemplar_Hero_Init
+
+DarkTemplar_Hero_Walking:
+	move           	4
+	wait           	1
+	playfram       	0xee	# frame set 14
+	move           	4
+	wait           	1
+	playfram       	0xff	# frame set 15
+	move           	4
+	wait           	1
+	playfram       	0x110	# frame set 16
+	move           	4
+	wait           	1
+	playfram       	0x121	# frame set 17
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0xcc	# frame set 12
+	move           	4
+	wait           	1
+	playfram       	0xdd	# frame set 13
+	goto           	DarkTemplar_Hero_Walking
+

@@ -1,0 +1,181 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:04 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 237 KerriganGhost (terran\ughost.grp)
+.headerstart
+IsId           	77
+Type           	13
+Init           	SarahKerriganInit
+Death          	SarahKerriganDeath
+GndAttkInit    	SarahKerriganGndAttkInit
+AirAttkInit    	SarahKerriganGndAttkInit
+Unused1        	[NONE]
+GndAttkRpt     	SarahKerriganGndAttkRpt
+AirAttkRpt     	SarahKerriganGndAttkRpt
+CastSpell      	SarahKerriganCastSpell
+GndAttkToIdle  	SarahKerriganGndAttkToIdle
+AirAttkToIdle  	SarahKerriganGndAttkToIdle
+Unused2        	[NONE]
+Walking        	SarahKerriganWalking
+WalkingToIdle  	SarahKerriganWalkingToIdle
+SpecialState1  	SarahKerriganSpecialState1
+.headerend
+# ----------------------------------------------------------------------------- #
+
+SarahKerriganInit:
+	imgul          	238 0 0	# KerriganGhostShad (terran\ughShad.grp)
+SarahKerriganWalkingToIdle:
+	playfram       	0x33	# frame set 3
+SarahKerriganLocal04:
+	waitrand       	63 75
+	randcondjmp    	25 SarahKerriganLocal00
+	randcondjmp    	128 SarahKerriganLocal03
+	goto           	SarahKerriganLocal04
+
+SarahKerriganLocal00:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	randcondjmp    	192 SarahKerriganLocal01
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	wait           	6
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	turncwise      	2
+	wait           	3
+	wait           	6
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	turnccwise     	2
+	wait           	3
+	goto           	SarahKerriganLocal02
+
+SarahKerriganLocal03:
+	playfram       	0x44	# frame set 4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	wait           	1
+	turnrand       	3
+	wait           	1
+	playfram       	0x44	# frame set 4
+	wait           	1
+	goto           	SarahKerriganWalkingToIdle
+
+SarahKerriganLocal01:
+	wait           	13
+SarahKerriganLocal02:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	SarahKerriganWalkingToIdle
+
+SarahKerriganDeath:
+	playsnd        	470	# Terran\KERRIGAN\UKeDth00.wav
+	imgol          	231 0 0	# Unknown231 (terran\ghost.grp)
+	wait           	1
+	end            	
+
+SarahKerriganGndAttkInit:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+SarahKerriganGndAttkRpt:
+	wait           	1
+	nobrkcodestart 	
+	playsnd        	98	# Bullet\TGhFir00.wav
+	attack         	
+	playfram       	0xcc	# frame set 12
+	wait           	1
+	playfram       	0x22	# frame set 2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	ignorerest     	
+SarahKerriganGndAttkToIdle:
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x00	# frame set 0
+	wait           	1
+	goto           	SarahKerriganWalkingToIdle
+
+SarahKerriganCastSpell:
+	nobrkcodestart 	
+	wait           	1
+	playsnd        	240	# Terran\GHOST\TGhLkd00.wav
+	castspell      	
+	playfram       	0xcc	# frame set 12
+	wait           	2
+	playfram       	0x22	# frame set 2
+	nobrkcodeend   	
+	gotorepeatattk 	
+	sigorder       	2
+	goto           	SarahKerriganGndAttkToIdle
+
+SarahKerriganWalking:
+	move           	4
+	wait           	1
+	playfram       	0x44	# frame set 4
+	move           	4
+	wait           	1
+	playfram       	0x55	# frame set 5
+	move           	4
+	wait           	1
+	playfram       	0x66	# frame set 6
+	move           	4
+	wait           	1
+	playfram       	0x77	# frame set 7
+	move           	4
+	wait           	1
+	playfram       	0x88	# frame set 8
+	move           	4
+	wait           	1
+	playfram       	0x99	# frame set 9
+	move           	4
+	wait           	1
+	playfram       	0xaa	# frame set 10
+	move           	4
+	wait           	1
+	playfram       	0xbb	# frame set 11
+	move           	4
+	wait           	1
+	playfram       	0x33	# frame set 3
+	goto           	SarahKerriganWalking
+
+SarahKerriganSpecialState1:
+	playfram       	0x00	# frame set 0
+	wait           	1
+	playfram       	0x11	# frame set 1
+	wait           	1
+	playfram       	0x22	# frame set 2
+	wait           	1
+	goto           	SarahKerriganLocal05
+
+SarahKerriganLocal05:
+	wait           	125
+	goto           	SarahKerriganLocal05
+

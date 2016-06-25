@@ -1,0 +1,78 @@
+# ----------------------------------------------------------------------------- #
+# This is a decompile of the iscript.bin file '.\data\scripts\iscript.bin'
+# created on: Sat Jun 25 19:42:06 2016
+# ----------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# This header is used by images.dat entries:
+# 312 NukeSilo (terran\nukesilo.grp)
+.headerstart
+IsId           	128
+Type           	24
+Init           	NuclearSiloInit
+Death          	NuclearSiloDeath
+GndAttkInit    	[NONE]
+AirAttkInit    	[NONE]
+Unused1        	[NONE]
+GndAttkRpt     	[NONE]
+AirAttkRpt     	[NONE]
+CastSpell      	[NONE]
+GndAttkToIdle  	[NONE]
+AirAttkToIdle  	[NONE]
+Unused2        	[NONE]
+Walking        	[NONE]
+WalkingToIdle  	[NONE]
+SpecialState1  	[NONE]
+SpecialState2  	[NONE]
+AlmostBuilt    	NuclearSiloAlmostBuilt
+Built          	NuclearSiloBuilt
+Landing        	NuclearSiloLanding
+LiftOff        	NuclearSiloLiftOff
+IsWorking      	NuclearSiloIsWorking
+WorkingToIdle  	NuclearSiloBuilt
+WarpIn         	[NONE]
+Unused3        	[NONE]
+InitTurret     	[NONE]
+Disable        	NuclearSiloDisable
+Burrow         	[NONE]
+.headerend
+# ----------------------------------------------------------------------------- #
+
+NuclearSiloInit:
+	imgul          	315 0 0	# NukeSiloShad (terran\tnsShad.grp)
+NuclearSiloBuilt:
+	playfram       	0
+	goto           	NuclearSiloLiftOff
+
+NuclearSiloLiftOff:
+	wait           	125
+	goto           	NuclearSiloLiftOff
+
+NuclearSiloDeath:
+	playsnd        	7	# Misc\ExploLrg.wav
+	imgol          	334 0 0	# TerranBuildingExplosionlarge (thingy\tBangX.grp)
+	wait           	3
+	liftoffcondjmp 	NuclearSiloLocal00
+	lowsprul       	273 0 0	# TerranBuildingRubblesmall (thingy\RubbleS.grp)
+	wait           	1
+	end            	
+
+NuclearSiloLocal00:
+	wait           	1
+	end            	
+
+NuclearSiloAlmostBuilt:
+	playfram       	1
+	goto           	NuclearSiloLiftOff
+
+NuclearSiloLanding:
+	imgol          	313 0 0	# NukeSiloAttachment (terran\NukeSilC.grp)
+	goto           	NuclearSiloLiftOff
+
+NuclearSiloIsWorking:
+	imgol          	314 0 0	# NukeSiloOverlay (terran\NukeSilT.grp)
+	goto           	NuclearSiloLiftOff
+
+NuclearSiloDisable:
+	goto           	NuclearSiloLiftOff
+
