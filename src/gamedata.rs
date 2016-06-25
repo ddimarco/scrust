@@ -9,6 +9,7 @@ use ::pcx::PCX;
 use ::tbl::read_tbl;
 use ::grp::GRP;
 use ::pal::Palette;
+use ::iscript::IScript;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
@@ -33,6 +34,8 @@ pub struct GameData {
     pub flingy_dat: FlingyDat,
 
     pub install_pal: Palette,
+
+    pub iscript: IScript,
 }
 
 impl GameData {
@@ -60,6 +63,7 @@ impl GameData {
         let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe").unwrap());
 
         // let unit_pcx = PCX::read(&mut GameData::open_(&archives, "game/tunit.pcx").unwrap());
+        let iscript = IScript::read(&mut GameData::open_(&archives, "scripts/iscript.bin").unwrap());
         GameData {
             mpq_archives: archives,
             fonts: fonts,
@@ -75,6 +79,7 @@ impl GameData {
             sprites_dat: sprites_dat,
             flingy_dat: flingy_dat,
 
+            iscript: iscript,
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
