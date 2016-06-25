@@ -67,10 +67,10 @@ struct SCImage<'iscript, 'gamedata> {
     // FIXME: a class wide instance would be enough
     images_dat: &'gamedata ImagesDat,
 
-    // FIXME: no copying
+    // FIXME: avoid copying
     grp: GRP,
 
-    //texture: Texture,
+    texture: Texture,
 
     waiting_ticks_left: usize,
     direction: u8,
@@ -90,46 +90,9 @@ impl<'iscript, 'gamedata> Read for SCImage<'iscript, 'gamedata> {
     }
 }
 
-// FIXME: this is super expensive, try:
-// - keep & rewrite the same texture
-// - cache & combine textures
-// - also see http://stackoverflow.com/questions/12506979/what-is-the-point-of-an-sdl2-texture
-fn palimg_to_texture(data: &[u8], width: u32, height: u32, pal: &Palette,
-                     reindexing_table: Option<&[u8]>, renderer: &mut Renderer) -> Texture {
-    let mut texture =
-        renderer.create_texture_streaming(PixelFormatEnum::RGB24, width, height).unwrap();
-    texture.with_lock(None, |buffer: &mut [u8], _: usize| {
-        for i in 0..data.len() {
-            let col = data[i] as usize;
-            let col_mapped =
-                match reindexing_table {
-                    Some(tbl) => tbl[col] as usize,
-                    None => col,
-                };
-
-            buffer[i*3 + 0] = pal.data[col_mapped*3 + 0];
-            buffer[i*3 + 1] = pal.data[col_mapped*3 + 1];
-            buffer[i*3 + 2] = pal.data[col_mapped*3 + 2];
-            }
-    }).ok();
-    texture
-}
 
 impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
-    pub fn render(&self, x: i32, y: i32, pal: &Palette,
-                  reindexing_table: Option<&[u8]>, renderer: &mut Renderer) {
-        let (w,h) = (self.grp.header.width as u32, self.grp.header.height as u32);
-        let frame = self.frame_idx();
-        // FIXME: cache this
-        let texture = palimg_to_texture(&self.grp.frames[frame], w, h,
-                                        &pal, reindexing_table, renderer);
-
-        renderer.copy_ex(&texture, None, Some(Rect::new(x, y, w, h)),
-                         0., None, self.draw_flipped(), false).ok();
-    }
-
-
-    pub fn new(gd: &'gamedata GameData, image_id: u16, iscript: &'iscript IScript)
+    pub fn new(gd: &'gamedata GameData, renderer: &mut Renderer, image_id: u16, iscript: &'iscript IScript)
                -> SCImage<'iscript, 'gamedata> {
         // image id -> iscript id:
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
@@ -148,6 +111,10 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         let grp = GRP::read(&mut gd.open(&name).unwrap());
 
         let start_pos = iscript_anim_offsets[AnimationType::Init as usize];
+        let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
+                                                        grp.header.width as u32,
+                                                        grp.header.height as u32)
+            .unwrap();
         SCImage {
             pos: start_pos,
             image_id: image_id,
@@ -155,6 +122,7 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
             iscript_data: &iscript.data,
             images_dat: &gd.images_dat,
             grp: grp,
+            texture: texture,
 
             waiting_ticks_left: 0,
             frameset: 0,
@@ -162,9 +130,44 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         }
     }
 
+    // FIXME: this is super expensive, try:
+    // - only redraw when necessary
+    // - cache & combine textures
+    // - see http://stackoverflow.com/questions/12506979/what-is-the-point-of-an-sdl2-texture
+    fn update_texture(texture: &mut Texture, data: &[u8], pal: &Palette,
+                      reindexing_table: Option<&[u8]>) {
+        texture.with_lock(None, |buffer: &mut [u8], _: usize| {
+            for i in 0..data.len() {
+                let col = data[i] as usize;
+                let col_mapped =
+                    match reindexing_table {
+                        Some(tbl) => tbl[col] as usize,
+                        None => col,
+                    };
+
+                buffer[i*3 + 0] = pal.data[col_mapped*3 + 0];
+                buffer[i*3 + 1] = pal.data[col_mapped*3 + 1];
+                buffer[i*3 + 2] = pal.data[col_mapped*3 + 2];
+            }
+        }).ok();
+    }
+
+    pub fn render(&mut self, x: i32, y: i32, pal: &Palette,
+                  reindexing_table: Option<&[u8]>, renderer: &mut Renderer) {
+        let (w,h) = (self.grp.header.width as u32, self.grp.header.height as u32);
+        let frame = self.frame_idx();
+        // FIXME: cache this
+        let ref data = self.grp.frames[frame];
+        SCImage::update_texture(&mut self.texture, data, &pal,
+                                reindexing_table);
+
+        renderer.copy_ex(&self.texture, None, Some(Rect::new(x, y, w, h)),
+                         0., None, self.draw_flipped(), false).ok();
+    }
+
+
     pub fn set_animation(&mut self, anim: AnimationType) {
         self.pos = self.iscript_anim_offsets[anim as usize];
-        println!("new iscript pos: {}", self.pos);
     }
 
     pub fn set_direction(&mut self, dir: u8) {
@@ -193,7 +196,6 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
         let mut nearest_dist = 10000;
         for lbl_idx in 0..self.iscript_anim_offsets.len() {
             let lbl_pos = self.iscript_anim_offsets[lbl_idx];
-            //println!("checking label: {} - {:?}", lbl_pos, AnimationType::from_usize(lbl_idx).unwrap());
             if self.pos >= lbl_pos {
                 let dist = self.pos - lbl_pos;
                 if dist < nearest_dist {
@@ -272,20 +274,17 @@ impl<'iscript, 'gamedata> SCImage<'iscript, 'gamedata> {
                 -1
             };
             let new_dir = ((self.direction as i16 - (dir * units as i16)) + 32) % 32;
-            println!(" new_dir: {}", new_dir);
             assert!(new_dir >= 0);
             self.set_direction((new_dir % 32) as u8);
         },
         OpCode::TurnCWise => (units: u8) {
             println!("turnccwise.: {}", units);
             let new_dir = self.direction + units;
-            println!(" new_dir: {}", new_dir);
             self.set_direction(new_dir);
         },
         OpCode::TurnCCWise => (units: u8) {
             println!("turnccwise: {}", units);
             let new_dir = ((self.direction as i16 - units as i16) + 32) % 32;
-            println!(" new_dir: {}", new_dir);
             assert!(new_dir >= 0);
             self.set_direction(new_dir as u8);
         },
@@ -323,7 +322,6 @@ fn main() {
     //gd.grp(grp_id);
 
     let iscript = IScript::read(&mut gd.open("scripts/iscript.bin").unwrap());
-    let mut img = SCImage::new(&gd, image_id, &iscript);
 
     //img.set_animation(AnimationType::Death);
     // for _ in 0..20 {
@@ -344,6 +342,9 @@ fn main() {
         .unwrap();
 
     let mut renderer = window.renderer().build().unwrap();
+
+    // FIXME: scimage should not require renderer
+    let mut img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
 
     // let (w, h) = (320, fnt.line_height());
     // let texture = fnt.render_textbox("Na, wie isses?", 0, &mut renderer,
