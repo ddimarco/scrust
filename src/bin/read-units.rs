@@ -60,14 +60,19 @@ macro_rules! def_opcodes {
 }
 
 
+enum CreateIScriptEntity {
+    ImageUnderlay {image_id: u16, rel_x: u8, rel_y: u8},
+    ImageOverlay {image_id: u16, rel_x: u8, rel_y: u8},
+}
+
 struct IScriptState<'iscript> {
     pub iscript_id: u32,
-    // current position in iscript
+    /// current position in iscript
     pub pos: u16,
-    // reference to iscript animation offsets
+    /// reference to iscript animation offsets
     iscript_anim_offsets: &'iscript Vec<u16>,
     // FIXME: class wide instance would be enough
-    // reference to iscript buffer
+    /// reference to iscript buffer
     iscript_data: &'iscript Vec<u8>,
     images_dat: &'iscript ImagesDat,
 
@@ -77,14 +82,18 @@ struct IScriptState<'iscript> {
     direction: u8,
     frameset: u16,
 
+    /// signals the parent to create a new entity
+    create_entity_action: Option<CreateIScriptEntity>,
+
+    parent: Option<&'iscript IScriptState<'iscript>>,
 }
 
-trait IScriptable<'a> {
-    fn state(&'a mut self) -> &'a mut IScriptState;
-    fn step(&'a mut self) {
-        self.state().interpret_iscript();
-    }
-}
+// trait IScriptable<'a> {
+//     fn state(&'a mut self) -> &'a mut IScriptState;
+//     fn step(&'a mut self) {
+//         self.state().interpret_iscript();
+//     }
+// }
 
 /**
 iscript needs to
@@ -108,7 +117,7 @@ impl<'iscript> Read for IScriptState<'iscript> {
 }
 
 impl<'iscript> IScriptState<'iscript> {
-    pub fn new(gd: &'iscript GameData, iscript_id: u32) -> IScriptState<'iscript> {
+    pub fn new(gd: &'iscript GameData, iscript_id: u32, parent: Option<&'iscript IScriptState>) -> IScriptState<'iscript> {
         let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
 
         println!("header:");
@@ -129,6 +138,8 @@ impl<'iscript> IScriptState<'iscript> {
             rel_y: 0,
             frameset: 0,
             direction: 0,
+            create_entity_action: None,
+            parent: parent,
         }
     }
 
@@ -151,7 +162,6 @@ impl<'iscript> IScriptState<'iscript> {
         assert!(new_dir >= 0);
         self.set_direction(new_dir as u8);
     }
-
 
     pub fn current_animation(&self) -> AnimationType {
         let mut nearest_label = AnimationType::Init;
@@ -176,6 +186,8 @@ impl<'iscript> IScriptState<'iscript> {
     // TODO: move into trait
     // TODO: join methods
     pub fn interpret_iscript(&mut self) {
+        assert!(self.create_entity_action.is_none());
+
         // FIXME: is waiting actually counted in frames?
         if self.waiting_ticks_left > 0 {
             self.waiting_ticks_left -= 1;
@@ -190,12 +202,21 @@ impl<'iscript> IScriptState<'iscript> {
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
         // shadows and such; img* is associated with the current entity
             println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
-        // let mut img = SCImage::new(&gd, &mut renderer, image_id, &iscript);
+            self.create_entity_action = Some(CreateIScriptEntity::ImageUnderlay {
+                image_id: image_id,
+                rel_x: rel_x,
+                rel_y: rel_y,
+            });
         // FIXME
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
         // e.g. explosions on death
             println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
+            self.create_entity_action = Some(CreateIScriptEntity::ImageOverlay {
+                image_id: image_id,
+                rel_x: rel_x,
+                rel_y: rel_y,
+            });
         // FIXME
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
@@ -244,27 +265,19 @@ impl<'iscript> IScriptState<'iscript> {
         },
         OpCode::TurnRand => (units: u8) {
             println!("turnrand: {}", units);
-            let dir = if rand::thread_rng().gen_range(0, 100) < 50 {
-                1
+            if rand::thread_rng().gen_range(0, 100) < 50 {
+                self.turn_cwise(units);
             } else {
-                -1
-            };
-            let new_dir = ((self.direction as i16 - (dir * units as i16)) + 32) % 32;
-            assert!(new_dir >= 0);
-            self.set_direction((new_dir % 32) as u8);
+                self.turn_ccwise(units);
+            }
         },
         OpCode::TurnCWise => (units: u8) {
             println!("turnccwise.: {}", units);
             self.turn_cwise(units);
-        // let new_dir = self.direction + units;
-        // self.set_direction(new_dir);
         },
         OpCode::TurnCCWise => (units: u8) {
             println!("turnccwise: {}", units);
             self.turn_ccwise(units);
-        // let new_dir = ((self.direction as i16 - units as i16) + 32) % 32;
-        // assert!(new_dir >= 0);
-        // self.set_direction(new_dir as u8);
         },
         OpCode::SetFlDirect => (dir: u8) {
             println!("setfldirect: {}", dir);
@@ -325,7 +338,6 @@ impl<'iscript> IScriptState<'iscript> {
 
     }
 }
-
 struct SCImage<'iscript> {
     pub image_id: u16,
 
@@ -335,18 +347,21 @@ struct SCImage<'iscript> {
     texture: Texture,
 
     iscript_state: IScriptState<'iscript>,
+
+    underlays: Vec<SCImage<'iscript>>,
 }
-impl<'state> IScriptable<'state> for SCImage<'state> {
-    fn state(&'state mut self) -> &'state mut IScriptState {
-        &mut self.iscript_state
-    }
-}
+// impl<'state> IScriptable<'state> for SCImage<'state> {
+//     fn state(&'state mut self) -> &'state mut IScriptState {
+//         &mut self.iscript_state
+//     }
+// }
 
 
 impl<'gamedata> SCImage<'gamedata> {
     pub fn new(gd: &'gamedata GameData,
                renderer: &mut Renderer,
-               image_id: u16)
+               image_id: u16,
+               parent: Option<&'gamedata SCImage>)
                -> SCImage<'gamedata> {
         // image id -> iscript id:
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
@@ -360,11 +375,14 @@ impl<'gamedata> SCImage<'gamedata> {
                                       grp.header.width as u32,
                                       grp.header.height as u32)
             .unwrap();
+
+        let parent_is = parent.and_then(|par| Some(&par.iscript_state));
         SCImage {
             image_id: image_id,
             grp: grp,
             texture: texture,
-            iscript_state: IScriptState::new(gd, iscript_id),
+            iscript_state: IScriptState::new(gd, iscript_id, parent_is),
+            underlays: Vec::<SCImage>::new(),
         }
     }
 
@@ -439,8 +457,35 @@ impl<'gamedata> SCImage<'gamedata> {
             .ok();
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self,
+                // these params are just for creating new entities
+                gd: &'gamedata GameData, renderer: &mut Renderer) {
+
+        for ul in &mut self.underlays {
+            ul.iscript_state.interpret_iscript();
+            // assuming they do not create additional under/overlays
+        }
+
         self.iscript_state.interpret_iscript();
+
+        // create additional entities if necessary
+        match self.iscript_state.create_entity_action {
+            Some(CreateIScriptEntity::ImageUnderlay {image_id, rel_x, rel_y}) => {
+                println!("creating underlay");
+
+                // let mut underlay = SCImage::new(gd, renderer, image_id, Some(&self));
+                // underlay.iscript_state.rel_x = rel_x;
+                // underlay.iscript_state.rel_y = rel_y;
+                // self.underlays.push(underlay);
+
+                self.iscript_state.create_entity_action = None;
+            },
+            Some(CreateIScriptEntity::ImageOverlay {image_id, rel_x, rel_y}) => {
+                println!("TODO: create overlay");
+                self.iscript_state.create_entity_action = None;
+            },
+            _ => {},
+        }
     }
 }
 
@@ -481,7 +526,7 @@ fn main() {
     let mut renderer = window.renderer().build().unwrap();
 
     // FIXME: scimage should not require renderer
-    let mut img = SCImage::new(&gd, &mut renderer, image_id);
+    let mut img = SCImage::new(&gd, &mut renderer, image_id, None);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let interval = 1_000 / 60;
@@ -532,7 +577,7 @@ fn main() {
         }
 
 
-        img.step();
+        img.step(&gd, &mut renderer);
         {
             let anim = img.iscript_state.current_animation();
             if anim != current_anim {
@@ -556,17 +601,11 @@ fn main() {
                         Keycode::Escape => break 'running,
                         Keycode::Q => {
                             // turn cc
-                            // let new_dir = ((img.direction as i16 - 1) + 32) % 32;
-                            // assert!(new_dir >= 0);
-                            // img.iscript_state.set_direction(new_dir as u8);
                             img.iscript_state.turn_ccwise(1);
                         }
                         Keycode::E => {
                             // turn c
                             img.iscript_state.turn_cwise(1);
-                            // let new_dir = (img.direction as i16 + 1) % 32;
-                            // assert!(new_dir >= 0);
-                            // img.iscript_state.set_direction(new_dir as u8);
                         }
                         Keycode::A => {
                             // change animation
@@ -589,7 +628,7 @@ fn main() {
                             let flingy_id = gd.units_dat.flingy_id[unit_id];
                             let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
                             let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-                            img = SCImage::new(&gd, &mut renderer, image_id);
+                            img = SCImage::new(&gd, &mut renderer, image_id, None);
 
                             unit_name_texture = fnt.render_textbox(&format!("Unit: {}",
                                                          gd.stat_txt_tbl[unit_id as usize]),
