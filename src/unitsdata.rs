@@ -73,7 +73,7 @@ dat_struct! (
         remapping:             u8;   999,
         iscript_id:            u32;  999,
         shield_overlay:        u32;  999,
-        attacku_overlay:       u32;  999,
+        attack_overlay:        u32;  999,
         damage_overlay:        u32;  999,
         special_overlay:       u32;  999,
         landing_dust_overlay:  u32;  999,

@@ -22,10 +22,10 @@ pub struct GameData {
     pub stat_txt_tbl: Vec<String>,
 
     // pub unit_reindexing_tbl: Vec<u8>,
-    // pub ofire_reindexing_tbl: Vec<u8>,
-    // pub bfire_reindexing_tbl: Vec<u8>,
-    // pub gfire_reindexing_tbl: Vec<u8>,
-    // pub bexpl_reindexing_tbl: Vec<u8>,
+    pub ofire_reindexing: PCX,
+    pub bfire_reindexing: PCX,
+    pub gfire_reindexing: PCX,
+    pub bexpl_reindexing: PCX,
 
     // TODO: encapsulate this stuff
     pub images_dat: ImagesDat,
@@ -64,6 +64,12 @@ impl GameData {
 
         // let unit_pcx = PCX::read(&mut GameData::open_(&archives, "game/tunit.pcx").unwrap());
         let iscript = IScript::read(&mut GameData::open_(&archives, "scripts/iscript.bin").unwrap());
+
+        // FIXME depends on tileset
+        let ofire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/ofire.pcx").unwrap());
+        let bfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bfire.pcx").unwrap());
+        let gfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/gfire.pcx").unwrap());
+        let bexpl_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bexpl.pcx").unwrap());
         GameData {
             mpq_archives: archives,
             fonts: fonts,
@@ -80,6 +86,10 @@ impl GameData {
             flingy_dat: flingy_dat,
 
             iscript: iscript,
+            ofire_reindexing: ofire_reindexing,
+            bfire_reindexing: bfire_reindexing,
+            gfire_reindexing: gfire_reindexing,
+            bexpl_reindexing: bexpl_reindexing,
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {

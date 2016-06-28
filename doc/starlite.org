@@ -1,0 +1,27 @@
+* starlite demo program
+  - smooth rendering of units, map, minimap, flingys, portaits, map animations
+  - sound
+  -uses 8bpp
+** structure
+*** Game
+    - map, units, selection
+**** Advance() method
+     - steps the game forward
+     - calls in sequence DestroyAdvanceDestroy for units, weapons, flingys
+**** DestroyAdvanceDestroy()
+     - checks whether entity should be destroyed
+     - calls Advance() on it
+     - again checks whether should be destroyed
+*** GameView
+    - Game interface
+    - contains pointer to game
+**** Run() method
+     - main loop
+     - calls game->advance
+*** SpriteEngine class
+    - keeps set & queues for images and sprites
+*** Unit class
+    implements UnitFlingyInterface
+*** Image class
+    - inherits ImageIScriptInterface, ImageSpriteInterface
+    - private methods for iscript functions (e.g. playframe etc)

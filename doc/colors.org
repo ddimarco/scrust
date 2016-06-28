@@ -1,0 +1,9 @@
+* color drawing
+** scimages "draw function" (RLE_function in bwapi)
+*** bwapi
+   - 14: coloringdata = playerid
+   - 9: coloringdata = colorshift[imagesdat.remapping[imageid]].data
+** mysc-scheme
+   - 10: shadow
+   - 9: reindexing table depending on imagesdat.remappping
+   - else: normal
