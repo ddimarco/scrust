@@ -14,54 +14,57 @@ use read_pcx::pcx::PCX;
 use read_pcx::pal::Palette;
 
 use read_pcx::gamedata::GameData;
+use read_pcx::font::RenderText;
+
+use read_pcx::{GameContext, View, ViewAction};
 
 use std::fs::File;
 use std::io::Write;
 
-use read_pcx::font::RenderText;
+struct FontView {
+    text: String,
+    font_size: FontSize,
+    color_idx: usize,
+    trg_rect: Rect,
+}
+impl FontView {
+    fn new(context: &mut GameContext, text: &str, font_size: FontSize, color_idx: usize) -> FontView {
+        let pal = context.gd.fontmm_reindex.palette.to_sdl();
+        context.screen.set_palette(&pal).ok();
+        FontView {
+            text: text.to_owned(),
+            font_size: font_size,
+            color_idx: color_idx,
+            trg_rect: Rect::new(50, 50, 100, 100),
+        }
+    }
+}
+impl View for FontView {
+    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+        if context.events.now.quit || context.events.now.key_escape == Some(true) {
+            return ViewAction::Quit;
+        }
+
+        let fnt = context.gd.font(FontSize::Font16);
+        let screen_pitch = context.screen.pitch();
+        let reindex = &context.gd.fontmm_reindex.data;
+        context.screen.with_lock_mut(|buffer: &mut [u8]| {
+            fnt.render_textbox(self.text.as_ref(),
+                               self.color_idx,
+                               reindex,
+                               buffer,
+                               screen_pitch,
+                               &self.trg_rect);
+        });
+
+        ViewAction::None
+    }
+}
 
 
 fn main() {
-    println!("opening mpq...");
-    let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
+    ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+        Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0))
+    });
 
-    let fnt = gd.font(FontSize::Font16);
-    println!("low-id: {}, high-idx: {}, max-width: {}, max-height: {}",
-             fnt.header.low_idx,
-             fnt.header.high_idx,
-             fnt.header.max_width,
-             fnt.header.max_height);
-
-    // sdl
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let window = video_subsystem.window("sc font display", 640, 480)
-        .position_centered()
-        .opengl()
-        .build()
-        .unwrap();
-
-    let mut renderer = window.renderer().build().unwrap();
-
-    let (w, h) = (320, fnt.line_height());
-    let texture = fnt.render_textbox("Na, wie isses?", 0, &mut renderer,
-                                     &gd.fontmm_reindex.palette, &gd.fontmm_reindex.data, w, h);
-    println!("w: {}, h: {}", w, h);
-
-    renderer.set_draw_color(Color::RGBA(0, 0, 0, 0));
-    renderer.clear();
-    renderer.copy(&texture, None, Some(sdl2::rect::Rect::new(0, 0, w, h)));
-    renderer.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-    'running: loop {
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
-                _ => {}
-            }
-        }
-    }
 }

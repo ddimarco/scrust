@@ -359,14 +359,14 @@ struct SCImage<'iscript> {
     // FIXME: avoid copying
     grp: GRP,
 
-    texture: Texture,
+    // texture: Texture,
 
     iscript_state: IScriptState<'iscript>,
 
     underlays: Vec<SCImage<'iscript>>,
     overlays: Vec<SCImage<'iscript>>,
 
-    prerender_buffer: Vec<u8>,
+    // prerender_buffer: Vec<u8>,
 }
 
 impl<'gamedata> SCImage<'gamedata> {
@@ -384,24 +384,24 @@ impl<'gamedata> SCImage<'gamedata> {
 
 
         // FIXME: need to increase the texture size
-        let (w, h) = //(320, 240);
-            (grp.header.width as u32, grp.header.height as u32);
-        let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
-                                      //(grp.header.width + increase) as u32,
-                                                        //(grp.header.height + increase) as u32
-                                                        w, h
-        )
-            .unwrap();
+        // let (w, h) = //(320, 240);
+        //     (grp.header.width as u32, grp.header.height as u32);
+        // let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
+        //                               //(grp.header.width + increase) as u32,
+        //                                                 //(grp.header.height + increase) as u32
+        //                                                 w, h
+        // )
+        //     .unwrap();
         //let ds = (grp.header.width + increase) as usize * (grp.header.height + increase) as usize;
-        let ds = (w as usize * h as usize);
+        // let ds = (w as usize * h as usize);
         SCImage {
             image_id: image_id,
             grp: grp,
-            texture: texture,
+            // texture: texture,
             iscript_state: IScriptState::new(gd, iscript_id),
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
-            prerender_buffer: vec![0; ds],
+            // prerender_buffer: vec![0; ds],
         }
     }
 
@@ -466,6 +466,7 @@ impl<'gamedata> SCImage<'gamedata> {
 
         let underlays = &self.underlays;
         let overlays = &self.overlays;
+        /*
         {
             let tq = self.texture.query();
             // println!("size: {} x {} = {}", tq.width, tq.height, data.len());
@@ -567,6 +568,7 @@ impl<'gamedata> SCImage<'gamedata> {
             .ok();
         renderer.set_draw_color(Color::RGB(255, 255, 255));
         renderer.draw_rect(rect).ok();
+        */
     }
 
     pub fn step(&mut self,
