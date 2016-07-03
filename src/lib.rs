@@ -24,6 +24,8 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
 
+use std::rc::Rc;
+
 struct_events! (
     keyboard: {
         key_escape: Escape,
@@ -32,7 +34,12 @@ struct_events! (
         key_left: Left,
         key_right: Right,
         key_space: Space,
-        key_return: Return
+        key_return: Return,
+        key_n: N,
+        key_p: P,
+        key_a: A,
+        key_q: Q,
+        key_e: E
     },
     else: {
         quit: Quit { .. }
@@ -40,7 +47,8 @@ struct_events! (
 );
 
 pub struct GameContext<'window> {
-    pub gd: GameData,
+    // gamedata is ref-counted so that refs can be kept by other objects
+    pub gd: Rc<GameData>,
     pub events: Events,
     pub renderer: Renderer<'window>,
     pub screen: Surface<'window>,
@@ -52,7 +60,7 @@ impl<'window> GameContext<'window> {
     fn new(gd: GameData, events: Events, renderer: Renderer<'window>,
            /*timer: Timer<'window>*/) -> GameContext<'window> {
         GameContext {
-            gd: gd,
+            gd: Rc::new(gd),
             events: events,
             renderer: renderer,
             screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(),
@@ -95,8 +103,6 @@ SDL_DestroyTexture(t8);
 
 pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
 where F: Fn(&mut GameContext) -> Box<View> {
-    let gd = GameData::init(&Path::new(scdata_path));
-
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window(title, 640, 480)
@@ -109,7 +115,7 @@ where F: Fn(&mut GameContext) -> Box<View> {
 
     // FIXME: set a default palette for screen surface
     let mut context = GameContext::new(
-        gd,
+        GameData::init(&Path::new(scdata_path)),
         Events::new(sdl_context.event_pump().unwrap()),
         window.renderer().accelerated().build().unwrap(),
     );

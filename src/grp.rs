@@ -84,7 +84,8 @@ impl GRP {
         for frame_int in &frames_int {
             let line_offsets =
                 GRP::read_line_offsets(file, frame_int.frameoffset, frame_int.frameheight as usize);
-            let mut frame_data = vec![0 as u8; (header.width as usize * header.width as usize)];
+            let fl = (header.width as usize) * (header.height as usize);
+            let mut frame_data = vec![0 as u8; fl];
             for i in 0..line_offsets.len() {
                 GRP::read_line_data(file,
                                     frame_int.y_offset as usize + i,
@@ -94,10 +95,8 @@ impl GRP {
                                     &mut frame_data,
                                     header.width);
             }
-
             frames.push(frame_data);
         }
-
         frames
     }
 

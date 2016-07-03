@@ -17,6 +17,7 @@ pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
 
     fonts: Vec<Font>,
+    pub font_reindex: PCX,
     pub fontmm_reindex: PCX,
     pub images_tbl: Vec<String>,
     pub stat_txt_tbl: Vec<String>,
@@ -26,6 +27,10 @@ pub struct GameData {
     pub bfire_reindexing: PCX,
     pub gfire_reindexing: PCX,
     pub bexpl_reindexing: PCX,
+    pub unit_reindexing: PCX,
+    pub dark_reindexing: PCX,
+    pub null_reindexing: Vec<u8>,
+    pub shadow_reindexing: Vec<u8>,
 
     // TODO: encapsulate this stuff
     pub images_dat: ImagesDat,
@@ -50,7 +55,15 @@ impl GameData {
             }
         }
 
+        let mut null_reindexing = vec![0 as u8; 256*256];
+        for i in 0..256 {
+            for j in 0..256 {
+                null_reindexing[i*256 + j] = i as u8;
+            }
+        }
+
         let fonts = GameData::load_fonts(&archives);
+        let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx").unwrap());
         let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx").unwrap());
         let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
         let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
@@ -70,10 +83,25 @@ impl GameData {
         let bfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bfire.pcx").unwrap());
         let gfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/gfire.pcx").unwrap());
         let bexpl_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bexpl.pcx").unwrap());
+        let unit_reindexing = PCX::read(&mut GameData::open_(&archives, "game\\tunit.pcx").unwrap());
+        let dark_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset\\install\\dark.pcx").unwrap());
+
+
+        let mut shadow_reindexing = vec![0 as u8; 256*256];
+        for r in 0..256 {
+            let mut inpos = 256*16;
+            for c in 0..256 {
+                shadow_reindexing[r*256+c] = dark_reindexing.data[inpos];
+                inpos += 1;
+            }
+        }
+
         GameData {
             mpq_archives: archives,
             fonts: fonts,
+            font_reindex: font_reindex,
             fontmm_reindex: fontmm_reindex,
+            null_reindexing: null_reindexing,
 
             install_pal: install_pal,
 
@@ -90,6 +118,9 @@ impl GameData {
             bfire_reindexing: bfire_reindexing,
             gfire_reindexing: gfire_reindexing,
             bexpl_reindexing: bexpl_reindexing,
+            unit_reindexing: unit_reindexing,
+            dark_reindexing: dark_reindexing,
+            shadow_reindexing: shadow_reindexing,
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {

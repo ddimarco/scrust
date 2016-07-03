@@ -13,21 +13,20 @@ use rand::Rng;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
-use sdl2::pixels::PixelFormatEnum;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
-use sdl2::render::{Renderer, Texture};
 
 extern crate read_pcx;
 use read_pcx::gamedata::GameData;
 use read_pcx::iscript::{AnimationType, OpCode};
 use read_pcx::grp::GRP;
-use read_pcx::pal::Palette;
 use read_pcx::unitsdata::ImagesDat;
 
 use read_pcx::font::FontSize;
 use read_pcx::font::RenderText;
+
+use read_pcx::{GameContext, View, ViewAction};
+
+use std::rc::Rc;
 
 
 macro_rules! var_read {
@@ -65,16 +64,13 @@ enum CreateIScriptEntity {
     ImageOverlay {image_id: u16, rel_x: u8, rel_y: u8},
 }
 
-struct IScriptState<'iscript> {
+struct IScriptState {
     pub iscript_id: u32,
     /// current position in iscript
     pub pos: u16,
-    /// reference to iscript animation offsets
-    iscript_anim_offsets: &'iscript Vec<u16>,
-    // FIXME: class wide instance would be enough
-    /// reference to iscript buffer
-    iscript_data: &'iscript Vec<u8>,
-    images_dat: &'iscript ImagesDat,
+
+    // TODO: couldn't find a better way to keep multiple immutable refs to gamedata
+    gd: Rc<GameData>,
 
     waiting_ticks_left: usize,
     rel_x: u8,
@@ -86,28 +82,13 @@ struct IScriptState<'iscript> {
     create_entity_action: Option<CreateIScriptEntity>,
 }
 
-// trait IScriptable<'a> {
-//     fn state(&'a mut self) -> &'a mut IScriptState;
-//     fn step(&'a mut self) {
-//         self.state().interpret_iscript();
-//     }
-// }
-
-/**
-iscript needs to
-  - create scimages over/underlays (& add to parent)
-  - create sprites over/underlays (& add to global layer)
-  - signal end of life
-**/
-
-
-impl<'iscript> Read for IScriptState<'iscript> {
+impl Read for IScriptState {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         for i in 0..buf.len() {
-            if self.pos as usize > self.iscript_data.len() {
+            if self.pos as usize > self.gd.iscript.data.len() {
                 return Ok(i);
             }
-            buf[i] = self.iscript_data[self.pos as usize];
+            buf[i] = self.gd.iscript.data[self.pos as usize];
             self.pos = self.pos + 1;
         }
         return Ok(buf.len());
@@ -124,23 +105,23 @@ enum SCImageRemapping {
     Shadow,
 }
 
-impl<'iscript> IScriptState<'iscript> {
-    pub fn new(gd: &'iscript GameData, iscript_id: u32) -> IScriptState<'iscript> {
-        let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
-
-        println!("header:");
-        for anim_idx in 0..iscript_anim_offsets.len() {
-            let anim = AnimationType::from_usize(anim_idx).unwrap();
-            let pos = iscript_anim_offsets[anim_idx];
-            println!("{:?}: {}", anim, pos);
+impl IScriptState {
+    pub fn new(gd: &Rc<GameData>, iscript_id: u32) -> IScriptState {
+        let start_pos;
+        {
+            let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
+            println!("header:");
+            for anim_idx in 0..iscript_anim_offsets.len() {
+                let anim = AnimationType::from_usize(anim_idx).unwrap();
+                let pos = iscript_anim_offsets[anim_idx];
+                println!("{:?}: {}", anim, pos);
+            }
+            start_pos = iscript_anim_offsets[AnimationType::Init as usize];
         }
-        let start_pos = iscript_anim_offsets[AnimationType::Init as usize];
         IScriptState {
             iscript_id: iscript_id,
             pos: start_pos,
-            iscript_anim_offsets: iscript_anim_offsets,
-            iscript_data: &gd.iscript.data,
-            images_dat: &gd.images_dat,
+            gd: gd.clone(),
             waiting_ticks_left: 0,
             rel_x: 0,
             rel_y: 0,
@@ -150,11 +131,20 @@ impl<'iscript> IScriptState<'iscript> {
         }
     }
 
+    /// reference to iscript animation offsets
+    pub fn iscript_anim_offsets(&self) -> &Vec<u16> {
+        self.gd.iscript.id_offsets_map.get(&self.iscript_id).unwrap()
+    }
+
+    pub fn images_dat(&self) -> &ImagesDat {
+        &self.gd.images_dat
+    }
+
     pub fn set_animation(&mut self, anim: AnimationType) {
-        self.pos = self.iscript_anim_offsets[anim as usize];
+        self.pos = self.iscript_anim_offsets()[anim as usize];
     }
     pub fn is_animation_valid(&self, anim: AnimationType) -> bool {
-        self.iscript_anim_offsets[anim as usize] > 0
+        self.iscript_anim_offsets()[anim as usize] > 0
     }
 
     pub fn set_direction(&mut self, dir: u8) {
@@ -173,8 +163,8 @@ impl<'iscript> IScriptState<'iscript> {
     pub fn current_animation(&self) -> AnimationType {
         let mut nearest_label = AnimationType::Init;
         let mut nearest_dist = 10000;
-        for lbl_idx in 0..self.iscript_anim_offsets.len() {
-            let lbl_pos = self.iscript_anim_offsets[lbl_idx];
+        for lbl_idx in 0..self.iscript_anim_offsets().len() {
+            let lbl_pos = self.iscript_anim_offsets()[lbl_idx];
             if self.pos >= lbl_pos {
                 let dist = self.pos - lbl_pos;
                 if dist < nearest_dist {
@@ -187,7 +177,7 @@ impl<'iscript> IScriptState<'iscript> {
     }
 
     pub fn anim_count(&self) -> usize {
-        self.iscript_anim_offsets.len()
+        self.iscript_anim_offsets().len()
     }
 
     // TODO: move into trait
@@ -353,60 +343,36 @@ impl<'iscript> IScriptState<'iscript> {
 
     }
 }
-struct SCImage<'iscript> {
+struct SCImage {
     pub image_id: u16,
-
-    // FIXME: avoid copying
+    // FIXME: avoid duplicated grps
     grp: GRP,
-
-    // texture: Texture,
-
-    iscript_state: IScriptState<'iscript>,
-
-    underlays: Vec<SCImage<'iscript>>,
-    overlays: Vec<SCImage<'iscript>>,
-
-    // prerender_buffer: Vec<u8>,
+    iscript_state: IScriptState,
+    underlays: Vec<SCImage>,
+    overlays: Vec<SCImage>,
 }
 
-impl<'gamedata> SCImage<'gamedata> {
-    pub fn new(gd: &'gamedata GameData,
-               renderer: &mut Renderer,
+impl SCImage {
+    pub fn new(gd: &Rc<GameData>,
                image_id: u16)
-               -> SCImage<'gamedata> {
-        // image id -> iscript id:
+               -> SCImage {
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
-
         let grp_id = gd.images_dat.grp_id[image_id as usize];
         let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
         println!("grp id: {}, filename: {}", grp_id, name);
         let grp = GRP::read(&mut gd.open(&name).unwrap());
 
-
-        // FIXME: need to increase the texture size
-        // let (w, h) = //(320, 240);
-        //     (grp.header.width as u32, grp.header.height as u32);
-        // let texture = renderer.create_texture_streaming(PixelFormatEnum::RGB24,
-        //                               //(grp.header.width + increase) as u32,
-        //                                                 //(grp.header.height + increase) as u32
-        //                                                 w, h
-        // )
-        //     .unwrap();
-        //let ds = (grp.header.width + increase) as usize * (grp.header.height + increase) as usize;
-        // let ds = (w as usize * h as usize);
         SCImage {
             image_id: image_id,
             grp: grp,
-            // texture: texture,
-            iscript_state: IScriptState::new(gd, iscript_id),
+            iscript_state: IScriptState::new(&gd, iscript_id),
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
-            // prerender_buffer: vec![0; ds],
         }
     }
 
     fn can_turn(&self) -> bool {
-        (self.iscript_state.images_dat.graphic_turns[self.image_id as usize] > 0)
+        (self.iscript_state.images_dat().graphic_turns[self.image_id as usize] > 0)
     }
     fn draw_flipped(&self) -> bool {
         self.can_turn() && self.iscript_state.direction > 16
@@ -442,152 +408,90 @@ impl<'gamedata> SCImage<'gamedata> {
             SCImageRemapping::OFire => &gd.ofire_reindexing.data,
             SCImageRemapping::BFire => &gd.bfire_reindexing.data,
             SCImageRemapping::GFire => &gd.gfire_reindexing.data,
+            SCImageRemapping::Normal => &gd.null_reindexing,
+            SCImageRemapping::Shadow => &gd.shadow_reindexing,
             _ => {panic!("unknown remapping enum: {:?}", remap);}
         }
     }
 
+    fn _draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        let remap = self.remapping(self.iscript_state.gd.as_ref());
+        let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
+                                                    remap);
 
-    // FIXME: expensive, try:
-    // - only redraw when necessary
-    // - cache & combine textures
-    // - see http://stackoverflow.com/questions/12506979/what-is-the-point-of-an-sdl2-texture
-    pub fn render(&mut self,
-                  x: i32,
-                  y: i32,
-                  pal: &Palette,
-                  gd: &GameData,
-                  //reindexing_table: Option<&[u8]>,
-                  renderer: &mut Renderer) {
-        let (w, h) = (self.grp.header.width as u32, self.grp.header.height as u32);
-        let frame = self.frame_idx();
-        // TODO: render over/underlays
-        // FIXME: cache this
-        //let ref data = self.grp.frames[frame];
+        let w = self.grp.header.width;
+        let h = self.grp.header.height;
+        let x_start = (cx + self.iscript_state.rel_x as u32) - (w as u32 / 2);
+        let y_start = (cy + self.iscript_state.rel_y as u32) - (h as u32 / 2);
+        let fridx = self.frame_idx();
+        let udata = &self.grp.frames[fridx];
 
-        let underlays = &self.underlays;
-        let overlays = &self.overlays;
-        /*
-        {
-            let tq = self.texture.query();
-            // println!("size: {} x {} = {}", tq.width, tq.height, data.len());
-            //assert!(tq.width as usize * tq.height as usize == data.len());
-
-            // first render to prerender_buffer
-            for b in &mut self.prerender_buffer[..] {
-                *b = 253;
-            }
-                // draw shadows (with fixed color)
-                for ul in underlays {
-                    let uf = ul.frame_idx();
-                    let udata = &ul.grp.frames[uf];
-                    // calculate offset: centerpoints should match
-                    let x_offset = tq.width / 2 - ul.grp.header.width as u32 / 2;
-                    let y_offset = tq.height / 2 - ul.grp.header.height as u32 / 2;
-                    for (i, col) in udata.iter().enumerate() {
-                        if *col != 0 {
-                            // make more efficient?
-                            let y = i / (ul.grp.header.width as usize);
-                            let x = i % (ul.grp.header.width as usize);
-                            let idx = (y as usize + y_offset as usize) * tq.width as usize +
-                                (x as usize + x_offset as usize);
-                            self.prerender_buffer[idx] = *col;
-                        }
+        let mut outpos = ((y_start * buffer_pitch) + x_start as u32) as usize;
+        let mut inpos = 0 as usize;
+        let flipped = self.draw_flipped();
+        if !flipped {
+            for _ in 0..h {
+                for _ in 0..w {
+                    let dest = udata[inpos] as usize;
+                    if dest > 0 {
+                        let src = buffer[outpos] as usize;
+                        buffer[outpos] = reindex[(dest ) * 256 + src];
                     }
+                    outpos += 1;
+                    inpos += 1;
                 }
-
-            // draw main image
-            let x_offset = (tq.width / 2) - (self.grp.header.width as u32 / 2);
-            let y_offset = (tq.height / 2) - (self.grp.header.height as u32 / 2);
-            for (i, col) in self.grp.frames[frame].iter().enumerate() {
-                let y = i / (self.grp.header.width as usize);
-                let x = i % (self.grp.header.width as usize);
-                let idx = (y as usize + y_offset as usize) * tq.width as usize +
-                    (x as usize + x_offset as usize);
-                if *col != 0 {
-                    self.prerender_buffer[idx] = *col;
-                }
+                outpos += (buffer_pitch - w as u32) as usize;
             }
-
-            for ol in overlays {
-                // get proper reindexing table
-                let remap = ol.remapping(gd);
-                let reindex = SCImage::get_reindexing_table(gd, remap);
-
-                let of = ol.frame_idx();
-                let odata = &ol.grp.frames[of];
-                let x_offset = (tq.width / 2) - (ol.grp.header.width as u32 / 2);
-                let y_offset = (tq.height / 2) - (ol.grp.header.height as u32 / 2);
-                for (i, col) in odata.iter().enumerate() {
-                    if *col == 0 {
-                        continue;
+        } else {
+            // draw flipped
+            for y in 0..h {
+                for x in 0..w {
+                    let dest = udata[(y*w + (w - x - 1)) as usize] as usize;
+                    if dest > 0 {
+                        let src = buffer[outpos] as usize;
+                        buffer[outpos] = reindex[(dest ) * 256 + src];
                     }
-                    // make more efficient?
-                    let y = i / (ol.grp.header.width as usize);
-                    let x = i % (ol.grp.header.width as usize);
-                    let idx = (y as usize + y_offset as usize) * tq.width as usize +
-                        (x as usize + x_offset as usize);
-
-                    let src = self.prerender_buffer[idx] as usize;
-                    let dest = *col as usize;
-                    assert!(dest < 64);
-                    // reindexing: already there: y, overlay color: x
-                    let color = reindex[(dest -1) * 255 + src];
-                    println!("src: {}, dest: {}, res: {}", src, dest, color);
-                    self.prerender_buffer[idx] = color;
+                    outpos += 1;
                 }
+                outpos += (buffer_pitch - w as u32) as usize;
             }
-            let prerender = &self.prerender_buffer;
-
-            self.texture.with_lock(None, |buffer: &mut [u8], _: usize| {
-                for (i, col) in prerender.iter().enumerate() {
-                    let color = (*col as usize) * 3;
-                    if color != 0 {
-                        buffer[i * 3 + 0] = pal.data[color + 0];
-                        buffer[i * 3 + 1] = pal.data[color + 1];
-                        buffer[i * 3 + 2] = pal.data[color + 2];
-                    }
-                }
-                })
-                .ok();
         }
 
-        let iscript_state = &self.iscript_state;
+    }
 
-        let rect = Rect::new(x + iscript_state.rel_x as i32,
-                             y + iscript_state.rel_y as i32,
-                             w,
-                             h);
-        // TODO: rel_x/y should probably done in the texture already
-        renderer.copy_ex(&self.texture,
-                     None,
-                     Some(rect),
-                     0.,
-                     None,
-                     self.draw_flipped(),
-                     false)
-            .ok();
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_rect(rect).ok();
-        */
+    pub fn draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        // draw underlays
+        for ul in &self.underlays {
+            ul._draw(cx, cy, buffer, buffer_pitch);
+        }
+        // draw main image
+        self._draw(cx, cy, buffer, buffer_pitch);
+        // draw overlays
+        for ol in &self.overlays {
+            ol._draw(cx, cy, buffer, buffer_pitch);
+        }
     }
 
     pub fn step(&mut self,
-                // these params are just for creating new entities
-                gd: &'gamedata GameData, renderer: &mut Renderer) {
-
+                // just for creating new entities
+                gd: &Rc<GameData>) {
+        // FIXME: death animation for marine: shadow tries to display wrong frameset
         for ul in &mut self.underlays {
             ul.iscript_state.interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
         }
-
         self.iscript_state.interpret_iscript(None);
+        for ol in &mut self.overlays {
+            ol.iscript_state.interpret_iscript(Some(&self.iscript_state));
+            // assuming they do not create additional under/overlays
+        }
 
         // create additional entities if necessary
         match self.iscript_state.create_entity_action {
             Some(CreateIScriptEntity::ImageUnderlay {image_id, rel_x, rel_y}) => {
                 println!("creating underlay");
 
-                let mut underlay = SCImage::new(gd, renderer, image_id);
+                let mut underlay = SCImage::new(gd, image_id);
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
@@ -596,7 +500,7 @@ impl<'gamedata> SCImage<'gamedata> {
             },
             Some(CreateIScriptEntity::ImageOverlay {image_id, rel_x, rel_y}) => {
                 println!("create overlay");
-                let mut overlay = SCImage::new(gd, renderer, image_id);
+                let mut overlay = SCImage::new(gd, image_id);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
                 self.overlays.push(overlay);
@@ -609,8 +513,140 @@ impl<'gamedata> SCImage<'gamedata> {
 }
 
 
+struct UnitsView {
+    unit_id: usize,
+    current_anim: AnimationType,
+    next_anim_idx: usize,
+    anim_str: String,
+    unit_name_str: String,
+    img: SCImage,
+}
+impl UnitsView {
+    fn new(gc: &mut GameContext, unit_id: usize) -> UnitsView {
+        let current_anim = AnimationType::Init;
+        let anim_str = format!("Animation: {:?}", current_anim);
+        let gd = gc.gd.clone();
+        let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
+        let flingy_id = gd.units_dat.flingy_id[unit_id];
+        let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+
+        // FIXME: move this to some generic initialization function
+        let pal = gd.install_pal.to_sdl();
+        gc.screen.set_palette(&pal).ok();
+
+        UnitsView {
+            unit_id: unit_id,
+            current_anim: current_anim,
+            next_anim_idx: 1,
+            anim_str: anim_str,
+            unit_name_str: unit_name_str,
+            img: SCImage::new(&gd, image_id),
+        }
+    }
+}
+impl View for UnitsView {
+    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+        if context.events.now.quit || context.events.now.key_escape == Some(true) {
+            return ViewAction::Quit;
+        }
+        // clear the screen
+        context.screen.fill_rect(None, Color::RGB(0,0,120)).ok();
+
+        let gd = &context.gd;
+        if context.events.now.key_n == Some(true) {
+            self.unit_id += 1;
+
+            self.unit_name_str = format!("{}: {}", self.unit_id,
+                                         gd.stat_txt_tbl[self.unit_id].to_owned());
+            let flingy_id = gd.units_dat.flingy_id[self.unit_id];
+            let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+            let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+            self.img = SCImage::new(&gd, image_id);
+        } else if context.events.now.key_p == Some(true) {
+            if self.unit_id > 0 {
+                self.unit_id -= 1;
+
+                self.unit_name_str = format!("{}: {}", self.unit_id,
+                                             gd.stat_txt_tbl[self.unit_id].to_owned());
+                let flingy_id = gd.units_dat.flingy_id[self.unit_id];
+                let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+                let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+                self.img = SCImage::new(&gd, image_id);
+            }
+        }
+        if context.events.now.key_q == Some(true) {
+            self.img.iscript_state.turn_ccwise(1);
+        } else if context.events.now.key_e == Some(true) {
+            self.img.iscript_state.turn_cwise(1);
+        }
+        if context.events.now.key_a == Some(true) {
+            // change animation
+            self.img.iscript_state
+                .set_animation(AnimationType::from_usize(self.next_anim_idx).unwrap());
+            loop {
+                self.next_anim_idx += 1;
+                self.next_anim_idx = self.next_anim_idx % self.img.iscript_state.anim_count();
+                if self.img.iscript_state
+                    .is_animation_valid(AnimationType::from_usize(self.next_anim_idx)
+                                        .unwrap()) {
+                        break;
+                    }
+            }
+        }
+
+        // FIXME: reduce cloning
+        let gd = context.gd.clone();
+        {
+            self.img.step(&gd);
+            {
+                let anim = self.img.iscript_state.current_animation();
+                if anim != self.current_anim {
+                    println!("--- current animation: {:?} ---", anim);
+                    self.current_anim = anim;
+                    self.anim_str = format!("Current Animation: {:?}", self.current_anim);
+                }
+            }
+        }
+
+        let fnt = gd.font(FontSize::Font16);
+        let screen_pitch = context.screen.pitch();
+        let fnt_reindex = &gd.font_reindex.data;
+
+        let unitname_rect = Rect::new(10, 10, 300, 50);
+        let animstr_rect = Rect::new(10, 300, 300, 50);
+
+        context.screen.with_lock_mut(|buffer: &mut [u8]| {
+            // unit name
+            fnt.render_textbox(self.unit_name_str.as_ref(),
+                               1,
+                               fnt_reindex,
+                               buffer,
+                               screen_pitch,
+                               &unitname_rect);
+            // animation
+            fnt.render_textbox(self.anim_str.as_ref(),
+                               0,
+                               fnt_reindex,
+                               buffer,
+                               screen_pitch,
+                               &animstr_rect);
+
+            // unit
+            self.img.draw(100, 100, buffer, screen_pitch);
+
+        });
+
+        ViewAction::None
+    }
+}
 
 fn main() {
+    ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+        Box::new(UnitsView::new(gc, 8))
+    });
+
+    /*
     println!("opening mpq...");
     let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
 
@@ -775,5 +811,5 @@ fn main() {
         renderer.copy(&unit_name_texture, None, Some(Rect::new(100, 10, 300, 50)));
         renderer.present();
     }
-
+    */
 }
