@@ -4,6 +4,7 @@ use std::cmp::min;
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
+#[derive(Copy, Clone)]
 pub enum FontSize {
     Font10 = 0,
     Font14 = 1,
