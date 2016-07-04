@@ -23,6 +23,8 @@ extern {
     fn SFileReadFile(handle: u64, buffer: *mut u8, toread: u32, read: *mut u32, lpoverlapped: u64) -> bool;
 
     fn SFileSetFilePointer(handle: u64, lFilePos: u32, plFilePos: *mut u32, moveMethod: u32) -> u32;
+
+    fn SFileExtractFile(handle: u64, in_filename: *const c_char, out_filename: *const c_char, flags: u32) -> bool;
 }
 
 // FIXME: lifetime of maf should be < mpqarchive
@@ -112,6 +114,16 @@ impl MPQArchive {
         let filepath = CString::new(filename).unwrap();
         unsafe {
             SFileHasFile(self.handle, filepath.as_ptr())
+        }
+    }
+
+    pub fn extract(&self, infilename: &str, outfilename: &str) {
+        let in_filepath = CString::new(infilename).unwrap();
+        let out_filepath = CString::new(outfilename).unwrap();
+        unsafe {
+            let res = SFileExtractFile(self.handle, in_filepath.as_ptr(),
+                                       out_filepath.as_ptr(), 0);
+            assert!(res);
         }
     }
 

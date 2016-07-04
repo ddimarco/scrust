@@ -87,6 +87,7 @@ struct IScriptState {
     direction: u8,
     frameset: u16,
     follow_main_graphic: bool,
+    visible: bool,
 
     /// signals the parent to create a new entity
     create_entity_action: Option<CreateIScriptEntity>,
@@ -109,7 +110,7 @@ impl Read for IScriptState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum SCImageRemapping {
     Normal,
     OFire,
@@ -137,6 +138,7 @@ impl IScriptState {
             pos: start_pos,
             gd: gd.clone(),
             waiting_ticks_left: 0,
+            visible: true,
             rel_x: 0,
             rel_y: 0,
             frameset: 0,
@@ -220,7 +222,7 @@ impl IScriptState {
         def_opcodes! (
             self,
             // show debug output?
-            false,
+            parent.is_some(),
             opcode,
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
             // shadows and such; img* is associated with the current entity
@@ -288,7 +290,7 @@ impl IScriptState {
         OpCode::RandCondJmp => (val: u8, target: u16) {
             let r = rand::random::<u8>();
             if r < val {
-                println!(" jumping!");
+                // println!(" jumping!");
                 self.pos = target;
             }
         },
@@ -331,6 +333,16 @@ impl IScriptState {
         },
         OpCode::NoBrkCodeEnd => () {
         // FIXME
+        },
+        OpCode::TmpRmGraphicStart => () {
+            // Sets the current image overlay state to hidden
+            println!("tmprmgraphicstart, has parent: {}", parent.is_some());
+            self.visible = false;
+        },
+        OpCode::TmpRmGraphicEnd => () {
+            // Sets the current image overlay state to visible
+            println!("tmprmgraphicend, has parent: {}", parent.is_some());
+            self.visible = true;
         },
         OpCode::Attack => () {
         // FIXME
@@ -386,6 +398,7 @@ impl SCImage {
             image_id: image_id,
             grp: grp,
             iscript_state: IScriptState::new(&gd, iscript_id),
+            // FIXME we probably only need 1 overlay & 1 underlay
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
         }
@@ -428,13 +441,16 @@ impl SCImage {
             SCImageRemapping::OFire => &gd.ofire_reindexing.data,
             SCImageRemapping::BFire => &gd.bfire_reindexing.data,
             SCImageRemapping::GFire => &gd.gfire_reindexing.data,
+            SCImageRemapping::BExpl => &gd.bexpl_reindexing.data,
             SCImageRemapping::Normal => &gd.null_reindexing,
             SCImageRemapping::Shadow => &gd.shadow_reindexing,
-            _ => {panic!("unknown remapping enum: {:?}", remap);}
         }
     }
 
-    fn _draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    fn _draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
+        if !self.iscript_state.visible {
+            return;
+        }
         let remap = self.remapping(self.iscript_state.gd.as_ref());
         let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
                                                     remap);
@@ -444,6 +460,10 @@ impl SCImage {
         let x_start = (cx + self.iscript_state.rel_x as u32) - (w as u32 / 2);
         let y_start = (cy + self.iscript_state.rel_y as u32) - (h as u32 / 2);
         let fridx = self.frame_idx();
+        // this seems like a hack
+        if fridx >= self.grp.frames.len() && has_parent {
+            return;
+        }
         let udata = &self.grp.frames[fridx];
 
         let mut outpos = ((y_start * buffer_pitch) + x_start as u32) as usize;
@@ -455,7 +475,7 @@ impl SCImage {
                     let dest = udata[inpos] as usize;
                     if dest > 0 {
                         let src = buffer[outpos] as usize;
-                        buffer[outpos] = reindex[(dest ) * 256 + src];
+                        buffer[outpos] = reindex[(dest - 1) * 256 + src];
                     }
                     outpos += 1;
                     inpos += 1;
@@ -469,7 +489,7 @@ impl SCImage {
                     let dest = udata[(y*w + (w - x - 1)) as usize] as usize;
                     if dest > 0 {
                         let src = buffer[outpos] as usize;
-                        buffer[outpos] = reindex[(dest ) * 256 + src];
+                        buffer[outpos] = reindex[(dest - 1) * 256 + src];
                     }
                     outpos += 1;
                 }
@@ -482,13 +502,13 @@ impl SCImage {
     pub fn draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         // draw underlays
         for ul in &self.underlays {
-            ul._draw(cx, cy, buffer, buffer_pitch);
+            ul._draw(cx, cy, buffer, buffer_pitch, true);
         }
         // draw main image
-        self._draw(cx, cy, buffer, buffer_pitch);
+        self._draw(cx, cy, buffer, buffer_pitch, false);
         // draw overlays
         for ol in &self.overlays {
-            ol._draw(cx, cy, buffer, buffer_pitch);
+            ol._draw(cx, cy, buffer, buffer_pitch, true);
         }
     }
 
@@ -536,7 +556,6 @@ impl SCImage {
 struct UnitsView {
     unit_id: usize,
     current_anim: AnimationType,
-    next_anim_idx: usize,
     anim_str: String,
     unit_name_str: String,
     img: SCImage,
@@ -558,7 +577,6 @@ impl UnitsView {
         UnitsView {
             unit_id: unit_id,
             current_anim: current_anim,
-            next_anim_idx: 1,
             anim_str: anim_str,
             unit_name_str: unit_name_str,
             img: SCImage::new(&gd, image_id),
@@ -653,6 +671,6 @@ impl View for UnitsView {
 
 fn main() {
     ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
-        Box::new(UnitsView::new(gc, 50))
+        Box::new(UnitsView::new(gc, 67))
     });
 }

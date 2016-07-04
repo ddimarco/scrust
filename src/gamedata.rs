@@ -55,13 +55,6 @@ impl GameData {
             }
         }
 
-        let mut null_reindexing = vec![0 as u8; 256*256];
-        for i in 0..256 {
-            for j in 0..256 {
-                null_reindexing[i*256 + j] = i as u8;
-            }
-        }
-
         let fonts = GameData::load_fonts(&archives);
         let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx").unwrap());
         let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx").unwrap());
@@ -86,6 +79,12 @@ impl GameData {
         let unit_reindexing = PCX::read(&mut GameData::open_(&archives, "game\\tunit.pcx").unwrap());
         let dark_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset\\install\\dark.pcx").unwrap());
 
+        let mut null_reindexing = vec![0 as u8; 256*256];
+        for i in 0..255 {
+            for j in 0..255 {
+                null_reindexing[i*256 + j] = (i+1) as u8;
+            }
+        }
 
         let mut shadow_reindexing = vec![0 as u8; 256*256];
         for r in 0..256 {
@@ -155,6 +154,15 @@ impl GameData {
         &self.fonts[size as usize]
     }
 
+    pub fn extract(&self, in_fn: &str, out_fn: &str) {
+        for mpq in &self.mpq_archives {
+            if mpq.has_file(in_fn) {
+                //println!("found {} in {}", filename, mpq.filename);
+                mpq.extract(in_fn, out_fn);
+                return;
+            }
+        }
+    }
 
 }
 
