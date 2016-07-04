@@ -37,17 +37,26 @@ macro_rules! var_read {
 macro_rules! def_opcodes {
     (
         $self_var:ident,
+        $debug:expr,
         $code_var:ident,
         $( $opcode:pat => ( $( $param:ident : $tpe:ident),*)
            $code:block),*
     )
         =>
     {
+
             match $code_var {
                 $(
                     $opcode => {
+                        if $debug {
+                            println!("op: {:?}", $code_var);
+                        }
                         $(
                             let $param = var_read!($tpe, $self_var).unwrap();
+                            if $debug {
+                                println!(" param: {}: {} = {}", stringify!($param),
+                                         stringify!($tpe), $param);
+                            }
                         )*
                             $code
                     }
@@ -77,6 +86,7 @@ struct IScriptState {
     rel_y: u8,
     direction: u8,
     frameset: u16,
+    follow_main_graphic: bool,
 
     /// signals the parent to create a new entity
     create_entity_action: Option<CreateIScriptEntity>,
@@ -86,7 +96,11 @@ impl Read for IScriptState {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         for i in 0..buf.len() {
             if self.pos as usize > self.gd.iscript.data.len() {
-                return Ok(i);
+                if i > 0 {
+                    return Ok(i);
+                } else {
+                    panic!("could not read anything!");
+                }
             }
             buf[i] = self.gd.iscript.data[self.pos as usize];
             self.pos = self.pos + 1;
@@ -110,12 +124,12 @@ impl IScriptState {
         let start_pos;
         {
             let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
-            println!("header:");
-            for anim_idx in 0..iscript_anim_offsets.len() {
-                let anim = AnimationType::from_usize(anim_idx).unwrap();
-                let pos = iscript_anim_offsets[anim_idx];
-                println!("{:?}: {}", anim, pos);
-            }
+            // println!("header:");
+            // for anim_idx in 0..iscript_anim_offsets.len() {
+            //     let anim = AnimationType::from_usize(anim_idx).unwrap();
+            //     let pos = iscript_anim_offsets[anim_idx];
+                // println!("{:?}: {}", anim, pos);
+            // }
             start_pos = iscript_anim_offsets[AnimationType::Init as usize];
         }
         IScriptState {
@@ -127,6 +141,7 @@ impl IScriptState {
             rel_y: 0,
             frameset: 0,
             direction: 0,
+            follow_main_graphic: false,
             create_entity_action: None,
         }
     }
@@ -190,78 +205,87 @@ impl IScriptState {
             return;
         }
 
+        let pos1 = self.pos;
         let val = self.read_u8().unwrap();
+        let pos2 = self.pos;
+        assert!(pos1 < pos2);
         let opcode = OpCode::from_u8(val).unwrap();
 
+
+        // FIXME: is this right? seems required for phoenix walking overlay
+        if parent.is_some() {
+            self.direction = parent.unwrap().direction;
+        }
+
         def_opcodes! (
-        self, opcode,
+            self,
+            // show debug output?
+            false,
+            opcode,
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
-        // shadows and such; img* is associated with the current entity
-            println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
+            // shadows and such; img* is associated with the current entity
             self.create_entity_action = Some(CreateIScriptEntity::ImageUnderlay {
                 image_id: image_id,
                 rel_x: rel_x,
                 rel_y: rel_y,
             });
-        // FIXME
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
-        // e.g. explosions on death
-            println!("imgul: {}, {}, {}", image_id, rel_x, rel_y);
+            // e.g. explosions on death
             self.create_entity_action = Some(CreateIScriptEntity::ImageOverlay {
                 image_id: image_id,
                 rel_x: rel_x,
                 rel_y: rel_y,
             });
-        // FIXME
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-        // independent overlay, e.g. scanner sweep
-            println!("sprol: {}, {}, {}", sprite_id, rel_x, rel_y);
-        // FIXME
+            // independent overlay, e.g. scanner sweep
+            // FIXME
+            println!("--- not implemented yet ---");
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
         // independent underlay, e.g. gore
-            println!("lowsprul: {}, {}, {}", sprite_id, rel_x, rel_y);
         // FIXME
+            println!("--- not implemented yet ---");
         },
         OpCode::PlayFram => (frame: u16) {
-            println!("playfram: {}", frame);
+            // println!("playfram: {}", frame);
             self.frameset = frame;
         },
         OpCode::PlayFramTile => (frame: u16) {
-            println!("playframtile: {}", frame);
+            println!("--- not implemented yet ---");
         // FIXME
         },
-
+        OpCode::EngFrame => (frame: u8) {
+            // FIXME is this right: same as playfram?
+            self.frameset = frame as u16;
+        },
         OpCode::FollowMainGraphic => () {
-            println!("followmaingraphic");
             assert!(parent.is_some());
-
-            self.direction = parent.unwrap().direction;
-            self.frameset = parent.unwrap().frameset;
+            self.follow_main_graphic = true;
+        },
+        OpCode::EngSet => () {
+            // same as FollowMainGraphic
+            assert!(parent.is_some());
+            self.follow_main_graphic = true;
         },
 
         OpCode::Wait => (ticks: u8) {
-            println!("wait: {}", ticks);
             self.waiting_ticks_left += ticks as usize;
         },
         OpCode::WaitRand => (minticks: u8, maxticks: u8) {
-            println!("waitrand: {}, {}", minticks, maxticks);
             let r = rand::thread_rng().gen_range(minticks, maxticks+1);
-            println!(" -> {}", r);
+            // println!(" -> {}", r);
             self.waiting_ticks_left += r as usize;
         },
         OpCode::SigOrder => (signal: u8) {
-            println!("sigorder: {}", signal);
         // FIXME
+            println!("--- not implemented yet ---");
         },
         OpCode::Goto => (target: u16) {
-            println!("goto: {}", target);
             self.pos = target;
         },
         OpCode::RandCondJmp => (val: u8, target: u16) {
-            println!("randcondjmp: {}, {}", val, target);
             let r = rand::random::<u8>();
             if r < val {
                 println!(" jumping!");
@@ -269,7 +293,6 @@ impl IScriptState {
             }
         },
         OpCode::TurnRand => (units: u8) {
-            println!("turnrand: {}", units);
             if rand::thread_rng().gen_range(0, 100) < 50 {
                 self.turn_cwise(units);
             } else {
@@ -277,71 +300,68 @@ impl IScriptState {
             }
         },
         OpCode::TurnCWise => (units: u8) {
-            println!("turnccwise.: {}", units);
             self.turn_cwise(units);
         },
         OpCode::TurnCCWise => (units: u8) {
-            println!("turnccwise: {}", units);
             self.turn_ccwise(units);
         },
         OpCode::SetFlDirect => (dir: u8) {
-            println!("setfldirect: {}", dir);
             self.set_direction(dir);
         },
         // FIXME: might be signed bytes?
         OpCode::SetVertPos => (val: u8) {
-            println!("setvertpos: {}", val);
             self.rel_y = val;
         },
         OpCode::SetHorPos => (val: u8) {
-            println!("sethorpos: {}", val);
             self.rel_x = val;
+        },
+        OpCode::Move => (dist: u8) {
+            // FIXME
+            println!("move not implemented!");
         },
 
         // FIXME sounds
         OpCode::PlaySndBtwn => (val1: u16, val2: u16) {
-            println!("playsndbtwn: {}, {}", val1, val2);
         },
         OpCode::PlaySnd => (sound_id: u16) {
-            println!("playsnd: {}", sound_id);
         },
 
         OpCode::NoBrkCodeStart => () {
-            println!("nobrkcodestart");
         // FIXME
         },
         OpCode::NoBrkCodeEnd => () {
-            println!("nobrkcodeend");
         // FIXME
         },
         OpCode::Attack => () {
-            println!("attack");
         // FIXME
         },
         OpCode::AttackWith => (weapon: u8) {
-            println!("attackwith: {}", weapon);
         // FIXME
         },
         OpCode::GotoRepeatAttk => () {
         // Signals to StarCraft that after this point, when the unit's cooldown time
         // is over, the repeat attack animation can be called.
-            println!("gotorepeatattack");
         // FIXME
         },
         OpCode::IgnoreRest => () {
         // this causes the script to stop until the next animation is called.
-            println!("ignorerest");
         // FIXME
+        },
+        OpCode::SetFlSpeed => (speed: u16) {
+            // FIXME
         },
 
         OpCode::End => () {
-            println!("end");
         // FIXME
         }
 
     );
 
-    }
+        if self.follow_main_graphic && parent.is_some() {
+            self.direction = parent.unwrap().direction;
+            self.frameset = parent.unwrap().frameset;
+        }
+        }
 }
 struct SCImage {
     pub image_id: u16,
@@ -552,7 +572,6 @@ impl View for UnitsView {
         }
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0,0,120)).ok();
-
         let gd = &context.gd;
         if context.events.now.key_n == Some(true) {
             self.unit_id += 1;
@@ -580,19 +599,10 @@ impl View for UnitsView {
         } else if context.events.now.key_e == Some(true) {
             self.img.iscript_state.turn_cwise(1);
         }
-        if context.events.now.key_a == Some(true) {
-            // change animation
-            self.img.iscript_state
-                .set_animation(AnimationType::from_usize(self.next_anim_idx).unwrap());
-            loop {
-                self.next_anim_idx += 1;
-                self.next_anim_idx = self.next_anim_idx % self.img.iscript_state.anim_count();
-                if self.img.iscript_state
-                    .is_animation_valid(AnimationType::from_usize(self.next_anim_idx)
-                                        .unwrap()) {
-                        break;
-                    }
-            }
+        if context.events.now.key_d == Some(true) {
+            self.img.iscript_state.set_animation(AnimationType::Death);
+        } else if context.events.now.key_w == Some(true) {
+            self.img.iscript_state.set_animation(AnimationType::Walking);
         }
 
         // FIXME: reduce cloning
@@ -643,173 +653,6 @@ impl View for UnitsView {
 
 fn main() {
     ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
-        Box::new(UnitsView::new(gc, 8))
+        Box::new(UnitsView::new(gc, 50))
     });
-
-    /*
-    println!("opening mpq...");
-    let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
-
-    println!("grp_file len: {}", gd.images_dat.grp_id.len());
-    println!("graphics len: {}", gd.units_dat.flingy_id.len());
-    println!("image_file len: {}", gd.sprites_dat.image_id.len());
-    println!("sprite len: {}", gd.flingy_dat.sprite_id.len());
-
-    let mut unit_id = 0;
-    let flingy_id = gd.units_dat.flingy_id[unit_id];
-    let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-    let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-    println!("unit id: {}, flingy id: {}, sprite id: {}, image id: {}",
-             unit_id,
-             flingy_id,
-             sprite_id,
-             image_id);
-
-    // let iscript = IScript::read(&mut gd.open("scripts/iscript.bin").unwrap());
-
-    // sdl
-    let sdl_context = sdl2::init().unwrap();
-    let mut timer = sdl_context.timer().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let window = video_subsystem.window("iscript test", 640, 480)
-        //.position_centered()
-        .opengl()
-        .build()
-        .unwrap();
-
-    let mut renderer = window.renderer().build().unwrap();
-
-    // FIXME: scimage should not require renderer
-    let mut img = SCImage::new(&gd, &mut renderer, image_id);
-
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let interval = 1_000 / 60;
-    let mut before = timer.ticks();
-    let mut last_second = timer.ticks();
-    let mut fps = 0u16;
-
-    let mut current_anim = AnimationType::Init;
-    let mut next_anim_idx = 1;
-
-    // labels
-    let fnt = gd.font(FontSize::Font16);
-    let mut anim_texture = fnt.render_textbox(&format!("Current Animation: {:?}", current_anim),
-                                              0,
-                                              &mut renderer,
-                                              &gd.fontmm_reindex.palette,
-                                              &gd.fontmm_reindex.data,
-                                              300,
-                                              50);
-    let mut unit_name_texture =
-        fnt.render_textbox(&format!("Unit: {}", gd.stat_txt_tbl[unit_id as usize]),
-                           1,
-                           &mut renderer,
-                           &gd.fontmm_reindex.palette,
-                           &gd.fontmm_reindex.data,
-                           300,
-                           50);
-
-    //img.iscript_state.set_animation(AnimationType::Walking);
-
-    'running: loop {
-        // FIXME: encapsulate all this (in a view?)
-        let now = timer.ticks();
-        let dt = now - before;
-        // let elapsed = dt as f64 / 1_000.0;
-
-        if dt < interval {
-            timer.delay(interval - dt);
-            continue;
-        }
-
-        before = now;
-        fps += 1;
-
-        if now - last_second > 1_000 {
-            println!("FPS: {}", fps);
-            last_second = now;
-            fps = 0;
-        }
-
-
-        img.step(&gd, &mut renderer);
-        {
-            let anim = img.iscript_state.current_animation();
-            if anim != current_anim {
-                println!("--- current animation: {:?} ---", anim);
-                current_anim = anim;
-                anim_texture = fnt.render_textbox(&format!("Current Animation: {:?}", current_anim),
-                                    0,
-                                    &mut renderer,
-                                    &gd.fontmm_reindex.palette,
-                                    &gd.fontmm_reindex.data,
-                                    300,
-                                    50);
-            }
-        }
-
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } => break 'running,
-                Event::KeyDown { keycode: Some(keycode), .. } => {
-                    match keycode {
-                        Keycode::Escape => break 'running,
-                        Keycode::Q => {
-                            // turn cc
-                            img.iscript_state.turn_ccwise(1);
-                        }
-                        Keycode::E => {
-                            // turn c
-                            img.iscript_state.turn_cwise(1);
-                        }
-                        Keycode::A => {
-                            // change animation
-                            img.iscript_state
-                                .set_animation(AnimationType::from_usize(next_anim_idx).unwrap());
-                            loop {
-                                next_anim_idx += 1;
-                                next_anim_idx = next_anim_idx % img.iscript_state.anim_count();
-                                if img.iscript_state
-                                    .is_animation_valid(AnimationType::from_usize(next_anim_idx)
-                                        .unwrap()) {
-                                    break;
-                                }
-                            }
-                        }
-                        Keycode::N => {
-                            // next unit
-                            unit_id = unit_id + 1;
-                            println!("unit: {}", unit_id);
-                            let flingy_id = gd.units_dat.flingy_id[unit_id];
-                            let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-                            let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-                            img = SCImage::new(&gd, &mut renderer, image_id);
-
-                            //img.iscript_state.set_animation(AnimationType::Walking);
-                            unit_name_texture = fnt.render_textbox(&format!("Unit: {}",
-                                                         gd.stat_txt_tbl[unit_id as usize]),
-                                                                   1,
-                                                                   &mut renderer,
-                                                                   &gd.fontmm_reindex.palette,
-                                                                   &gd.fontmm_reindex.data,
-                                                                   300,
-                                                                   50);
-                            next_anim_idx = 0;
-                        }
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        renderer.set_draw_color(Color::RGB(0,0,0));
-        renderer.clear();
-        img.render(100, 100, &gd.install_pal, &gd, &mut renderer);
-        renderer.copy(&anim_texture, None, Some(Rect::new(100, 300, 300, 50)));
-        renderer.copy(&unit_name_texture, None, Some(Rect::new(100, 10, 300, 50)));
-        renderer.present();
-    }
-    */
 }

@@ -39,6 +39,8 @@ struct_events! (
         key_p: P,
         key_a: A,
         key_q: Q,
+        key_w: W,
+        key_d: D,
         key_e: E
     },
     else: {
