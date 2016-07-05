@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::env;
 
 use std::io::Read;
 
@@ -670,7 +670,9 @@ impl View for UnitsView {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let unit_id = if args.len() == 2 {args[1].parse::<usize>().unwrap() } else {0};
     ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
-        Box::new(UnitsView::new(gc, 67))
+        Box::new(UnitsView::new(gc, unit_id))
     });
 }
