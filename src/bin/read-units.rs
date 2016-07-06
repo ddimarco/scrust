@@ -67,10 +67,22 @@ macro_rules! def_opcodes {
     }
 }
 
+extern crate linked_list;
+use linked_list::LinkedList;
+struct IScriptEntityLayer {
+    pub imgs: LinkedList<SCImage>,
+}
+impl IScriptEntityLayer {
+    fn new() -> IScriptEntityLayer {
+        IScriptEntityLayer {
+            imgs: LinkedList::<SCImage>::new(),
+        }
+    }
+}
 
-enum CreateIScriptEntity {
-    ImageUnderlay {image_id: u16, rel_x: u8, rel_y: u8},
-    ImageOverlay {image_id: u16, rel_x: u8, rel_y: u8},
+enum IScriptEntityAction {
+    CreateImageUnderlay {image_id: u16, rel_x: u8, rel_y: u8},
+    CreateImageOverlay {image_id: u16, rel_x: u8, rel_y: u8},
 }
 
 struct IScriptState {
@@ -88,9 +100,6 @@ struct IScriptState {
     frameset: u16,
     follow_main_graphic: bool,
     visible: bool,
-
-    /// signals the parent to create a new entity
-    create_entity_action: Option<CreateIScriptEntity>,
 }
 
 impl Read for IScriptState {
@@ -144,7 +153,6 @@ impl IScriptState {
             frameset: 0,
             direction: 0,
             follow_main_graphic: false,
-            create_entity_action: None,
         }
     }
 
@@ -197,36 +205,35 @@ impl IScriptState {
         self.iscript_anim_offsets().len()
     }
 
-    // TODO: move into trait
-    pub fn interpret_iscript(&mut self, parent: Option<&IScriptState>) {
-        assert!(self.create_entity_action.is_none());
-
+    fn _interpret_iscript(&mut self, parent: Option<&IScriptState>) -> Option<IScriptEntityAction> {
         // FIXME: is waiting actually counted in frames?
         if self.waiting_ticks_left > 0 {
             self.waiting_ticks_left -= 1;
-            return;
+            return None;
         }
 
-        let pos1 = self.pos;
         let val = self.read_u8().unwrap();
-        let pos2 = self.pos;
-        assert!(pos1 < pos2);
         let opcode = OpCode::from_u8(val).unwrap();
-
 
         // FIXME: is this right? seems required for phoenix walking overlay
         if parent.is_some() {
             self.direction = parent.unwrap().direction;
         }
 
+        if self.follow_main_graphic && parent.is_some() {
+            self.direction = parent.unwrap().direction;
+            self.frameset = parent.unwrap().frameset;
+        }
+
         def_opcodes! (
             self,
             // show debug output?
-            parent.is_some(),
+            //parent.is_some(),
+            false,
             opcode,
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
             // shadows and such; img* is associated with the current entity
-            self.create_entity_action = Some(CreateIScriptEntity::ImageUnderlay {
+            return Some(IScriptEntityAction::CreateImageUnderlay {
                 image_id: image_id,
                 rel_x: rel_x,
                 rel_y: rel_y,
@@ -234,7 +241,7 @@ impl IScriptState {
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
             // e.g. explosions on death
-            self.create_entity_action = Some(CreateIScriptEntity::ImageOverlay {
+            return Some(IScriptEntityAction::CreateImageOverlay {
                 image_id: image_id,
                 rel_x: rel_x,
                 rel_y: rel_y,
@@ -368,12 +375,9 @@ impl IScriptState {
         }
 
     );
+        return None;
+    }
 
-        if self.follow_main_graphic && parent.is_some() {
-            self.direction = parent.unwrap().direction;
-            self.frameset = parent.unwrap().frameset;
-        }
-        }
 }
 struct SCImage {
     pub image_id: u16,
@@ -517,48 +521,123 @@ impl SCImage {
                 gd: &Rc<GameData>) {
         // FIXME: death animation for marine: shadow tries to display wrong frameset
         for ul in &mut self.underlays {
-            ul.iscript_state.interpret_iscript(Some(&self.iscript_state));
+            let _ = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
         }
-        self.iscript_state.interpret_iscript(None);
+        let iscript_action = self.iscript_state._interpret_iscript(None);
         for ol in &mut self.overlays {
-            ol.iscript_state.interpret_iscript(Some(&self.iscript_state));
+            let _ = ol.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
         }
 
         // create additional entities if necessary
-        match self.iscript_state.create_entity_action {
-            Some(CreateIScriptEntity::ImageUnderlay {image_id, rel_x, rel_y}) => {
+        match iscript_action {
+            Some(IScriptEntityAction::CreateImageUnderlay {image_id, rel_x, rel_y}) => {
                 println!("creating underlay");
 
                 let mut underlay = SCImage::new(gd, image_id);
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
-
-                self.iscript_state.create_entity_action = None;
             },
-            Some(CreateIScriptEntity::ImageOverlay {image_id, rel_x, rel_y}) => {
+            Some(IScriptEntityAction::CreateImageOverlay {image_id, rel_x, rel_y}) => {
                 println!("create overlay");
                 let mut overlay = SCImage::new(gd, image_id);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
                 self.overlays.push(overlay);
-
-                self.iscript_state.create_entity_action = None;
             },
             _ => {},
         }
     }
 }
 
+////////////////////////////////////////
+
+// sprite: additional features:
+// - health bar
+// - selection circle
+struct SCSprite {
+    pub sprite_id: u16,
+    pub img: SCImage,
+    /// from sprites.dat: length of health bar in pixels
+    health_bar: u8,
+    // circle_img: u8,
+    circle_offset: u8,
+    // FIXME: inefficient
+   circle_grp: GRP,
+}
+
+impl SCSprite {
+    pub fn new(gd: &Rc<GameData>, sprite_id: u16) -> SCSprite {
+        let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+        let img = SCImage::new(gd, image_id);
+
+        let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
+        let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
+        let name = "unit\\".to_string() + &gd.images_tbl[(circle_grp_id as usize) - 1];
+        let grp = GRP::read(&mut gd.open(&name).unwrap());
+        SCSprite {
+            sprite_id: sprite_id,
+            img: img,
+            health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
+            circle_offset: gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
+            circle_grp: grp,
+        }
+    }
+
+    pub fn draw_healthbar(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        let boxes = self.health_bar as u32 / 3;
+        let box_width = 3;
+        let width = 2 + (box_width * boxes) + (boxes - 1);
+        let height = 8;
+
+        let mut outpos = (cy - height / 2) * buffer_pitch + (cx - width / 2);
+        for y in 0..height {
+            for x in 0..width {
+                let outer_border = y == 0 || y == height-1 || x == 0 || x == (width-1);
+                let inner_border = x % (box_width+1) == 0;
+                if inner_border || outer_border {
+                    // black
+                    buffer[outpos as usize] = 0;
+                } else {
+                    // green
+                    buffer[outpos as usize] = 185;
+                }
+                outpos += 1;
+            }
+            outpos += buffer_pitch - width;
+        }
+    }
+
+    pub fn draw_selection_circle(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        let width = self.circle_grp.header.width as u32;
+        let height = self.circle_grp.header.height as u32;
+
+        let mut outpos = ((cy + self.circle_offset as u32) - height / 2) * buffer_pitch + (cx - width / 2);
+        let mut inpos = 0;
+        // FIXME: reindexing
+        for _ in 0..height {
+            for _ in 0..width {
+                let col = self.circle_grp.frames[0][inpos as usize];
+                if col > 0 {
+                    buffer[outpos as usize] = col;
+                }
+                outpos += 1;
+                inpos += 1;
+            }
+            outpos += buffer_pitch - width;
+        }
+    }
+}
 
 struct UnitsView {
     unit_id: usize,
     current_anim: AnimationType,
     anim_str: String,
     unit_name_str: String,
-    img: SCImage,
+    //img: SCImage,
+    sprite: SCSprite,
 }
 impl UnitsView {
     fn new(gc: &mut GameContext, unit_id: usize) -> UnitsView {
@@ -568,7 +647,7 @@ impl UnitsView {
         let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
         let flingy_id = gd.units_dat.flingy_id[unit_id];
         let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-        let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+        // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
 
         // FIXME: move this to some generic initialization function
         let pal = gd.install_pal.to_sdl();
@@ -579,7 +658,8 @@ impl UnitsView {
             current_anim: current_anim,
             anim_str: anim_str,
             unit_name_str: unit_name_str,
-            img: SCImage::new(&gd, image_id),
+            //img: SCImage::new(&gd, image_id),
+            sprite: SCSprite::new(&gd, sprite_id),
         }
     }
 }
@@ -598,8 +678,9 @@ impl View for UnitsView {
                                          gd.stat_txt_tbl[self.unit_id].to_owned());
             let flingy_id = gd.units_dat.flingy_id[self.unit_id];
             let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-            let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-            self.img = SCImage::new(&gd, image_id);
+            // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+            //self.img = SCImage::new(&gd, image_id);
+            self.sprite = SCSprite::new(&gd, sprite_id);
         } else if context.events.now.key_p == Some(true) {
             if self.unit_id > 0 {
                 self.unit_id -= 1;
@@ -608,27 +689,28 @@ impl View for UnitsView {
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
                 let flingy_id = gd.units_dat.flingy_id[self.unit_id];
                 let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-                let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-                self.img = SCImage::new(&gd, image_id);
+                // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
+                //self.img = SCImage::new(&gd, image_id);
+                self.sprite = SCSprite::new(&gd, sprite_id);
             }
         }
         if context.events.now.key_q == Some(true) {
-            self.img.iscript_state.turn_ccwise(1);
+            self.sprite.img.iscript_state.turn_ccwise(1);
         } else if context.events.now.key_e == Some(true) {
-            self.img.iscript_state.turn_cwise(1);
+            self.sprite.img.iscript_state.turn_cwise(1);
         }
         if context.events.now.key_d == Some(true) {
-            self.img.iscript_state.set_animation(AnimationType::Death);
+            self.sprite.img.iscript_state.set_animation(AnimationType::Death);
         } else if context.events.now.key_w == Some(true) {
-            self.img.iscript_state.set_animation(AnimationType::Walking);
+            self.sprite.img.iscript_state.set_animation(AnimationType::Walking);
         }
 
         // FIXME: reduce cloning
         let gd = context.gd.clone();
         {
-            self.img.step(&gd);
+            self.sprite.img.step(&gd);
             {
-                let anim = self.img.iscript_state.current_animation();
+                let anim = self.sprite.img.iscript_state.current_animation();
                 if anim != self.current_anim {
                     println!("--- current animation: {:?} ---", anim);
                     self.current_anim = anim;
@@ -660,8 +742,11 @@ impl View for UnitsView {
                                screen_pitch,
                                &animstr_rect);
 
+            self.sprite.draw_selection_circle(100, 100, buffer, screen_pitch);
             // unit
-            self.img.draw(100, 100, buffer, screen_pitch);
+            self.sprite.img.draw(100, 100, buffer, screen_pitch);
+
+            self.sprite.draw_healthbar(100, 140, buffer, screen_pitch);
 
         });
 
