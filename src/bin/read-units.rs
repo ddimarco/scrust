@@ -387,6 +387,30 @@ struct SCImage {
     underlays: Vec<SCImage>,
     overlays: Vec<SCImage>,
 }
+trait IScriptableTrait {
+    fn get_iscript_state<'a>(&'a self) -> &'a IScriptState;
+    fn get_iscript_state_mut<'a>(&'a mut self) -> &'a mut IScriptState;
+}
+impl IScriptableTrait for SCImage {
+    fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
+        &self.iscript_state
+    }
+    fn get_iscript_state_mut<'a>(&'a mut self) -> &'a mut IScriptState {
+        &mut self.iscript_state
+    }
+}
+trait SCImageTrait : IScriptableTrait {
+    fn get_scimg<'a>(&'a self) -> &'a SCImage;
+    fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage;
+}
+impl SCImageTrait for SCImage {
+    fn get_scimg<'a>(&'a self) -> &'a SCImage {
+        self
+    }
+    fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage {
+        self
+    }
+}
 
 impl SCImage {
     pub fn new(gd: &Rc<GameData>,
@@ -568,6 +592,31 @@ struct SCSprite {
    circle_grp: GRP,
 }
 
+impl IScriptableTrait for SCSprite {
+    fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
+        self.img.get_iscript_state()
+    }
+    fn get_iscript_state_mut<'a>(&'a mut self) -> &'a mut IScriptState {
+        self.img.get_iscript_state_mut()
+    }
+}
+impl SCImageTrait for SCSprite {
+    fn get_scimg<'a>(&'a self) -> &'a SCImage {
+        &self.img
+    }
+    fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage {
+        &mut self.img
+    }
+}
+trait SCSpriteTrait: SCImageTrait {
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite;
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite;
+}
+impl SCSpriteTrait for SCSprite {
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite { self }
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { self }
+}
+
 impl SCSprite {
     pub fn new(gd: &Rc<GameData>, sprite_id: u16) -> SCSprite {
         let image_id = gd.sprites_dat.image_id[sprite_id as usize];
@@ -631,13 +680,52 @@ impl SCSprite {
     }
 }
 
+struct SCUnit {
+    unit_id: usize,
+    // merging flingy and unit for now
+    flingy_id: usize,
+    sprite: SCSprite,
+}
+impl IScriptableTrait for SCUnit {
+    fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
+        self.sprite.get_iscript_state()
+    }
+    fn get_iscript_state_mut<'a>(&'a mut self) -> &'a mut IScriptState {
+        self.sprite.get_iscript_state_mut()
+    }
+}
+impl SCImageTrait for SCUnit {
+    fn get_scimg<'a>(&'a self) -> &'a SCImage {
+        &self.sprite.get_scimg()
+    }
+    fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage {
+        self.sprite.get_scimg_mut()
+    }
+}
+impl SCSpriteTrait for SCUnit {
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite { &self.sprite }
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { &mut self.sprite }
+}
+impl SCUnit {
+    pub fn new(gd: &Rc<GameData>, unit_id: usize) -> SCUnit {
+        let flingy_id = gd.units_dat.flingy_id[unit_id];
+        let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        let sprite = SCSprite::new(gd, sprite_id);
+        SCUnit {
+            unit_id: unit_id as usize,
+            flingy_id: flingy_id as usize,
+            sprite: sprite,
+        }
+    }
+}
+
+
 struct UnitsView {
     unit_id: usize,
     current_anim: AnimationType,
     anim_str: String,
     unit_name_str: String,
-    //img: SCImage,
-    sprite: SCSprite,
+    unit: SCUnit,
 }
 impl UnitsView {
     fn new(gc: &mut GameContext, unit_id: usize) -> UnitsView {
@@ -645,8 +733,8 @@ impl UnitsView {
         let anim_str = format!("Animation: {:?}", current_anim);
         let gd = gc.gd.clone();
         let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
-        let flingy_id = gd.units_dat.flingy_id[unit_id];
-        let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        // let flingy_id = gd.units_dat.flingy_id[unit_id];
+        //let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
         // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
 
         // FIXME: move this to some generic initialization function
@@ -659,7 +747,8 @@ impl UnitsView {
             anim_str: anim_str,
             unit_name_str: unit_name_str,
             //img: SCImage::new(&gd, image_id),
-            sprite: SCSprite::new(&gd, sprite_id),
+            //sprite: SCSprite::new(&gd, sprite_id),
+            unit: SCUnit::new(&gd, unit_id),
         }
     }
 }
@@ -676,41 +765,43 @@ impl View for UnitsView {
 
             self.unit_name_str = format!("{}: {}", self.unit_id,
                                          gd.stat_txt_tbl[self.unit_id].to_owned());
-            let flingy_id = gd.units_dat.flingy_id[self.unit_id];
-            let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+            // let flingy_id = gd.units_dat.flingy_id[self.unit_id];
+            // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
             // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
             //self.img = SCImage::new(&gd, image_id);
-            self.sprite = SCSprite::new(&gd, sprite_id);
+            //self.sprite = SCSprite::new(&gd, sprite_id);
+            self.unit = SCUnit::new(&gd, self.unit_id);
         } else if context.events.now.key_p == Some(true) {
             if self.unit_id > 0 {
                 self.unit_id -= 1;
 
                 self.unit_name_str = format!("{}: {}", self.unit_id,
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
-                let flingy_id = gd.units_dat.flingy_id[self.unit_id];
-                let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+                // let flingy_id = gd.units_dat.flingy_id[self.unit_id];
+                // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
                 // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
                 //self.img = SCImage::new(&gd, image_id);
-                self.sprite = SCSprite::new(&gd, sprite_id);
+                //self.sprite = SCSprite::new(&gd, sprite_id);
+                self.unit = SCUnit::new(&gd, self.unit_id);
             }
         }
         if context.events.now.key_q == Some(true) {
-            self.sprite.img.iscript_state.turn_ccwise(1);
+            self.unit.get_iscript_state_mut().turn_ccwise(1);
         } else if context.events.now.key_e == Some(true) {
-            self.sprite.img.iscript_state.turn_cwise(1);
+            self.unit.get_iscript_state_mut().turn_cwise(1);
         }
         if context.events.now.key_d == Some(true) {
-            self.sprite.img.iscript_state.set_animation(AnimationType::Death);
+            self.unit.get_iscript_state_mut().set_animation(AnimationType::Death);
         } else if context.events.now.key_w == Some(true) {
-            self.sprite.img.iscript_state.set_animation(AnimationType::Walking);
+            self.unit.get_iscript_state_mut().set_animation(AnimationType::Walking);
         }
 
         // FIXME: reduce cloning
         let gd = context.gd.clone();
         {
-            self.sprite.img.step(&gd);
+            self.unit.get_scimg_mut().step(&gd);
             {
-                let anim = self.sprite.img.iscript_state.current_animation();
+                let anim = self.unit.get_iscript_state().current_animation();
                 if anim != self.current_anim {
                     println!("--- current animation: {:?} ---", anim);
                     self.current_anim = anim;
@@ -742,11 +833,11 @@ impl View for UnitsView {
                                screen_pitch,
                                &animstr_rect);
 
-            self.sprite.draw_selection_circle(100, 100, buffer, screen_pitch);
+            self.unit.get_scsprite().draw_selection_circle(100, 100, buffer, screen_pitch);
             // unit
-            self.sprite.img.draw(100, 100, buffer, screen_pitch);
+            self.unit.get_scimg().draw(100, 100, buffer, screen_pitch);
 
-            self.sprite.draw_healthbar(100, 140, buffer, screen_pitch);
+            self.unit.get_scsprite().draw_healthbar(100, 140, buffer, screen_pitch);
 
         });
 
