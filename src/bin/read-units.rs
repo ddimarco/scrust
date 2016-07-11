@@ -479,27 +479,68 @@ impl SCImage {
         if !self.iscript_state.visible {
             return;
         }
+
         let remap = self.remapping(self.iscript_state.gd.as_ref());
         let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
                                                     remap);
 
-        let w = self.grp.header.width;
-        let h = self.grp.header.height;
-        let x_start = (cx + self.iscript_state.rel_x as u32) - (w as u32 / 2);
-        let y_start = (cy + self.iscript_state.rel_y as u32) - (h as u32 / 2);
         let fridx = self.frame_idx();
         // this seems like a hack
         if fridx >= self.grp.frames.len() && has_parent {
+            println!("WARNING: suspicious frame index");
             return;
         }
         let udata = &self.grp.frames[fridx];
 
-        let mut outpos = ((y_start * buffer_pitch) + x_start as u32) as usize;
-        let mut inpos = 0 as usize;
+        let w = self.grp.header.width;
+        let h = self.grp.header.height;
+        let x_center = cx + self.iscript_state.rel_x as u32;
+        let (in_pitch, x_in_offset, x_start) =
+            if x_center < (w as u32 / 2) {
+                // clip (image is at left border)
+                let xio = (w as u32 / 2) - x_center;
+                ((w as u32)-xio, xio, 0)
+            } else {
+                let x_start = x_center - (w as u32 / 2);
+                (w as u32, 0, x_start as usize)
+            };
+        if x_start > buffer_pitch as usize {
+            return;
+        }
+        let in_width =
+            if (x_center + in_pitch / 2) > buffer_pitch {
+                buffer_pitch - (x_start as u32)
+            } else {
+                in_pitch
+            };
+
+        let y_center = cy + self.iscript_state.rel_y as u32;
+        let (_y_in_height, y_in_offset, y_start) =
+            if y_center < (h as u32 / 2) {
+                // clip (top border)
+                let yio = (h as u32 / 2) - y_center;
+                ((h as u32)-yio, yio, 0)
+            } else {
+                let y_start = y_center - (h as u32 / 2);
+                (h as u32, 0, y_start)
+            };
+        let buf_height = buffer.len() / buffer_pitch as usize;
+        if y_start as usize > buf_height {
+            return;
+        }
+        let y_in_height =
+            if (y_center + _y_in_height / 2) as usize > buf_height {
+                buf_height as u32 - y_start
+            } else {
+                _y_in_height
+            };
+
+        let mut outpos = (y_start * buffer_pitch) as usize + x_start;
+        let mut inpos = (y_in_offset as usize * (w as usize)) + x_in_offset as usize;
         let flipped = self.draw_flipped();
         if !flipped {
-            for _ in 0..h {
-                for _ in 0..w {
+            for _ in 0..y_in_height {
+                for _ in 0..in_width {
                     let dest = udata[inpos] as usize;
                     if dest > 0 {
                         let src = buffer[outpos] as usize;
@@ -508,23 +549,25 @@ impl SCImage {
                     outpos += 1;
                     inpos += 1;
                 }
-                outpos += (buffer_pitch - w as u32) as usize;
+                let to_skip = (w as u32 - in_width) as usize;
+                inpos += to_skip;
+                outpos += to_skip + (buffer_pitch - w as u32) as usize;
             }
         } else {
             // draw flipped
-            for y in 0..h {
-                for x in 0..w {
-                    let dest = udata[(y*w + (w - x - 1)) as usize] as usize;
+            for y in (y_in_offset as usize)..(y_in_offset as usize + y_in_height as usize) {
+                for x in (x_in_offset as usize)..(x_in_offset as usize + in_width as usize) {
+                    let dest = udata[(y*(w as usize) + ((w as usize) - x - 1)) as usize] as usize;
                     if dest > 0 {
                         let src = buffer[outpos] as usize;
                         buffer[outpos] = reindex[(dest - 1) * 256 + src];
                     }
                     outpos += 1;
                 }
-                outpos += (buffer_pitch - w as u32) as usize;
+                let to_skip = (w as u32 - in_width) as usize;
+                outpos += to_skip + (buffer_pitch - w as u32) as usize;
             }
         }
-
     }
 
     pub fn draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
@@ -638,6 +681,10 @@ impl SCSprite {
     pub fn draw_healthbar(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         let boxes = self.health_bar as u32 / 3;
         let box_width = 3;
+        if self.health_bar == 0 {
+            println!("healthbar == 0, not drawing");
+            return;
+        }
         let width = 2 + (box_width * boxes) + (boxes - 1);
         let height = 8;
 
