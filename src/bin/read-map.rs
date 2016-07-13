@@ -538,20 +538,41 @@ impl Map {
             ""
         }
     }
+
+    pub fn render(&self, map_x: u16, map_y: u16, tiles_x: u16, tiles_y: u16,
+                  trg_buf: &mut [u8], trg_pitch: u32) {
+        let map_w = self.data.width as usize;
+        for ty in 0..tiles_y {
+            let top = (ty as usize) * 32;
+            for tx in 0..tiles_x {
+                let mtxm_tile = self.data.mtxm[map_w * ((map_y + ty) as usize) +
+                                               (map_x + tx) as usize];
+
+                let left = (tx as usize) * 32;
+                let buffer_idx = (top * (tiles_x as usize) * 32) + left;
+
+                //self.terrain_info.render_mega_tile(2, trg_buf, 0, trg_pitch as usize);
+                self.terrain_info.render_mtxm(mtxm_tile, trg_buf, buffer_idx as usize, trg_pitch as usize);
+            }
+        }
+    }
 }
 
 struct MapView {
     map: Map,
+    map_x: u16,
+    map_y: u16,
 }
 impl MapView {
     fn new(context: &mut GameContext, mapfn: &str) -> MapView {
-        let pal = context.gd.fontmm_reindex.palette.to_sdl();
-        context.screen.set_palette(&pal).ok();
         let map = Map::read(&context.gd, mapfn);
         println!("map name: {}", map.name());
         println!("map desc: {}", map.description());
+        context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
         MapView {
             map: map,
+            map_x: 0,
+            map_y: 0,
         }
     }
 }
@@ -560,17 +581,24 @@ impl View for MapView {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
+        if context.events.now.key_left == Some(true) {
+            if self.map_x > 0 {
+                self.map_x -= 1;
+            }
+        } else if context.events.now.key_right == Some(true) {
+                self.map_x += 1;
+        }
+        if context.events.now.key_up == Some(true) {
+            if self.map_y > 0 {
+                self.map_y -= 1;
+            }
+        } else if context.events.now.key_down == Some(true) {
+            self.map_y += 1;
+        }
 
-        // let fnt = &context.gd.font(self.font_size);
         let screen_pitch = context.screen.pitch();
-        let reindex = &context.gd.fontmm_reindex.data;
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            // fnt.render_textbox(self.text.as_ref(),
-            //                    self.color_idx,
-            //                    reindex,
-            //                    buffer,
-            //                    screen_pitch,
-            //                    &self.trg_rect);
+            self.map.render(self.map_x, self.map_y, 15, 15, buffer, screen_pitch);
         });
 
         ViewAction::None

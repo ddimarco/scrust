@@ -170,7 +170,7 @@ fn make_tileset_filename(tileset: TileSet, ending: &str) -> String {
 }
 
 pub struct TerrainInfo {
-    pal: Palette,
+    pub pal: Palette,
     cv5: Vec<CV5>,
     doodads: Vec<Doodad>,
     vx4: Vec<VX4>,
@@ -226,5 +226,48 @@ impl TerrainInfo {
             vr4: vr4,
             vf4: vf4,
         }
+    }
+
+    pub fn render_mtxm(&self, mtxm_idx: u16, buffer: &mut [u8],
+                       buffer_offset: usize, stride: usize) {
+        let cv5_id = mtxm_idx >> 4;
+        let sub_id = mtxm_idx & 0x000F;
+        let ref cv5_tile = self.cv5[cv5_id as usize];
+        let mega_tile_idx = cv5_tile.mega_tiles[sub_id as usize];
+        self.render_mega_tile(mega_tile_idx as usize, buffer, buffer_offset, stride);
+    }
+
+    fn render_mega_tile(&self, vx4_idx: usize, buffer: &mut [u8],
+                            buffer_offset: usize, stride: usize) {
+        let ref vx4 = self.vx4[vx4_idx];
+        for i in 0..16 {
+            let outrow = i / 4;
+            let outcol = i % 4;
+            let top_y = outrow * 8;
+            let left_x = outcol * 8;
+            let buffer_offset = buffer_offset + (top_y * stride) + left_x;
+            let vxentry = vx4.data[i];
+            let flipped = (vxentry & 1) > 0;
+            let vr4_idx = vxentry >> 1;
+            self.render_mini_tile(vr4_idx as usize, buffer, buffer_offset, stride, flipped);
+        }
+    }
+
+    fn render_mini_tile(&self, vr4_idx: usize, buffer: &mut [u8],
+                            buffer_offset: usize, stride: usize, flipped: bool) {
+        let ref imgdata = self.vr4[vr4_idx].bitmap;
+        for y in 0..8 {
+            for x in 0..8 {
+                let outpos = buffer_offset + (y * stride) + x;
+                let imgpos = (y * 8) +
+                    if flipped {
+                        7 - x
+                    } else {
+                        x
+                    };
+                buffer[outpos] = imgdata[imgpos];
+            }
+        }
+
     }
 }
