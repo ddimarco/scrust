@@ -13,6 +13,18 @@ use ::iscript::IScript;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
+#[derive(Copy, Clone, Debug)]
+pub enum TileSet {
+    Badlands = 0,
+    SpacePlatform = 1,
+    Installation = 2,
+    Ashworld = 3,
+    Jungle = 4,
+    Desert = 5,
+    Arctic = 6,
+    Twilight = 7,
+}
+
 pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
 

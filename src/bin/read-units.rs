@@ -100,6 +100,7 @@ struct IScriptState {
     frameset: u16,
     follow_main_graphic: bool,
     visible: bool,
+    alive: bool,
 }
 
 impl Read for IScriptState {
@@ -153,6 +154,7 @@ impl IScriptState {
             frameset: 0,
             direction: 0,
             follow_main_graphic: false,
+            alive: true,
         }
     }
 
@@ -206,6 +208,9 @@ impl IScriptState {
     }
 
     fn _interpret_iscript(&mut self, parent: Option<&IScriptState>) -> Option<IScriptEntityAction> {
+        if !self.alive {
+            return None;
+        }
         // FIXME: is waiting actually counted in frames?
         if self.waiting_ticks_left > 0 {
             self.waiting_ticks_left -= 1;
@@ -372,6 +377,7 @@ impl IScriptState {
 
         OpCode::End => () {
         // FIXME
+            self.alive = false;
         }
 
     );

@@ -16,7 +16,9 @@ pub mod pal;
 pub mod gamedata;
 pub mod unitsdata;
 pub mod iscript;
-
+#[macro_use]
+pub mod utils;
+pub mod terrain;
 
 use std::path::Path;
 use sdl2::render::Renderer;
