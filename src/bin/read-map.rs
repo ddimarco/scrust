@@ -557,11 +557,12 @@ impl Map {
                                                (map_x + tx) as usize];
 
                 let left = (tx as usize) * 32;
-                let buffer_idx = (top * (tiles_x as usize) * 32) + left;
+                let buffer_idx = top * (tiles_x as usize) * 32 + left;
 
                 self.terrain_info.render_mtxm(mtxm_tile, trg_buf,
                                               buffer_idx as usize,
                                               trg_pitch as usize);
+                trg_buf[buffer_idx] = 255;
             }
         }
 
@@ -606,7 +607,7 @@ impl MapView {
 }
 impl View for MapView {
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
-        const MAP_RENDER_W: u16 = 15;
+        const MAP_RENDER_W: u16 = 20;
         const MAP_RENDER_H: u16 = 15;
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
