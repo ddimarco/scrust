@@ -232,8 +232,11 @@ impl TerrainInfo {
                        buffer_offset: usize, stride: usize) {
         let cv5_id = mtxm_idx >> 4;
         let sub_id = mtxm_idx & 0x000F;
-        let ref cv5_tile = self.cv5[cv5_id as usize];
-        let mega_tile_idx = cv5_tile.mega_tiles[sub_id as usize];
+        let mega_tile_idx = if cv5_id <= 1024 {
+            self.cv5[cv5_id as usize].mega_tiles[sub_id as usize]
+        } else {
+            self.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]
+        };
         self.render_mega_tile(mega_tile_idx as usize, buffer, buffer_offset, stride);
     }
 

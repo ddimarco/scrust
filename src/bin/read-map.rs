@@ -517,6 +517,14 @@ impl Map {
         println!("loading terrain");
         let ti = TerrainInfo::read(gd, mapdata.tileset);
 
+        println!("{} units", mapdata.units.len());
+        for u in &mapdata.units {
+            println!(" unit instance {}", u.instance_id);
+            println!(" unit pos {}, {}", u.x, u.y);
+            println!(" unit id {}", u.unit_id);
+            println!(" unit name {}", gd.stat_txt_tbl[u.unit_id as usize].to_owned());
+        }
+
         Map {
             data: mapdata,
             terrain_info: ti,
@@ -551,8 +559,28 @@ impl Map {
                 let left = (tx as usize) * 32;
                 let buffer_idx = (top * (tiles_x as usize) * 32) + left;
 
-                //self.terrain_info.render_mega_tile(2, trg_buf, 0, trg_pitch as usize);
-                self.terrain_info.render_mtxm(mtxm_tile, trg_buf, buffer_idx as usize, trg_pitch as usize);
+                self.terrain_info.render_mtxm(mtxm_tile, trg_buf,
+                                              buffer_idx as usize,
+                                              trg_pitch as usize);
+            }
+        }
+
+        // placeholder for map units
+        let left_map_x = map_x * 32;
+        let right_map_x = left_map_x + tiles_x * 32;
+        let top_map_y = map_y * 32;
+        let bottom_map_y = top_map_y + tiles_y * 32;
+        for u in &self.data.units {
+            if u.x > left_map_x && u.x < right_map_x && u.y > top_map_y && u.y < bottom_map_y {
+                //println!("{} in view", u.unit_id);
+                let cx = (u.x - left_map_x) as usize;
+                let cy = (u.y - top_map_y) as usize;
+                let s = 5;
+                for y in 0..s {
+                    for x in 0..s {
+                        trg_buf[(cy + y - s/2)*trg_pitch as usize + cx + x - s/2] = 255;
+                    }
+                }
             }
         }
     }
@@ -578,6 +606,8 @@ impl MapView {
 }
 impl View for MapView {
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+        const MAP_RENDER_W: u16 = 15;
+        const MAP_RENDER_H: u16 = 15;
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -586,19 +616,24 @@ impl View for MapView {
                 self.map_x -= 1;
             }
         } else if context.events.now.key_right == Some(true) {
+            if self.map_x + MAP_RENDER_W < self.map.data.width {
                 self.map_x += 1;
+            }
         }
         if context.events.now.key_up == Some(true) {
             if self.map_y > 0 {
                 self.map_y -= 1;
             }
         } else if context.events.now.key_down == Some(true) {
-            self.map_y += 1;
+            if self.map_y + MAP_RENDER_H < self.map.data.height {
+                self.map_y += 1;
+            }
         }
 
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            self.map.render(self.map_x, self.map_y, 15, 15, buffer, screen_pitch);
+            self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,
+                            buffer, screen_pitch);
         });
 
         ViewAction::None
