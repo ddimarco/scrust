@@ -1,0 +1,201 @@
+* on using hardware-accelerated sdl2 with 8bit color
+I was in the same boat with Postal 1; it always writes to a 640x480,
+8-bit, paletted surface.
+
+I had moved it from SDL 1.2 to SDL 2.0, using an 8-bit shadow surface,
+which I would blit to the window surface. Postal uses dirty rects and
+such, so it would do this reasonably efficiently, at least on the
+application side of things.
+
+This worked, but it used a lot of CPU on the Mac I tried it on. I hadn't
+debugged it or even sanity-checked the code to make sure I wasn't doing
+something stupid.
+
+I decided to move it to OpenGL directly:
+
+- We keep a 640x480 memory buffer. The game renders into this, 8 bits
+per pixel, thinking it's the usual SDL 1.2 video surface.
+- We also have a 640x480 GL_R8 texture, which we update once a frame
+with glTexSubImage2D() from that memory buffer. We don't try to do dirty
+rectangles. At the end of the frame, the whole texture is updated,
+unconditionally, because it was easier this way.
+- We have an 256x1 GL_RGBA texture. It's the palette.
+- There's a VBO that has the vertex array we use to draw a single quad
+with this texture.
+- There's GLSL to make it take the 8-bit texture and the palette
+texture, and render the proper colors to the framebuffer.
+- For extra credit, we have an FBO that we can then do a GL_LINEAR
+stretch-blit to the real window system framebuffer, so the game doesn't
+have to be 640x480 anymore. Since the 8-bit values have to line up
+exactly for the palette to work, that _has_ to render at 640x480 to get
+the right colors, but then you can do a nice linear filter when going to
+the screen. Now it looks like it would if you dropped your monitor's
+resolution to 640x480 to fill the whole display, but the Steam Overlay
+still renders at full resolution.
+
+This took a few hours to implement, got some cool benefits, and this Mac
+uses about 4% of the CPU to play the game.
+
+** more details
+For those that are curious, here's the code for that...
+
+#+BEGIN_SRC C
+  // call prepareOpenGLShaders() after setting up your GL context.
+  struct OpenGLVertexAttribs
+  {
+    GLfloat x;
+    GLfloat y;
+    GLfloat u;
+    GLfloat v;
+  };
+
+  static bool prepareOpenGLShaders(const int w, const int h)
+  {
+    static const char *glslVertexShader =
+      "#version 110\n"
+      "attribute vec2 pos;"
+      "attribute vec2 tex;"
+      "void main() {"
+      "gl_Position = vec4(pos.xy, 0.0, 1.0);"
+      "gl_TexCoord[0].xy = tex;"
+      "}"
+      ;
+
+    static const char *glslFragmentShader2D =
+      "#version 110\n"
+      "uniform sampler2D image;"
+      "uniform sampler2D palette;"
+      "void main() {"
+      "gl_FragColor = texture2D(palette, vec2(texture2D(image,
+  gl_TexCoord[0].xy).x, 0.0));"
+      "}"
+      ;
+
+    static const char *glslFragmentShaderRect =
+      "#version 110\n"
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect image;"
+      "uniform sampler2DRect palette;"
+      "void main() {"
+      "gl_FragColor = texture2DRect(palette,
+  vec2(texture2DRect(image, gl_TexCoord[0].xy).x * 255.0, 0.0));"
+      "}"
+      ;
+
+    GLuint vertex = 0;
+    GLuint fragment = 0;
+    GLuint program = 0;
+    GLint ok = 0;
+    GLint shaderlen = 0;
+
+    ok = 0;
+    shaderlen = (GLint) strlen(glslVertexShader);
+    vertex = pglCreateShader(GL_VERTEX_SHADER);
+    pglShaderSource(vertex, 1, (const GLchar **) &glslVertexShader,
+                    &shaderlen);
+    pglCompileShader(vertex);
+    pglGetShaderiv(vertex, GL_COMPILE_STATUS, &ok);
+    if (!ok)
+      {
+        char errbuf[256];
+        GLsizei len = 0;
+        pglGetShaderInfoLog(vertex, sizeof (errbuf), &len, (GLchar *)
+                            errbuf);
+        printf("POSTAL1 vertex shader compile error:\n%s\n\n", errbuf);
+        pglDeleteShader(vertex);
+        return false;
+      } // if
+
+    const bool isTextureRect = (OpenGLTextureTarget ==
+                                GL_TEXTURE_RECTANGLE_ARB);
+    const char *glslFragmentShader = isTextureRect ?
+      glslFragmentShaderRect : glslFragmentShader2D;
+
+    ok = 0;
+    shaderlen = (GLint) strlen(glslFragmentShader);
+    fragment = pglCreateShader(GL_FRAGMENT_SHADER);
+    pglShaderSource(fragment, 1, (const GLchar **) &glslFragmentShader,
+                    &shaderlen);
+    pglCompileShader(fragment);
+    pglGetShaderiv(fragment, GL_COMPILE_STATUS, &ok);
+    if (!ok)
+      {
+        char errbuf[256];
+        GLsizei len = 0;
+        pglGetShaderInfoLog(fragment, sizeof (errbuf), &len, (GLchar *)
+                            errbuf);
+        printf("POSTAL1 fragment shader compile error:\n%s\n\n", errbuf);
+        pglDeleteShader(vertex);
+        pglDeleteShader(fragment);
+        return false;
+      } // if
+
+    ok = 0;
+    OpenGLProgram = pglCreateProgram();
+    pglAttachShader(OpenGLProgram, vertex);
+    pglAttachShader(OpenGLProgram, fragment);
+    pglBindAttribLocation(OpenGLProgram, 0, "pos");
+    pglBindAttribLocation(OpenGLProgram, 1, "tex");
+    pglLinkProgram(OpenGLProgram);
+    pglDeleteShader(vertex);
+    pglDeleteShader(fragment);
+    pglGetProgramiv(OpenGLProgram, GL_LINK_STATUS, &ok);
+    if (!ok)
+      {
+        pglDeleteProgram(OpenGLProgram);
+        OpenGLProgram = 0;
+        return false;
+      } // if
+
+    pglUseProgram(OpenGLProgram);
+    pglUniform1i(pglGetUniformLocation(OpenGLProgram, "image"), 0);
+    pglUniform1i(pglGetUniformLocation(OpenGLProgram, "palette"), 1);
+
+    const float left = -1.0f;
+    const float right = 1.0f;
+    const float top = 1.0f;
+    const float bottom = -1.0f;
+
+    OpenGLVertexAttribs verts[4] = {
+      { left, top, 0.0f, 0.0f },
+      { right, top, 1.0f, 0.0f },
+      { left, bottom, 0.0f, 1.0f },
+      { right, bottom, 1.0f, 1.0f }
+    };
+
+    if (isTextureRect)
+      {
+        for (int i = 0; i < (sizeof (verts) / sizeof (verts[0])); i++)
+          {
+            verts[i].u *= (GLfloat) w;
+            verts[i].v *= (GLfloat) h;
+          }
+      }
+
+    pglGenBuffers(1, &OpenGLVBO);
+    pglBindBuffer(GL_ARRAY_BUFFER, OpenGLVBO);
+    pglBufferData(GL_ARRAY_BUFFER, sizeof (verts), verts, GL_STATIC_DRAW);
+
+    const OpenGLVertexAttribs *ptr = NULL; // it's a bound VBO.
+
+    pglVertexAttribPointer(0, 2, GL_FLOAT, 0, sizeof (verts[0]), &ptr->x);
+    pglEnableVertexAttribArray(0);
+
+    pglVertexAttribPointer(1, 2, GL_FLOAT, 0, sizeof (verts[0]), &ptr->u);
+    pglEnableVertexAttribArray(1);
+
+    return true;
+  }
+
+
+  // Make sure your image texture and palette texture are on texunits 0
+  // and 1. Everything else is all set up in here, so other than making
+  // sure the textures are set up, here's how you get it to the screen:
+
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  SDL_GL_SwapBuffers(); // this is SDL_GL_SwapWindow() in SDL2.
+
+#+END_SRC
+
+The FBOs to stretch-blit add another dozen or two lines of code, but
+that's the gist otherwise.

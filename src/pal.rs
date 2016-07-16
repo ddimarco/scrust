@@ -1,5 +1,8 @@
 use std::io::{Read};
 
+extern crate sdl2;
+use sdl2::pixels::{Color};
+
 pub struct Palette {
     pub data: Vec<u8>,
 }
@@ -29,4 +32,17 @@ impl Palette {
             data: data,
         }
     }
+
+    pub fn to_sdl(&self) -> sdl2::pixels::Palette {
+        let mut cols = [Color::RGB(0, 0, 0); 256];
+        for i in 0..256 {
+            let r = self.data[i*3 + 0];
+            let g = self.data[i*3 + 1];
+            let b = self.data[i*3 + 2];
+            cols[i] = Color::RGB(r,g,b);
+        }
+        let pal = sdl2::pixels::Palette::from_colors(&cols);
+        pal
+    }
+
 }

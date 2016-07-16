@@ -4,6 +4,7 @@ use std::cmp::min;
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
+#[derive(Copy, Clone)]
 pub enum FontSize {
     Font10 = 0,
     Font14 = 1,
@@ -122,6 +123,59 @@ impl Font {
 
 ///////////////////////////////////////////////////////////////
 
+// render into 8bit screen buffer
+use ::GameContext;
+
+extern crate sdl2;
+use self::sdl2::rect::Rect;
+
+pub trait RenderText {
+    fn render_textbox(&self,
+                      text: &str,
+                      color_idx: usize,
+                      reindexing_table: &[u8],
+                      trg_buf: &mut [u8],
+                      trg_pitch: u32,
+                      trg_rect: &Rect);
+}
+impl RenderText for Font {
+    fn render_textbox(&self,
+                      text: &str,
+                      color_idx: usize,
+                      reindexing_table: &[u8],
+                      trg_buf: &mut [u8],
+                      trg_pitch: u32,
+                      trg_rect: &Rect) {
+        // for now, assume only single lines
+        let y = trg_rect.y() as usize;
+        let mut x = trg_rect.x() as usize;
+        // TODO: proper reindexing?
+        for c in text.chars() {
+            if c != ' ' {
+                let ref letter = self.get_letter(c);
+                for yl in (letter.yoffset as u32)..(letter.yoffset as u32 + letter.height as u32) {
+                    for xl in letter.xoffset as u32..(letter.xoffset as u32 + letter.width as u32) {
+                        let col = letter.data[(((yl - letter.yoffset as u32) * letter.width as u32) +
+                                               (xl - letter.xoffset as u32)) as usize];
+
+
+                        let outpos = ((y + yl as usize) * trg_pitch as usize) +
+                            (x + xl as usize);
+
+                        let col_mapped = reindexing_table[col as usize + (color_idx * 8)];
+                        trg_buf[outpos] = col_mapped;
+                    }
+                }
+            }
+            let letterwidth = self.letter_width(c);
+            x = x + 1 + letterwidth as usize;
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////
+// render into rgb24 texture
+/*
 use ::pal::Palette;
 
 extern crate sdl2;
@@ -184,3 +238,4 @@ impl RenderText for Font {
         return texture;
     }
 }
+*/
