@@ -13,6 +13,9 @@ use read_pcx::gamedata::{GameData, TileSet};
 use read_pcx::utils::read_u8buf;
 use read_pcx::terrain::TerrainInfo;
 
+extern crate sdl2;
+use sdl2::pixels::Color;
+
 struct MapData {
     pub mpq_archive: MPQArchive,
     pub owners: [u8; 12],
@@ -557,12 +560,11 @@ impl Map {
                                                (map_x + tx) as usize];
 
                 let left = (tx as usize) * 32;
-                let buffer_idx = top * (tiles_x as usize) * 32 + left;
+                let buffer_idx = top * trg_pitch as usize + left;
 
                 self.terrain_info.render_mtxm(mtxm_tile, trg_buf,
                                               buffer_idx as usize,
                                               trg_pitch as usize);
-                trg_buf[buffer_idx] = 255;
             }
         }
 
@@ -607,8 +609,8 @@ impl MapView {
 }
 impl View for MapView {
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
-        const MAP_RENDER_W: u16 = 20;
-        const MAP_RENDER_H: u16 = 15;
+        const MAP_RENDER_W: u16 = 4;
+        const MAP_RENDER_H: u16 = 4;
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -631,6 +633,8 @@ impl View for MapView {
             }
         }
 
+        // clear the screen
+        context.screen.fill_rect(None, Color::RGB(0,0,0)).ok();
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
             self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,

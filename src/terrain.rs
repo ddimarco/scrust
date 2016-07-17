@@ -243,16 +243,16 @@ impl TerrainInfo {
     fn render_mega_tile(&self, vx4_idx: usize, buffer: &mut [u8],
                             buffer_offset: usize, stride: usize) {
         let ref vx4 = self.vx4[vx4_idx];
-        for i in 0..16 {
-            let outrow = i / 4;
-            let outcol = i % 4;
-            let top_y = outrow * 8;
-            let left_x = outcol * 8;
-            let buffer_offset = buffer_offset + (top_y * stride) + left_x;
-            let vxentry = vx4.data[i];
-            let flipped = (vxentry & 1) > 0;
-            let vr4_idx = vxentry >> 1;
-            self.render_mini_tile(vr4_idx as usize, buffer, buffer_offset, stride, flipped);
+        for y in 0..4 {
+            for x in 0..4 {
+                let top_y = y * 8;
+                let left_x = x * 8;
+                let buffer_offset = buffer_offset + (top_y * stride) + left_x;
+                let vxentry = vx4.data[y*4+x];
+                let flipped = (vxentry & 1) > 0;
+                let vr4_idx = vxentry >> 1;
+                self.render_mini_tile(vr4_idx as usize, buffer, buffer_offset, stride, flipped);
+            }
         }
     }
 
