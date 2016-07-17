@@ -17,7 +17,7 @@ macro_rules! def_bin_struct {
     }
     )
         => {
-            struct $name {
+            pub struct $name {
                 $(
                     pub $field_name: $tpe,
                 )*
