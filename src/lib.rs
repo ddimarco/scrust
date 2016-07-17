@@ -3,6 +3,7 @@ extern crate libc;
 #[macro_use] extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
+extern crate rand;
 
 #[macro_use]
 pub mod events;
@@ -19,6 +20,7 @@ pub mod iscript;
 #[macro_use]
 pub mod utils;
 pub mod terrain;
+pub mod scunits;
 
 use std::path::Path;
 use sdl2::render::Renderer;
