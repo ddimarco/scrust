@@ -12,6 +12,7 @@ macro_rules! struct_events {
             $( pub $k_alias: Option<bool> ,) *
             $( pub $e_alias: bool, )*
             resize: Option<(u32, u32)>,
+            pub mouse_move: Option<(i32, i32)>,
         }
 
         impl ImmediateEvents {
@@ -20,6 +21,7 @@ macro_rules! struct_events {
                     $( $k_alias: None, ) *
                     $( $e_alias: false, ) *
                     resize: None,
+                    mouse_move: None,
                 }
             }
         }
@@ -75,6 +77,10 @@ macro_rules! struct_events {
                                 }
                             ),*
                             _ => {}
+                        },
+
+                        MouseMotion { x, y, .. } => {
+                            self.now.mouse_move = Some((x, y));
                         },
 
                         $(

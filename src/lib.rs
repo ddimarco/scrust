@@ -52,6 +52,12 @@ struct_events! (
     }
 );
 
+
+pub trait LayerTrait {
+    fn render(&self, renderer: &mut Renderer);
+    fn update(&mut self, gc: &GameContext);
+}
+
 pub struct GameContext<'window> {
     // gamedata is ref-counted so that refs can be kept by other objects
     pub gd: Rc<GameData>,
@@ -78,6 +84,7 @@ impl<'window> GameContext<'window> {
         let (w, h) = self.renderer.output_size().unwrap();
         (w,h)
     }
+
 }
 
 pub enum ViewAction {
@@ -89,6 +96,9 @@ pub enum ViewAction {
 pub trait View {
     /// renders the current view into context.screen
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction;
+
+    fn render_layers(&mut self, context: &mut GameContext) {
+    }
 }
 
 // useful links for SDL2 & 8bit rendering:
@@ -125,6 +135,7 @@ where F: Fn(&mut GameContext) -> Box<View> {
         Events::new(sdl_context.event_pump().unwrap()),
         window.renderer().accelerated().build().unwrap(),
     );
+    sdl_context.mouse().show_cursor(false);
     let mut current_view = init(&mut context);
 
     let interval = 1_000 / 60;
@@ -167,10 +178,14 @@ where F: Fn(&mut GameContext) -> Box<View> {
 
         // let start = timer.ticks();
         {
+            // XXX make screen another layer
             let t8 = context.renderer.create_texture_from_surface(&context.screen).unwrap();
             context.renderer.copy(&t8, None, None);
+
+            current_view.render_layers(&mut context);
+
             context.renderer.present();
-        }
+            }
         // let end = timer.ticks();
         //println!("rendering took {} ticks", end-start);
 
