@@ -41,7 +41,7 @@ impl Palette {
             let b = self.data[i*3 + 2];
             cols[i] = Color::RGB(r,g,b);
         }
-        let pal = sdl2::pixels::Palette::from_colors(&cols);
+        let pal = sdl2::pixels::Palette::with_colors(&cols).unwrap();
         pal
     }
 
