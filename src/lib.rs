@@ -21,6 +21,7 @@ pub mod iscript;
 pub mod utils;
 pub mod terrain;
 pub mod scunits;
+pub mod lox;
 
 use std::path::Path;
 use sdl2::render::Renderer;
