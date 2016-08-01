@@ -23,14 +23,13 @@ impl UnitsView {
     fn new(gc: &mut GameContext, unit_id: usize) -> UnitsView {
         let current_anim = AnimationType::Init;
         let anim_str = format!("Animation: {:?}", current_anim);
-        let gd = gc.gd.clone();
-        let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
+        let unit_name_str = format!("{}: {}", unit_id, gc.gd.stat_txt_tbl[unit_id].to_owned());
         // let flingy_id = gd.units_dat.flingy_id[unit_id];
         //let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
         // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
 
         // FIXME: move this to some generic initialization function
-        let pal = gd.install_pal.to_sdl();
+        let pal = gc.gd.install_pal.to_sdl();
         gc.screen.set_palette(&pal).ok();
 
         UnitsView {
@@ -40,7 +39,7 @@ impl UnitsView {
             unit_name_str: unit_name_str,
             //img: SCImage::new(&gd, image_id),
             //sprite: SCSprite::new(&gd, sprite_id),
-            unit: SCUnit::new(&gd, unit_id),
+            unit: SCUnit::new(&gc.gd, unit_id),
         }
     }
 }
@@ -88,8 +87,6 @@ impl View for UnitsView {
             self.unit.get_iscript_state_mut().set_animation(AnimationType::Walking);
         }
 
-        // FIXME: reduce cloning
-        let gd = context.gd.clone();
         {
             self.unit.get_scimg_mut().step(&gd);
             {
