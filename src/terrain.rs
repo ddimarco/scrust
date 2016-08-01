@@ -575,15 +575,13 @@ impl Map {
         let s = 5;
         for u in &self.data.units {
             if u.x > map_x && u.x < right_map_x && u.y > map_y && u.y < bottom_map_y {
-                //println!("{} in view", u.unit_id);
                 let cx = (u.x - map_x) as usize;
                 let cy = (u.y - map_y) as usize;
                 // XXX ugly computation
                 for y in cmp::max((s as isize)/2 - cy as isize, 0)..s as isize {
+                    let startidx = (cy + y as usize - s/2)*trg_pitch as usize + cx - s/2;
                     for x in cmp::max(((s as isize)/2 - cx as isize) , 0)..s as isize {
-                        let ny = cy + y as usize - s/2;
-                        let nx = cx + x as usize - s/2;
-                        let idx = ny*trg_pitch as usize + nx;
+                        let idx = startidx + x as usize;
                         if idx < trg_buf.len() {
                             trg_buf[idx] = 255;
                         }
