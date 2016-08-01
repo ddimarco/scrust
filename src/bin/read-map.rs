@@ -5,6 +5,8 @@ extern crate read_pcx;
 use read_pcx::{GameContext, View, ViewAction};
 use read_pcx::terrain::{Map};
 
+use read_pcx::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
+
 extern crate sdl2;
 use sdl2::pixels::Color;
 
@@ -12,6 +14,8 @@ struct MapView {
     map: Map,
     map_x: u16,
     map_y: u16,
+
+    units: Vec<SCUnit>,
 }
 impl MapView {
     fn new(context: &mut GameContext, mapfn: &str) -> MapView {
@@ -19,10 +23,21 @@ impl MapView {
         println!("map name: {}", map.name());
         println!("map desc: {}", map.description());
         context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
+
+        // create map units
+        let mut units = Vec::<SCUnit>::new();
+        for mapunit in &map.data.units {
+            // XXX: make use of mapunit data
+            let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize,
+                                   mapunit.x, mapunit.y);
+            units.push(unit);
+        }
+
         MapView {
             map: map,
             map_x: 0,
             map_y: 0,
+            units: units,
         }
     }
 }
@@ -56,13 +71,36 @@ impl View for MapView {
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0,0,0)).ok();
         let screen_pitch = context.screen.pitch();
+        // HACK
+        let buffer_height = 480;
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
             self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,
                             buffer, screen_pitch);
+
+            // units
+            let right_map_x = self.map_x + screen_pitch as u16;
+            let bottom_map_y = self.map_y + buffer_height as u16;
+            for u in &self.units {
+                if u.get_iscript_state().map_pos_x > self.map_x &&
+                    u.get_iscript_state().map_pos_x < right_map_x &&
+                    u.get_iscript_state().map_pos_y > self.map_y &&
+                    u.get_iscript_state().map_pos_y < bottom_map_y {
+                        let cx = (u.get_iscript_state().map_pos_x - self.map_x) as u32;
+                        let cy = (u.get_iscript_state().map_pos_y - self.map_y) as u32;
+
+                        u.get_scimg().draw(cx, cy, buffer, screen_pitch);
+                    }
+            }
         });
 
+
+        for u in &mut self.units {
+            u.get_scimg_mut().step(&context.gd);
+        }
+
+
         ViewAction::None
-    }
+        }
 }
 
 

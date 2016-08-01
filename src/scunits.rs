@@ -89,6 +89,9 @@ pub struct IScriptState {
     follow_main_graphic: bool,
     visible: bool,
     alive: bool,
+
+    pub map_pos_x: u16,
+    pub map_pos_y: u16,
 }
 
 impl Read for IScriptState {
@@ -119,7 +122,7 @@ pub enum SCImageRemapping {
 }
 
 impl IScriptState {
-    pub fn new(gd: &Rc<GameData>, iscript_id: u32) -> IScriptState {
+    pub fn new(gd: &Rc<GameData>, iscript_id: u32, map_x: u16, map_y: u16) -> IScriptState {
         let start_pos;
         {
             let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
@@ -143,6 +146,8 @@ impl IScriptState {
             direction: 0,
             follow_main_graphic: false,
             alive: true,
+            map_pos_x: map_x,
+            map_pos_y: map_y,
         }
     }
 
@@ -250,6 +255,12 @@ impl IScriptState {
         // FIXME
             println!("--- not implemented yet ---");
         },
+
+        OpCode::CreateGasOverlays => (overlay_no: u8) {
+            // FIXME
+            println!("--- not implemented yet ---");
+        },
+
         OpCode::PlayFram => (frame: u16) {
             // println!("playfram: {}", frame);
             self.frameset = frame;
@@ -407,9 +418,7 @@ impl SCImageTrait for SCImage {
 }
 
 impl SCImage {
-    pub fn new(gd: &Rc<GameData>,
-               image_id: u16)
-               -> SCImage {
+    pub fn new(gd: &Rc<GameData>, image_id: u16, map_x: u16, map_y: u16) -> SCImage {
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
         let grp_id = gd.images_dat.grp_id[image_id as usize];
         let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
@@ -419,7 +428,7 @@ impl SCImage {
         SCImage {
             image_id: image_id,
             grp: grp,
-            iscript_state: IScriptState::new(&gd, iscript_id),
+            iscript_state: IScriptState::new(&gd, iscript_id, map_x, map_y),
             // FIXME we probably only need 1 overlay & 1 underlay
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
@@ -596,14 +605,14 @@ impl SCImage {
             Some(IScriptEntityAction::CreateImageUnderlay {image_id, rel_x, rel_y}) => {
                 println!("creating underlay");
 
-                let mut underlay = SCImage::new(gd, image_id);
+                let mut underlay = SCImage::new(gd, image_id, 0, 0);
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
             },
             Some(IScriptEntityAction::CreateImageOverlay {image_id, rel_x, rel_y}) => {
                 println!("create overlay");
-                let mut overlay = SCImage::new(gd, image_id);
+                let mut overlay = SCImage::new(gd, image_id, 0, 0);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
                 self.overlays.push(overlay);
@@ -655,9 +664,9 @@ impl SCSpriteTrait for SCSprite {
 }
 
 impl SCSprite {
-    pub fn new(gd: &Rc<GameData>, sprite_id: u16) -> SCSprite {
+    pub fn new(gd: &Rc<GameData>, sprite_id: u16, map_x: u16, map_y: u16) -> SCSprite {
         let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-        let img = SCImage::new(gd, image_id);
+        let img = SCImage::new(gd, image_id, map_x, map_y);
 
         let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
         let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
@@ -748,10 +757,10 @@ impl SCSpriteTrait for SCUnit {
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { &mut self.sprite }
 }
 impl SCUnit {
-    pub fn new(gd: &Rc<GameData>, unit_id: usize) -> SCUnit {
+    pub fn new(gd: &Rc<GameData>, unit_id: usize, map_x: u16, map_y: u16) -> SCUnit {
         let flingy_id = gd.units_dat.flingy_id[unit_id];
         let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-        let sprite = SCSprite::new(gd, sprite_id);
+        let sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
         SCUnit {
             unit_id: unit_id as usize,
             flingy_id: flingy_id as usize,

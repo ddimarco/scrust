@@ -39,7 +39,7 @@ impl UnitsView {
             unit_name_str: unit_name_str,
             //img: SCImage::new(&gd, image_id),
             //sprite: SCSprite::new(&gd, sprite_id),
-            unit: SCUnit::new(&gc.gd, unit_id),
+            unit: SCUnit::new(&gc.gd, unit_id, 0, 0),
         }
     }
 }
@@ -61,7 +61,7 @@ impl View for UnitsView {
             // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
             //self.img = SCImage::new(&gd, image_id);
             //self.sprite = SCSprite::new(&gd, sprite_id);
-            self.unit = SCUnit::new(&gd, self.unit_id);
+            self.unit = SCUnit::new(&gd, self.unit_id, 0, 0);
         } else if context.events.now.key_p == Some(true) {
             if self.unit_id > 0 {
                 self.unit_id -= 1;
@@ -73,7 +73,7 @@ impl View for UnitsView {
                 // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
                 //self.img = SCImage::new(&gd, image_id);
                 //self.sprite = SCSprite::new(&gd, sprite_id);
-                self.unit = SCUnit::new(&gd, self.unit_id);
+                self.unit = SCUnit::new(&gd, self.unit_id, 0, 0);
             }
         }
         if context.events.now.key_q == Some(true) {
