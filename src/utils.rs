@@ -48,3 +48,28 @@ pub fn read_u16buf(file: &mut Read, size: usize, res: &mut [u16]) {
         res[i] = file.read_u16::<LittleEndian>().unwrap();
     }
 }
+
+pub fn read_vec_u32(file: &mut Read, count: usize) -> Vec<u32> {
+    let mut res = Vec::<u32>::with_capacity(count);
+    for _ in 0..count {
+        let val = file.read_u32::<LittleEndian>().unwrap();
+        res.push(val);
+    }
+    res
+}
+pub fn read_vec_u16(file: &mut Read, count: usize) -> Vec<u16> {
+    let mut res = Vec::<u16>::with_capacity(count);
+    for _ in 0..count {
+        let val = file.read_u16::<LittleEndian>().unwrap();
+        res.push(val);
+    }
+    res
+}
+pub fn read_vec_u8(file: &mut Read, count: usize) -> Vec<u8> {
+    let mut res = Vec::<u8>::with_capacity(count);
+    for _ in 0..count {
+        let val = file.read_u8().unwrap();
+        res.push(val);
+    }
+    res
+}
