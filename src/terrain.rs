@@ -1,4 +1,5 @@
 use std::io::{Read, Seek, SeekFrom};
+use std::cmp;
 
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
@@ -577,9 +578,15 @@ impl Map {
                 //println!("{} in view", u.unit_id);
                 let cx = (u.x - map_x) as usize;
                 let cy = (u.y - map_y) as usize;
-                for y in 0..s {
-                    for x in 0..s {
-                        trg_buf[(cy + y - s/2)*trg_pitch as usize + cx + x - s/2] = 255;
+                // XXX ugly computation
+                for y in cmp::max((s as isize)/2 - cy as isize, 0)..s as isize {
+                    for x in cmp::max(((s as isize)/2 - cx as isize) , 0)..s as isize {
+                        let ny = cy + y as usize - s/2;
+                        let nx = cx + x as usize - s/2;
+                        let idx = ny*trg_pitch as usize + nx;
+                        if idx < trg_buf.len() {
+                            trg_buf[idx] = 255;
+                        }
                     }
                 }
             }
