@@ -1,19 +1,8 @@
-extern crate sdl2;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::PixelFormatEnum;
-// use sdl2::rect::Rect;
-use sdl2::render::{Renderer, Texture};
-use sdl2::surface::{Surface};
-
-use sdl2::TimerSubsystem;
-
-extern crate read_pcx;
-use read_pcx::stormlib::{MPQArchive};
-use read_pcx::pcx::{PCX};
+extern crate scrust;
+use scrust::pcx::{PCX};
 
 
-use read_pcx::{GameContext, View, ViewAction};
+use scrust::{GameContext, View, ViewAction};
 
 struct PCXView {
     pcx: PCX,
@@ -28,7 +17,7 @@ impl PCXView {
     }
 }
 impl View for PCXView {
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -42,7 +31,7 @@ impl View for PCXView {
 }
 
 fn main() {
-    ::read_pcx::spawn("pcx loading", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("pcx loading", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
         Box::new(PCXView::new(gc, "glue\\title\\title.pcx"))
     });
 }

@@ -1,9 +1,9 @@
-extern crate read_pcx;
-use read_pcx::stormlib::{MPQArchive};
-use read_pcx::grp::{GRP};
-use read_pcx::font::Font;
-use read_pcx::tbl::read_tbl;
-use read_pcx::lox::read_lox_overlay_offsets;
+extern crate scrust;
+use scrust::stormlib::{MPQArchive};
+use scrust::grp::{GRP};
+use scrust::font::Font;
+use scrust::tbl::read_tbl;
+use scrust::lox::read_lox_overlay_offsets;
 
 use std::fs::File;
 

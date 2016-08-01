@@ -1,11 +1,11 @@
 use std::env;
 
 #[macro_use]
-extern crate read_pcx;
-use read_pcx::{GameContext, View, ViewAction};
-use read_pcx::terrain::{Map};
+extern crate scrust;
+use scrust::{GameContext, View, ViewAction};
+use scrust::terrain::{Map};
 
-use read_pcx::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
+use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait};
 
 extern crate sdl2;
 use sdl2::pixels::Color;
@@ -42,7 +42,7 @@ impl MapView {
     }
 }
 impl View for MapView {
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
         const MAP_RENDER_W: u16 = 20;
         const MAP_RENDER_H: u16 = 12;
         const SCROLLING_SPEED: u16 = 4;
@@ -105,7 +105,7 @@ impl View for MapView {
 
 
 fn main() {
-    ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
         let args: Vec<String> = env::args().collect();
         let mapfn = if args.len() == 2 {args[1].clone()} else { String::from("/home/dm/.wine/drive_c/StarCraft/Maps/(2)Space Madness.scm")};
         Box::new(MapView::new(gc, &mapfn))

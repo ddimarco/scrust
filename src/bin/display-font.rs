@@ -1,11 +1,11 @@
 extern crate sdl2;
 use sdl2::rect::Rect;
 
-extern crate read_pcx;
-use read_pcx::font::{FontSize};
+extern crate scrust;
+use scrust::font::{FontSize};
 
-use read_pcx::font::RenderText;
-use read_pcx::{GameContext, View, ViewAction};
+use scrust::font::RenderText;
+use scrust::{GameContext, View, ViewAction};
 
 struct FontView {
     text: String,
@@ -26,7 +26,7 @@ impl FontView {
     }
 }
 impl View for FontView {
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -49,7 +49,7 @@ impl View for FontView {
 
 
 fn main() {
-    ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
         Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0))
     });
 

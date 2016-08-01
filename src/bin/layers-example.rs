@@ -3,12 +3,12 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 use sdl2::render::{Renderer, Texture};
 
-extern crate read_pcx;
+extern crate scrust;
 
-use read_pcx::{GameContext, View, ViewAction, LayerTrait};
-use read_pcx::grp::GRP;
-use read_pcx::pal::Palette;
-use read_pcx::pcx::PCX;
+use scrust::{GameContext, View, ViewAction, LayerTrait};
+use scrust::grp::GRP;
+use scrust::pal::Palette;
+use scrust::pcx::PCX;
 
 #[derive(Copy,Clone)]
 enum MousePointerType {
@@ -215,7 +215,7 @@ impl LayersExampleView {
     }
 }
 impl View for LayersExampleView {
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -233,7 +233,7 @@ impl View for LayersExampleView {
 }
 
 fn main() {
-    ::read_pcx::spawn("layers",
+    ::scrust::spawn("layers",
                       "/home/dm/.wine/drive_c/StarCraft/",
                       |gc| Box::new(LayersExampleView::new(gc)));
 

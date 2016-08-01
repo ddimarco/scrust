@@ -98,7 +98,7 @@ pub trait View {
     /// renders the current view into context.screen
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction;
 
-    fn render_layers(&mut self, context: &mut GameContext) {
+    fn render_layers(&mut self, _: &mut GameContext) {
     }
 }
 
@@ -124,6 +124,7 @@ where F: Fn(&mut GameContext) -> Box<View> {
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window(title, 640, 480)
         .position_centered()
+        //.fullscreen()
         .opengl()
         .build()
         .unwrap();

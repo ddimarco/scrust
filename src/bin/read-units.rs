@@ -4,12 +4,12 @@ extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 
-extern crate read_pcx;
-use read_pcx::font::FontSize;
-use read_pcx::font::RenderText;
-use read_pcx::{GameContext, View, ViewAction};
-use read_pcx::iscript::{AnimationType};
-use read_pcx::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
+extern crate scrust;
+use scrust::font::FontSize;
+use scrust::font::RenderText;
+use scrust::{GameContext, View, ViewAction};
+use scrust::iscript::{AnimationType};
+use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
 
 
 struct UnitsView {
@@ -44,7 +44,7 @@ impl UnitsView {
     }
 }
 impl View for UnitsView {
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -137,7 +137,7 @@ impl View for UnitsView {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let unit_id = if args.len() == 2 {args[1].parse::<usize>().unwrap() } else {0};
-    ::read_pcx::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
         Box::new(UnitsView::new(gc, unit_id))
     });
 }
