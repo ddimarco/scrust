@@ -73,26 +73,30 @@ impl View for MapView {
         let screen_pitch = context.screen.pitch();
         // HACK
         let buffer_height = 480;
-        context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,
-                            buffer, screen_pitch);
+        {
+            let grp_cache = &*context.gd.grp_cache.borrow();
+            let mut screen = &mut context.screen;
+            screen.with_lock_mut(|buffer: &mut [u8]| {
+                self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,
+                                buffer, screen_pitch);
 
-            // units
-            let right_map_x = self.map_x + screen_pitch as u16;
-            let bottom_map_y = self.map_y + buffer_height as u16;
-            for u in &self.units {
-                if u.get_iscript_state().map_pos_x > self.map_x &&
-                    u.get_iscript_state().map_pos_x < right_map_x &&
-                    u.get_iscript_state().map_pos_y > self.map_y &&
-                    u.get_iscript_state().map_pos_y < bottom_map_y {
-                        let cx = (u.get_iscript_state().map_pos_x - self.map_x) as u32;
-                        let cy = (u.get_iscript_state().map_pos_y - self.map_y) as u32;
+                // units
+                let right_map_x = self.map_x + screen_pitch as u16;
+                let bottom_map_y = self.map_y + buffer_height as u16;
+                for u in &self.units {
+                    if u.get_iscript_state().map_pos_x > self.map_x &&
+                        u.get_iscript_state().map_pos_x < right_map_x &&
+                        u.get_iscript_state().map_pos_y > self.map_y &&
+                        u.get_iscript_state().map_pos_y < bottom_map_y {
+                            let cx = (u.get_iscript_state().map_pos_x - self.map_x) as u32;
+                            let cy = (u.get_iscript_state().map_pos_y - self.map_y) as u32;
 
-                        u.get_scimg().draw(cx, cy, buffer, screen_pitch);
-                    }
-            }
-        });
+                            u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+                        }
+                }
+            });
 
+        }
 
         for u in &mut self.units {
             u.get_scimg_mut().step(&context.gd);

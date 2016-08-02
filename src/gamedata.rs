@@ -1,15 +1,17 @@
+use std::collections::HashMap;
+
 use std::path::Path;
 use std::io::Read;
 
-use std::collections::HashMap;
+use std::cell::RefCell;
 
 use ::stormlib::{MPQArchive, MPQArchiveFile};
 use ::font::{Font, FontSize};
 use ::pcx::PCX;
 use ::tbl::read_tbl;
-use ::grp::GRP;
 use ::pal::Palette;
 use ::iscript::IScript;
+use ::grp::GRP;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
@@ -53,6 +55,8 @@ pub struct GameData {
     pub install_pal: Palette,
 
     pub iscript: IScript,
+
+    pub grp_cache: RefCell<GRPCache>,
 }
 
 impl GameData {
@@ -132,6 +136,9 @@ impl GameData {
             unit_reindexing: unit_reindexing,
             dark_reindexing: dark_reindexing,
             shadow_reindexing: shadow_reindexing,
+
+            // FIXME: move out of here, get rid of refcell?
+            grp_cache: RefCell::new(GRPCache::new()),
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
@@ -178,31 +185,37 @@ impl GameData {
 
 }
 
-/*
-pub struct GRPCache<'a> {
+
+pub struct GRPCache {
     grp_cache: HashMap<u32, GRP>,
-    gd: &'a GameData,
 }
-impl<'a> GRPCache<'a> {
-    pub fn new(gd: &'a GameData) -> GRPCache<'a> {
+impl GRPCache {
+    pub fn new() -> GRPCache {
         GRPCache {
             grp_cache: HashMap::new(),
-            gd: gd,
         }
     }
 
-    pub fn grp(& mut self, grp_id: u32) -> &GRP {
-        // TODO: cache only references
-        if self.grp_cache.contains_key(&grp_id) {
-            return self.grp_cache.get(&grp_id).unwrap();
+    pub fn load(&mut self, gd: &GameData, grp_id: u32) {
+        if !self.grp_cache.contains_key(&grp_id) {
+            let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
+            println!("grp id: {}, filename: {}", grp_id, name);
+
+            let grp = GRP::read(&mut gd.open(&name).unwrap());
+            self.grp_cache.insert(grp_id, grp);
         }
-        let name = "unit\\".to_string() + &self.gd.images_tbl[(grp_id as usize) - 1];
-        println!("grp id: {}, filename: {}", grp_id, name);
+    }
 
-        let grp = GRP::read(&mut self.gd.open(&name).unwrap());
-        self.grp_cache.insert(grp_id, grp);
-
+    pub fn grp(&mut self, gd: &GameData, grp_id: u32) -> &GRP {
+        self.load(gd, grp_id);
         return self.grp_cache.get(&grp_id).unwrap();
     }
+
+    pub fn grp_ro(&self, grp_id: u32) -> &GRP {
+        if self.grp_cache.contains_key(&grp_id) {
+            return self.grp_cache.get(&grp_id).unwrap();
+        } else {
+            panic!("grp_ro() called and grp {} not in cache!", grp_id);
+        }
+    }
 }
-*/

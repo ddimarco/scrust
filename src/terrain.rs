@@ -570,9 +570,10 @@ impl Map {
         }
 
         // placeholder for map units
+        let s = 5;
         let right_map_x = map_x + trg_pitch as u16;
         let bottom_map_y = map_y + buffer_height as u16;
-        let s = 5;
+        /*
         for u in &self.data.units {
             if u.x > map_x && u.x < right_map_x && u.y > map_y && u.y < bottom_map_y {
                 let cx = (u.x - map_x) as usize;
@@ -589,6 +590,7 @@ impl Map {
                 }
             }
         }
+        */
 
         for u in &self.data.sprites {
             if u.x > map_x && u.x < right_map_x && u.y > map_y && u.y < bottom_map_y {

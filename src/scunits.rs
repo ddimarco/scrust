@@ -14,7 +14,7 @@ use std::rc::Rc;
 use ::grp::GRP;
 use ::unitsdata::ImagesDat;
 use ::GameContext;
-use ::gamedata::GameData;
+use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
 
 macro_rules! var_read {
@@ -387,7 +387,8 @@ impl IScriptState {
 pub struct SCImage {
     pub image_id: u16,
     // FIXME: avoid duplicated grps
-    grp: GRP,
+    //grp: GRP,
+    pub grp_id: u32,
     iscript_state: IScriptState,
     underlays: Vec<SCImage>,
     overlays: Vec<SCImage>,
@@ -421,13 +422,19 @@ impl SCImage {
     pub fn new(gd: &Rc<GameData>, image_id: u16, map_x: u16, map_y: u16) -> SCImage {
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
         let grp_id = gd.images_dat.grp_id[image_id as usize];
-        let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
-        println!("grp id: {}, filename: {}", grp_id, name);
-        let grp = GRP::read(&mut gd.open(&name).unwrap());
+        // let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
+        // println!("grp id: {}, filename: {}", grp_id, name);
+        {
+            gd.grp_cache.borrow_mut().load(gd, grp_id);
+        }
+        //let grp = GRP::read(&mut gd.open(&name).unwrap());
+        // let grp = (*grp_cache.grp(gd, grp_id)).clone();
+
 
         SCImage {
             image_id: image_id,
-            grp: grp,
+            //grp: grp,
+            grp_id: grp_id,
             iscript_state: IScriptState::new(&gd, iscript_id, map_x, map_y),
             // FIXME we probably only need 1 overlay & 1 underlay
             underlays: Vec::<SCImage>::new(),
@@ -478,7 +485,7 @@ impl SCImage {
         }
     }
 
-    fn _draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
+    fn _draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
         if !self.iscript_state.visible {
             return;
         }
@@ -488,15 +495,16 @@ impl SCImage {
                                                     remap);
 
         let fridx = self.frame_idx();
+        let grp = grp_cache.grp_ro(self.grp_id);
         // this seems like a hack
-        if fridx >= self.grp.frames.len() && has_parent {
+        if fridx >= grp.frames.len() && has_parent {
             println!("WARNING: suspicious frame index");
             return;
         }
-        let udata = &self.grp.frames[fridx];
+        let udata = &grp.frames[fridx];
 
-        let w = self.grp.header.width;
-        let h = self.grp.header.height;
+        let w = grp.header.width;
+        let h = grp.header.height;
         let x_center = cx + self.iscript_state.rel_x as u32;
         let (in_pitch, x_in_offset, x_start) =
             if x_center < (w as u32 / 2) {
@@ -573,16 +581,16 @@ impl SCImage {
         }
     }
 
-    pub fn draw(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         // draw underlays
         for ul in &self.underlays {
-            ul._draw(cx, cy, buffer, buffer_pitch, true);
+            ul._draw(grp_cache, cx, cy, buffer, buffer_pitch, true);
         }
         // draw main image
-        self._draw(cx, cy, buffer, buffer_pitch, false);
+        self._draw(grp_cache, cx, cy, buffer, buffer_pitch, false);
         // draw overlays
         for ol in &self.overlays {
-            ol._draw(cx, cy, buffer, buffer_pitch, true);
+            ol._draw(grp_cache, cx, cy, buffer, buffer_pitch, true);
         }
     }
 
