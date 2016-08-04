@@ -16,6 +16,7 @@ use ::unitsdata::ImagesDat;
 use ::GameContext;
 use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
+use ::lox::read_lox_overlay_offsets;
 
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -69,8 +70,8 @@ macro_rules! def_opcodes {
 // }
 
 enum IScriptEntityAction {
-    CreateImageUnderlay {image_id: u16, rel_x: u8, rel_y: u8},
-    CreateImageOverlay {image_id: u16, rel_x: u8, rel_y: u8},
+    CreateImageUnderlay {image_id: u16, rel_x: i8, rel_y: i8},
+    CreateImageOverlay {image_id: u16, rel_x: i8, rel_y: i8},
 }
 
 pub struct IScriptState {
@@ -78,12 +79,16 @@ pub struct IScriptState {
     /// current position in iscript
     pub pos: u16,
 
+    // XXX: nasty: duplicate information
+    image_id: u16,
+
     // TODO: couldn't find a better way to keep multiple immutable refs to gamedata
     gd: Rc<GameData>,
 
     waiting_ticks_left: usize,
-    rel_x: u8,
-    rel_y: u8,
+    // FIXME: signed or unsigned?
+    rel_x: i8,
+    rel_y: i8,
     direction: u8,
     frameset: u16,
     follow_main_graphic: bool,
@@ -122,7 +127,7 @@ pub enum SCImageRemapping {
 }
 
 impl IScriptState {
-    pub fn new(gd: &Rc<GameData>, iscript_id: u32, map_x: u16, map_y: u16) -> IScriptState {
+    pub fn new(gd: &Rc<GameData>, iscript_id: u32, image_id: u16, map_x: u16, map_y: u16) -> IScriptState {
         let start_pos;
         {
             let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
@@ -136,6 +141,7 @@ impl IScriptState {
         }
         IScriptState {
             iscript_id: iscript_id,
+            image_id: image_id,
             pos: start_pos,
             gd: gd.clone(),
             waiting_ticks_left: 0,
@@ -233,32 +239,53 @@ impl IScriptState {
             // shadows and such; img* is associated with the current entity
             return Some(IScriptEntityAction::CreateImageUnderlay {
                 image_id: image_id,
-                rel_x: rel_x,
-                rel_y: rel_y,
+                rel_x: rel_x as i8,
+                rel_y: rel_y as i8,
             });
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
             // e.g. explosions on death
             return Some(IScriptEntityAction::CreateImageOverlay {
                 image_id: image_id,
-                rel_x: rel_x,
-                rel_y: rel_y,
+                rel_x: rel_x as i8,
+                rel_y: rel_y as i8,
             });
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
             // independent overlay, e.g. scanner sweep
             // FIXME
-            println!("--- not implemented yet ---");
+            println!("--- sprol not implemented yet ---");
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
         // independent underlay, e.g. gore
         // FIXME
-            println!("--- not implemented yet ---");
+            println!("--- lowsprul not implemented yet ---");
         },
 
         OpCode::CreateGasOverlays => (overlay_no: u8) {
             // FIXME
-            println!("--- not implemented yet ---");
+            println!("--- creategasoverlays not implemented yet ---");
+       //      (let [(smoke-imgid (+ 430 overlay-no))
+       //     (special-overlay (lazy-lo-get (sc-image-special-overlay sc-img)))]
+       // (let [(smoke-overlay (make-sc-image smoke-imgid))
+       //       (rel-pos (vector-ref (vector-ref special-overlay 0) overlay-no))]
+       //   (sc-image-add-overlay! sc-img smoke-overlay (car rel-pos) (cdr rel-pos)))))
+
+            let smoke_img_id = 430 + overlay_no as u16;
+            // XXX cache lo files
+            let overlay_id = self.gd.images_dat.special_overlay[self.image_id as usize];
+            let lo_name = "unit/".to_string() + &self.gd.images_tbl[(overlay_id as usize)-1];
+            println!("reading {}", lo_name);
+            let lo = read_lox_overlay_offsets(&mut self.gd.open(&lo_name).unwrap());
+            println!("overlay frames: {}", lo.len());
+            let (rx, ry) = lo[0][overlay_no as usize];
+            println!("x,y: {}, {}, as u8: {}, {}", rx, ry, rx as u8, ry as u8);
+            return Some(IScriptEntityAction::CreateImageOverlay {
+                image_id: smoke_img_id,
+                // FIXME signed or unsigned?
+                rel_x: rx ,
+                rel_y: ry ,
+            });
         },
 
         OpCode::PlayFram => (frame: u16) {
@@ -266,7 +293,7 @@ impl IScriptState {
             self.frameset = frame;
         },
         OpCode::PlayFramTile => (frame: u16) {
-            println!("--- not implemented yet ---");
+            println!("--- playframtile not implemented yet ---");
         // FIXME
         },
         OpCode::EngFrame => (frame: u8) {
@@ -323,10 +350,10 @@ impl IScriptState {
         },
         // FIXME: might be signed bytes?
         OpCode::SetVertPos => (val: u8) {
-            self.rel_y = val;
+            self.rel_y = val as i8;
         },
         OpCode::SetHorPos => (val: u8) {
-            self.rel_x = val;
+            self.rel_x = val as i8;
         },
         OpCode::Move => (dist: u8) {
             // FIXME
@@ -376,6 +403,7 @@ impl IScriptState {
 
         OpCode::End => () {
         // FIXME
+            println!("dead!");
             self.alive = false;
         }
 
@@ -435,7 +463,7 @@ impl SCImage {
             image_id: image_id,
             //grp: grp,
             grp_id: grp_id,
-            iscript_state: IScriptState::new(&gd, iscript_id, map_x, map_y),
+            iscript_state: IScriptState::new(&gd, iscript_id, image_id, map_x, map_y),
             // FIXME we probably only need 1 overlay & 1 underlay
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
@@ -505,7 +533,8 @@ impl SCImage {
 
         let w = grp.header.width;
         let h = grp.header.height;
-        let x_center = cx + self.iscript_state.rel_x as u32;
+        let x_center = (cx as i32 + self.iscript_state.rel_x as i32) as u32;
+
         let (in_pitch, x_in_offset, x_start) =
             if x_center < (w as u32 / 2) {
                 // clip (image is at left border)
@@ -525,7 +554,7 @@ impl SCImage {
                 in_pitch
             };
 
-        let y_center = cy + self.iscript_state.rel_y as u32;
+        let y_center = (cy as i32 + self.iscript_state.rel_y as i32) as u32;
         let (_y_in_height, y_in_offset, y_start) =
             if y_center < (h as u32 / 2) {
                 // clip (top border)
@@ -602,11 +631,15 @@ impl SCImage {
             let _ = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
         }
+        self.underlays.retain(|ref ul| ul.iscript_state.alive);
+
         let iscript_action = self.iscript_state._interpret_iscript(None);
+        // let mut to_remove: Option<usize> = None;
         for ol in &mut self.overlays {
             let _ = ol.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
         }
+        self.overlays.retain(|ref ol| ol.iscript_state.alive);
 
         // create additional entities if necessary
         match iscript_action {
