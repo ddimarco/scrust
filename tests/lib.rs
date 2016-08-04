@@ -4,6 +4,7 @@ use scrust::grp::{GRP};
 use scrust::font::Font;
 use scrust::tbl::read_tbl;
 use scrust::lox::read_lox_overlay_offsets;
+use scrust::spk::SPK;
 
 use std::fs::File;
 
@@ -66,3 +67,4 @@ fn read_lox() {
     assert_eq!(lo_offsets[0][3], (127, 127));
     assert_eq!(lo_offsets[0][4], (127, 127));
 }
+
