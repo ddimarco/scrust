@@ -106,6 +106,8 @@ impl View for UnitsView {
         let unitname_rect = Rect::new(10, 10, 300, 50);
         let animstr_rect = Rect::new(10, 300, 300, 50);
 
+        let grp_cache = &*context.gd.grp_cache.borrow();
+
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
             // unit name
             fnt.render_textbox(self.unit_name_str.as_ref(),
@@ -124,7 +126,7 @@ impl View for UnitsView {
 
             self.unit.get_scsprite().draw_selection_circle(100, 100, buffer, screen_pitch);
             // unit
-            self.unit.get_scimg().draw(100, 100, buffer, screen_pitch);
+            self.unit.get_scimg().draw(grp_cache, 100, 100, buffer, screen_pitch);
 
             self.unit.get_scsprite().draw_healthbar(100, 140, buffer, screen_pitch);
 

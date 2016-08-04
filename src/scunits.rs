@@ -611,15 +611,12 @@ impl SCImage {
         // create additional entities if necessary
         match iscript_action {
             Some(IScriptEntityAction::CreateImageUnderlay {image_id, rel_x, rel_y}) => {
-                println!("creating underlay");
-
                 let mut underlay = SCImage::new(gd, image_id, 0, 0);
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
             },
             Some(IScriptEntityAction::CreateImageOverlay {image_id, rel_x, rel_y}) => {
-                println!("create overlay");
                 let mut overlay = SCImage::new(gd, image_id, 0, 0);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
@@ -635,15 +632,20 @@ impl SCImage {
 // sprite: additional features:
 // - health bar
 // - selection circle
-pub struct SCSprite {
-    pub sprite_id: u16,
-    pub img: SCImage,
+
+pub struct SCSpriteSelectable {
     /// from sprites.dat: length of health bar in pixels
     health_bar: u8,
     // circle_img: u8,
     circle_offset: u8,
     // FIXME: inefficient
-   circle_grp: GRP,
+    circle_grp: GRP,
+}
+
+pub struct SCSprite {
+    pub sprite_id: u16,
+    pub img: SCImage,
+    pub selectable_data: Option<SCSpriteSelectable>,
 }
 
 impl IScriptableTrait for SCSprite {
@@ -676,64 +678,87 @@ impl SCSprite {
         let image_id = gd.sprites_dat.image_id[sprite_id as usize];
         let img = SCImage::new(gd, image_id, map_x, map_y);
 
-        let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
-        let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
-        let name = "unit\\".to_string() + &gd.images_tbl[(circle_grp_id as usize) - 1];
-        let grp = GRP::read(&mut gd.open(&name).unwrap());
+        let selectable_data =
+        if sprite_id >= 130 {
+            let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
+            let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
+            let name = "unit\\".to_string() + &gd.images_tbl[(circle_grp_id as usize) - 1];
+            let grp = GRP::read(&mut gd.open(&name).unwrap());
+            Some(SCSpriteSelectable {
+                health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
+                circle_offset: gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
+                circle_grp: grp,
+            })
+        } else {
+            None
+        };
         SCSprite {
             sprite_id: sprite_id,
             img: img,
-            health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
-            circle_offset: gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
-            circle_grp: grp,
+            selectable_data: selectable_data,
         }
     }
 
     pub fn draw_healthbar(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
-        let boxes = self.health_bar as u32 / 3;
-        let box_width = 3;
-        if self.health_bar == 0 {
-            println!("healthbar == 0, not drawing");
-            return;
-        }
-        let width = 2 + (box_width * boxes) + (boxes - 1);
-        let height = 8;
-
-        let mut outpos = (cy - height / 2) * buffer_pitch + (cx - width / 2);
-        for y in 0..height {
-            for x in 0..width {
-                let outer_border = y == 0 || y == height-1 || x == 0 || x == (width-1);
-                let inner_border = x % (box_width+1) == 0;
-                if inner_border || outer_border {
-                    // black
-                    buffer[outpos as usize] = 0;
-                } else {
-                    // green
-                    buffer[outpos as usize] = 185;
+        match self.selectable_data {
+            None => {
+                panic!();
+            },
+            Some(ref selectable) => {
+                let boxes = selectable.health_bar as u32 / 3;
+                let box_width = 3;
+                if selectable.health_bar == 0 {
+                    println!("healthbar == 0, not drawing");
+                    return;
                 }
-                outpos += 1;
+                let width = 2 + (box_width * boxes) + (boxes - 1);
+                let height = 8;
+
+                let mut outpos = (cy - height / 2) * buffer_pitch + (cx - width / 2);
+                for y in 0..height {
+                    for x in 0..width {
+                        let outer_border = y == 0 || y == height-1 || x == 0 || x == (width-1);
+                        let inner_border = x % (box_width+1) == 0;
+                        if inner_border || outer_border {
+                            // black
+                            buffer[outpos as usize] = 0;
+                        } else {
+                            // green
+                            buffer[outpos as usize] = 185;
+                        }
+                        outpos += 1;
+                    }
+                    outpos += buffer_pitch - width;
+                }
             }
-            outpos += buffer_pitch - width;
         }
     }
 
     pub fn draw_selection_circle(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
-        let width = self.circle_grp.header.width as u32;
-        let height = self.circle_grp.header.height as u32;
+        match self.selectable_data {
+            Some(ref selectable) => {
+                let width = selectable.circle_grp.header.width as u32;
+                let height = selectable.circle_grp.header.height as u32;
 
-        let mut outpos = ((cy + self.circle_offset as u32) - height / 2) * buffer_pitch + (cx - width / 2);
-        let mut inpos = 0;
-        // FIXME: reindexing
-        for _ in 0..height {
-            for _ in 0..width {
-                let col = self.circle_grp.frames[0][inpos as usize];
-                if col > 0 {
-                    buffer[outpos as usize] = col;
+                let mut outpos = ((cy + selectable.circle_offset as u32)
+                                  - height / 2) * buffer_pitch + (cx - width / 2);
+                let mut inpos = 0;
+                // FIXME: reindexing
+                for _ in 0..height {
+                    for _ in 0..width {
+                        let col = selectable.circle_grp.frames[0][inpos as usize];
+                        if col > 0 {
+                            buffer[outpos as usize] = col;
+                        }
+                        outpos += 1;
+                        inpos += 1;
+                    }
+                    outpos += buffer_pitch - width;
                 }
-                outpos += 1;
-                inpos += 1;
+            },
+            None => {
+                panic!();
             }
-            outpos += buffer_pitch - width;
         }
     }
 }

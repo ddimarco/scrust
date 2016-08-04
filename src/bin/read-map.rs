@@ -4,26 +4,20 @@ use std::env;
 extern crate scrust;
 use scrust::{GameContext, View, ViewAction};
 use scrust::terrain::{Map};
-
-use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait};
+use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait};
+use scrust::gamedata::GRPCache;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
 
-struct MapView {
-    map: Map,
-    map_x: u16,
-    map_y: u16,
 
+struct UnitsLayer {
     units: Vec<SCUnit>,
-}
-impl MapView {
-    fn new(context: &mut GameContext, mapfn: &str) -> MapView {
-        let map = Map::read(&context.gd, mapfn);
-        println!("map name: {}", map.name());
-        println!("map desc: {}", map.description());
-        context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
 
+    sprites: Vec<SCSprite>,
+}
+impl UnitsLayer {
+    fn from_map(context: &mut GameContext, map: &Map) -> Self {
         // create map units
         let mut units = Vec::<SCUnit>::new();
         for mapunit in &map.data.units {
@@ -33,11 +27,80 @@ impl MapView {
             units.push(unit);
         }
 
+        let mut sprites = Vec::<SCSprite>::new();
+        for mapsprite in &map.data.sprites {
+            // XXX: is sprite_no correct?
+            let sprite = SCSprite::new(&context.gd, mapsprite.sprite_no,
+                                       mapsprite.x, mapsprite.y);
+            sprites.push(sprite);
+        }
+        UnitsLayer {
+            units: units,
+            sprites: sprites,
+        }
+    }
+
+    fn update(&mut self, context: &GameContext) {
+        for u in &mut self.units {
+            u.get_scimg_mut().step(&context.gd);
+        }
+    }
+
+    fn render(&self, map_x: u16, map_y: u16, grp_cache: &GRPCache, buffer: &mut [u8],
+              screen_pitch: u32, screen_height: usize) {
+        // units
+        let right_map_x = map_x + screen_pitch as u16;
+        let bottom_map_y = map_y + screen_height as u16;
+        // FIXME: draw in proper order
+        for u in &self.sprites {
+            if u.get_iscript_state().map_pos_x > map_x &&
+                u.get_iscript_state().map_pos_x < right_map_x &&
+                u.get_iscript_state().map_pos_y > map_y &&
+                u.get_iscript_state().map_pos_y < bottom_map_y {
+                    let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
+                    let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
+
+                    u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+                }
+        }
+
+        for u in &self.units {
+            if u.get_iscript_state().map_pos_x > map_x &&
+                u.get_iscript_state().map_pos_x < right_map_x &&
+                u.get_iscript_state().map_pos_y > map_y &&
+                u.get_iscript_state().map_pos_y < bottom_map_y {
+                    let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
+                    let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
+
+                    u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+                }
+        }
+
+    }
+}
+
+
+
+struct MapView {
+    map: Map,
+    map_x: u16,
+    map_y: u16,
+
+    units_layer: UnitsLayer,
+}
+impl MapView {
+    fn new(context: &mut GameContext, mapfn: &str) -> Self {
+        let map = Map::read(&context.gd, mapfn);
+        println!("map name: {}", map.name());
+        println!("map desc: {}", map.description());
+        context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
+        let units_layer = UnitsLayer::from_map(context, &map);
+
         MapView {
             map: map,
             map_x: 0,
             map_y: 0,
-            units: units,
+            units_layer: units_layer,
         }
     }
 }
@@ -68,11 +131,14 @@ impl View for MapView {
             }
         }
 
+        self.units_layer.update(context);
+
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0,0,0)).ok();
         let screen_pitch = context.screen.pitch();
         // HACK
         let buffer_height = 480;
+
         {
             let grp_cache = &*context.gd.grp_cache.borrow();
             let mut screen = &mut context.screen;
@@ -80,26 +146,10 @@ impl View for MapView {
                 self.map.render(self.map_x, self.map_y, MAP_RENDER_W, MAP_RENDER_H,
                                 buffer, screen_pitch);
 
-                // units
-                let right_map_x = self.map_x + screen_pitch as u16;
-                let bottom_map_y = self.map_y + buffer_height as u16;
-                for u in &self.units {
-                    if u.get_iscript_state().map_pos_x > self.map_x &&
-                        u.get_iscript_state().map_pos_x < right_map_x &&
-                        u.get_iscript_state().map_pos_y > self.map_y &&
-                        u.get_iscript_state().map_pos_y < bottom_map_y {
-                            let cx = (u.get_iscript_state().map_pos_x - self.map_x) as u32;
-                            let cy = (u.get_iscript_state().map_pos_y - self.map_y) as u32;
+                self.units_layer.render(self.map_x, self.map_y, grp_cache, buffer,
+                                        screen_pitch, buffer_height);
 
-                            u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
-                        }
-                }
             });
-
-        }
-
-        for u in &mut self.units {
-            u.get_scimg_mut().step(&context.gd);
         }
 
 
