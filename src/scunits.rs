@@ -14,9 +14,9 @@ use std::rc::Rc;
 use ::grp::GRP;
 use ::unitsdata::ImagesDat;
 use ::GameContext;
-use ::gamedata::{GameData, GRPCache};
+use ::gamedata::{GameData, GRPCache, LOXCache};
 use ::iscript::{AnimationType, OpCode};
-use ::lox::read_lox_overlay_offsets;
+use ::lox::LOX;
 
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -162,10 +162,6 @@ impl IScriptState {
         self.gd.iscript.id_offsets_map.get(&self.iscript_id).unwrap()
     }
 
-    pub fn images_dat(&self) -> &ImagesDat {
-        &self.gd.images_dat
-    }
-
     pub fn set_animation(&mut self, anim: AnimationType) {
         self.pos = self.iscript_anim_offsets()[anim as usize];
     }
@@ -263,28 +259,18 @@ impl IScriptState {
         },
 
         OpCode::CreateGasOverlays => (overlay_no: u8) {
-            // FIXME
-            println!("--- creategasoverlays not implemented yet ---");
-       //      (let [(smoke-imgid (+ 430 overlay-no))
-       //     (special-overlay (lazy-lo-get (sc-image-special-overlay sc-img)))]
-       // (let [(smoke-overlay (make-sc-image smoke-imgid))
-       //       (rel-pos (vector-ref (vector-ref special-overlay 0) overlay-no))]
-       //   (sc-image-add-overlay! sc-img smoke-overlay (car rel-pos) (cdr rel-pos)))))
-
             let smoke_img_id = 430 + overlay_no as u16;
-            // XXX cache lo files
             let overlay_id = self.gd.images_dat.special_overlay[self.image_id as usize];
-            let lo_name = "unit/".to_string() + &self.gd.images_tbl[(overlay_id as usize)-1];
-            println!("reading {}", lo_name);
-            let lo = read_lox_overlay_offsets(&mut self.gd.open(&lo_name).unwrap());
-            println!("overlay frames: {}", lo.len());
-            let (rx, ry) = lo[0][overlay_no as usize];
-            println!("x,y: {}, {}, as u8: {}, {}", rx, ry, rx as u8, ry as u8);
+            let (rx, ry) = {
+                let mut c = self.gd.lox_cache.borrow_mut();
+                let lo = c.lox(&self.gd, overlay_id) ;
+                lo.frames[0].offsets[overlay_no as usize]
+            };
             return Some(IScriptEntityAction::CreateImageOverlay {
                 image_id: smoke_img_id,
                 // FIXME signed or unsigned?
-                rel_x: rx ,
-                rel_y: ry ,
+                rel_x: rx,
+                rel_y: ry,
             });
         },
 
@@ -403,7 +389,6 @@ impl IScriptState {
 
         OpCode::End => () {
         // FIXME
-            println!("dead!");
             self.alive = false;
         }
 
@@ -414,8 +399,6 @@ impl IScriptState {
 }
 pub struct SCImage {
     pub image_id: u16,
-    // FIXME: avoid duplicated grps
-    //grp: GRP,
     pub grp_id: u32,
     iscript_state: IScriptState,
     underlays: Vec<SCImage>,
@@ -471,7 +454,7 @@ impl SCImage {
     }
 
     fn can_turn(&self) -> bool {
-        (self.iscript_state.images_dat().graphic_turns[self.image_id as usize] > 0)
+        (self.iscript_state.gd.images_dat.graphic_turns[self.image_id as usize] > 0)
     }
     fn draw_flipped(&self) -> bool {
         self.can_turn() && self.iscript_state.direction > 16

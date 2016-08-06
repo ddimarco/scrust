@@ -12,6 +12,7 @@ use ::tbl::read_tbl;
 use ::pal::Palette;
 use ::iscript::IScript;
 use ::grp::GRP;
+use ::lox::LOX;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
@@ -57,6 +58,7 @@ pub struct GameData {
     pub iscript: IScript,
 
     pub grp_cache: RefCell<GRPCache>,
+    pub lox_cache: RefCell<LOXCache>,
 }
 
 impl GameData {
@@ -139,6 +141,7 @@ impl GameData {
 
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),
+            lox_cache: RefCell::new(LOXCache::new()),
         }
     }
     fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
@@ -217,5 +220,31 @@ impl GRPCache {
         } else {
             panic!("grp_ro() called and grp {} not in cache!", grp_id);
         }
+    }
+}
+
+
+pub struct LOXCache {
+    lox_cache: HashMap<u32, LOX>,
+}
+impl LOXCache {
+    pub fn new() -> Self {
+        LOXCache {
+            lox_cache: HashMap::new(),
+        }
+    }
+
+    pub fn load(&mut self, gd: &GameData, lox_id: u32) {
+        if !self.lox_cache.contains_key(&lox_id) {
+            let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize)-1];
+            println!("lox id: {}, filename: {}", lox_id, name);
+            let lox = LOX::read(&mut gd.open(&name).unwrap());
+            self.lox_cache.insert(lox_id, lox);
+        }
+    }
+
+    pub fn lox(&mut self, gd: &GameData, lox_id: u32) -> &LOX {
+        self.load(gd, lox_id);
+        self.lox_cache.get(&lox_id).unwrap()
     }
 }
