@@ -655,7 +655,7 @@ pub struct SCSpriteSelectable {
     // circle_img: u8,
     circle_offset: u8,
     // FIXME: inefficient
-    circle_grp: GRP,
+    circle_grp_id: u32,
 }
 
 pub struct SCSprite {
@@ -698,12 +698,13 @@ impl SCSprite {
         if sprite_id >= 130 {
             let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
             let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
-            let name = "unit\\".to_string() + &gd.images_tbl[(circle_grp_id as usize) - 1];
-            let grp = GRP::read(&mut gd.open(&name).unwrap());
+            {
+                gd.grp_cache.borrow_mut().load(gd, circle_grp_id);
+            }
             Some(SCSpriteSelectable {
                 health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
                 circle_offset: gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
-                circle_grp: grp,
+                circle_grp_id: circle_grp_id,
             })
         } else {
             None
@@ -750,11 +751,12 @@ impl SCSprite {
         }
     }
 
-    pub fn draw_selection_circle(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         match self.selectable_data {
             Some(ref selectable) => {
-                let width = selectable.circle_grp.header.width as u32;
-                let height = selectable.circle_grp.header.height as u32;
+                let grp = grp_cache.grp_ro(selectable.circle_grp_id);
+                let width = grp.header.width as u32;
+                let height = grp.header.height as u32;
 
                 let mut outpos = ((cy + selectable.circle_offset as u32)
                                   - height / 2) * buffer_pitch + (cx - width / 2);
@@ -762,7 +764,7 @@ impl SCSprite {
                 // FIXME: reindexing
                 for _ in 0..height {
                     for _ in 0..width {
-                        let col = selectable.circle_grp.frames[0][inpos as usize];
+                        let col = grp.frames[0][inpos as usize];
                         if col > 0 {
                             buffer[outpos as usize] = col;
                         }

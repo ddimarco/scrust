@@ -124,7 +124,7 @@ impl View for UnitsView {
                                screen_pitch,
                                &animstr_rect);
 
-            self.unit.get_scsprite().draw_selection_circle(100, 100, buffer, screen_pitch);
+            self.unit.get_scsprite().draw_selection_circle(&grp_cache, 100, 100, buffer, screen_pitch);
             // unit
             self.unit.get_scimg().draw(grp_cache, 100, 100, buffer, screen_pitch);
 
