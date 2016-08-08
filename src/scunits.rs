@@ -69,9 +69,11 @@ macro_rules! def_opcodes {
 //     }
 // }
 
-enum IScriptEntityAction {
+pub enum IScriptEntityAction {
     CreateImageUnderlay {image_id: u16, rel_x: i8, rel_y: i8},
     CreateImageOverlay {image_id: u16, rel_x: i8, rel_y: i8},
+    CreateSpriteOverlay {sprite_id: u16, x: u16, y: u16},
+    CreateSpriteUnderlay {sprite_id: u16, x: u16, y: u16},
 }
 
 pub struct IScriptState {
@@ -251,11 +253,21 @@ impl IScriptState {
             // independent overlay, e.g. scanner sweep
             // FIXME
             println!("--- sprol not implemented yet ---");
+            return Some(IScriptEntityAction::CreateSpriteOverlay {
+                sprite_id: sprite_id,
+                x: (rel_x as u16) + (self.rel_x as u16) + self.map_pos_x,
+                y: (rel_y as u16) + (self.rel_y as u16) + self.map_pos_y,
+            });
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-        // independent underlay, e.g. gore
+            // independent underlay, e.g. gore
         // FIXME
             println!("--- lowsprul not implemented yet ---");
+            return Some(IScriptEntityAction::CreateSpriteUnderlay {
+                sprite_id: sprite_id,
+                x: (rel_x as u16) + (self.rel_x as u16) + self.map_pos_x,
+                y: (rel_y as u16) + (self.rel_y as u16) + self.map_pos_y,
+            });
         },
 
         OpCode::CreateGasOverlays => (overlay_no: u8) {
@@ -608,19 +620,20 @@ impl SCImage {
 
     pub fn step(&mut self,
                 // just for creating new entities
-                gd: &Rc<GameData>) {
+                gd: &Rc<GameData>) -> Option<IScriptEntityAction> {
         // FIXME: death animation for marine: shadow tries to display wrong frameset
         for ul in &mut self.underlays {
-            let _ = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
+            let action = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
+            assert!(action.is_none());
         }
         self.underlays.retain(|ref ul| ul.iscript_state.alive);
 
         let iscript_action = self.iscript_state._interpret_iscript(None);
-        // let mut to_remove: Option<usize> = None;
         for ol in &mut self.overlays {
-            let _ = ol.iscript_state._interpret_iscript(Some(&self.iscript_state));
+            let action = ol.iscript_state._interpret_iscript(Some(&self.iscript_state));
             // assuming they do not create additional under/overlays
+            assert!(action.is_none());
         }
         self.overlays.retain(|ref ol| ol.iscript_state.alive);
 
@@ -631,14 +644,18 @@ impl SCImage {
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
+                None
             },
             Some(IScriptEntityAction::CreateImageOverlay {image_id, rel_x, rel_y}) => {
                 let mut overlay = SCImage::new(gd, image_id, 0, 0);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
                 self.overlays.push(overlay);
+                None
             },
-            _ => {},
+            _ => {
+                iscript_action
+            },
         }
     }
 }

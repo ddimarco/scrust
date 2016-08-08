@@ -4,7 +4,7 @@ use std::env;
 extern crate scrust;
 use scrust::{GameContext, View, ViewAction};
 use scrust::terrain::Map;
-use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait};
+use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction};
 use scrust::gamedata::GRPCache;
 
 extern crate sdl2;
@@ -14,6 +14,7 @@ use sdl2::pixels::Color;
 struct UnitsLayer {
     units: Vec<SCUnit>,
 
+    // XXX distinguish high & low layer
     sprites: Vec<SCSprite>,
 }
 impl UnitsLayer {
@@ -39,7 +40,19 @@ impl UnitsLayer {
 
     fn update(&mut self, context: &GameContext) {
         for u in &mut self.units {
-            u.get_scimg_mut().step(&context.gd);
+            let action = u.get_scimg_mut().step(&context.gd);
+            match action {
+                // XXX distinguish high & low layer
+                Some(IScriptEntityAction::CreateSpriteOverlay {sprite_id, x, y}) => {
+                    let sprite = SCSprite::new(&context.gd, sprite_id, x, y);
+                    self.sprites.push(sprite);
+                },
+                Some(IScriptEntityAction::CreateSpriteUnderlay {sprite_id, x, y}) => {
+                    let sprite = SCSprite::new(&context.gd, sprite_id, x, y);
+                    self.sprites.push(sprite);
+                },
+                _ => {}
+            }
         }
     }
 
