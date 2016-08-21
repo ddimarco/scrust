@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use std::path::Path;
-use std::io::Read;
 
 use std::cell::RefCell;
 
@@ -66,7 +65,7 @@ impl GameData {
         let data_filenames = ["patch_rt.mpq", "BroodWar.mpq", "BrooDat.mpq",
                               "StarDat.mpq", "Starcraft.mpq"];
         let mut archives = Vec::<MPQArchive>::new();
-        for &filename in data_filenames.iter() {
+        for filename in &data_filenames {
             let combined = data_path.join(filename);
             if combined.exists() {
                 archives.push(MPQArchive::open(combined.to_str().unwrap()));
@@ -144,7 +143,7 @@ impl GameData {
             lox_cache: RefCell::new(LOXCache::new()),
         }
     }
-    fn load_fonts(archives: &Vec<MPQArchive>) -> Vec<Font> {
+    fn load_fonts(archives: &[MPQArchive]) -> Vec<Font> {
         let mut fonts = Vec::<Font>::with_capacity(4);
         let font_files = ["files/font/font10.fnt",
                           "files/font/font14.fnt",
@@ -157,8 +156,8 @@ impl GameData {
         fonts
     }
 
-    fn open_(archives: &Vec<MPQArchive>, filename: &str) -> Option<MPQArchiveFile> {
-        for mpq in archives.iter() {
+    fn open_(archives: &[MPQArchive], filename: &str) -> Option<MPQArchiveFile> {
+        for mpq in archives {
             if mpq.has_file(filename) {
                 //println!("found {} in {}", filename, mpq.filename);
                 let res: MPQArchiveFile = mpq.open_file(filename);
@@ -172,7 +171,7 @@ impl GameData {
         GameData::open_(&self.mpq_archives, filename)
     }
 
-    pub fn font<'a>(&'a self, size: FontSize) -> &'a Font {
+    pub fn font(&self, size: FontSize) -> &Font {
         &self.fonts[size as usize]
     }
 
@@ -211,12 +210,12 @@ impl GRPCache {
 
     pub fn grp(&mut self, gd: &GameData, grp_id: u32) -> &GRP {
         self.load(gd, grp_id);
-        return self.grp_cache.get(&grp_id).unwrap();
+        self.grp_cache.get(&grp_id).unwrap()
     }
 
     pub fn grp_ro(&self, grp_id: u32) -> &GRP {
         if self.grp_cache.contains_key(&grp_id) {
-            return self.grp_cache.get(&grp_id).unwrap();
+            self.grp_cache.get(&grp_id).unwrap()
         } else {
             panic!("grp_ro() called and grp {} not in cache!", grp_id);
         }

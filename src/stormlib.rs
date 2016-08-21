@@ -46,7 +46,7 @@ impl MPQArchiveFile {
         unsafe {
             let mut fshigh: u32 = 0;
             let fs = SFileGetFileSize(self.handle, &mut fshigh);
-            return fs as usize;
+            fs as usize
         }
     }
 }
@@ -63,7 +63,7 @@ impl Read for MPQArchiveFile {
                 return Ok(read_bytes as usize);
             }
         }
-        return Ok(read_bytes as usize);
+        Ok(read_bytes as usize)
     }
 }
 impl Seek for MPQArchiveFile {
@@ -80,7 +80,7 @@ impl Seek for MPQArchiveFile {
                                          move_method as u32);
             // println!("fs: {}, lFilePosHigh: {}", fs, fph);
             // FIXME: is this correct?
-            return Ok(fs as u64);
+            Ok(fs as u64)
         }
     }
 }

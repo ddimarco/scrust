@@ -11,12 +11,8 @@ use ::rand::Rng;
 
 use std::rc::Rc;
 
-use ::grp::GRP;
-use ::unitsdata::ImagesDat;
-use ::GameContext;
-use ::gamedata::{GameData, GRPCache, LOXCache};
+use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
-use ::lox::LOX;
 
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -114,7 +110,7 @@ impl Read for IScriptState {
             buf[i] = self.gd.iscript.data[self.pos as usize];
             self.pos = self.pos + 1;
         }
-        return Ok(buf.len());
+        Ok(buf.len())
     }
 }
 
@@ -405,7 +401,7 @@ impl IScriptState {
         }
 
     );
-        return None;
+        None
     }
 
 }

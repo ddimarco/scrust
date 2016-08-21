@@ -56,9 +56,8 @@ impl Font {
 
         let mut letters = Vec::with_capacity(num_letters);
         // read letters
-        for i in 0..num_letters {
-            let ofs = letter_offsets[i] as u64;
-            file.seek(SeekFrom::Start(ofs)).ok();
+        for ofs in letter_offsets {
+            file.seek(SeekFrom::Start(ofs as u64)).ok();
 
             // read letter header
             let w = file.read_u8().unwrap();
@@ -73,11 +72,11 @@ impl Font {
                 let color_idx = val & 0x7;
                 let skipped = val >> 3;
 
-                i = i + skipped as usize;
+                i += skipped as usize;
                 if i < datasize {
                     data[i] = color_idx;
                 }
-                i = i + 1;
+                i += 1;
             }
             letters.push(FontLetter {
                 width: w,
@@ -100,7 +99,7 @@ impl Font {
         }
     }
 
-    pub fn get_letter<'a>(&'a self, c: char) -> &'a FontLetter {
+    pub fn get_letter(&self, c: char) -> &FontLetter {
         assert!(c != ' ');
         &self.letters[(c as usize) - 33]
     }
@@ -108,15 +107,15 @@ impl Font {
     pub fn letter_width(&self, c: char) -> u32 {
         if c == ' ' {
             min((self.header.max_width as u32)/3,
-                          6)
+                6)
         } else {
-            let ref letter = self.get_letter(c);
+            let letter = &self.get_letter(c);
             (letter.xoffset as u32) + (letter.width as u32)
         }
     }
 
     pub fn line_height(&self) -> u32 {
-        let ref letter = self.get_letter('y');
+        let letter = &self.get_letter('y');
         (letter.yoffset as u32) + (letter.height as u32)
     }
 }
@@ -124,7 +123,6 @@ impl Font {
 ///////////////////////////////////////////////////////////////
 
 // render into 8bit screen buffer
-use ::GameContext;
 
 extern crate sdl2;
 use self::sdl2::rect::Rect;
@@ -152,7 +150,7 @@ impl RenderText for Font {
         // TODO: proper reindexing?
         for c in text.chars() {
             if c != ' ' {
-                let ref letter = self.get_letter(c);
+                let letter = &self.get_letter(c);
                 for yl in (letter.yoffset as u32)..(letter.yoffset as u32 + letter.height as u32) {
                     for xl in letter.xoffset as u32..(letter.xoffset as u32 + letter.width as u32) {
                         let col = letter.data[(((yl - letter.yoffset as u32) * letter.width as u32) +

@@ -1,6 +1,4 @@
 use std::io::{Read, Seek, SeekFrom};
-use std::cmp;
-
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -225,8 +223,8 @@ impl MapData {
                 // 08 - Closed slot
                 let owners = read_u8buf(chk_file, 12);
                 println!(" owners: {:?}", owners);
-                for i in 0..12 {
-                    self.owners[i] = owners[i];
+                for (i, owner) in owners.iter().enumerate() {
+                    self.owners[i] = *owner;
                 }
             },
             "ERA " => (tileset: u16) {
@@ -390,8 +388,8 @@ impl MapData {
                 let data = read_u8buf(chk_file, (size as usize) - strings_start);
                 let mut strings = Vec::<String>::with_capacity(string_count as usize);
                 let mut inpos;
-                for i in 0..(string_count as usize) {
-                    inpos = string_offsets[i] as usize - strings_start;
+                for string_offset in string_offsets {
+                    inpos = string_offset as usize - strings_start;
                     if inpos == 0 {
                         continue;
                     }
@@ -483,7 +481,7 @@ impl MapData {
             }
         );
 
-        return Some(read_bytes);
+        Some(read_bytes)
     }
 
 }
@@ -845,7 +843,7 @@ impl TerrainInfo {
 
     fn render_mega_tile(&self, vx4_idx: usize, buffer: &mut [u8],
                         x: i32, y: i32, stride: usize, buffer_height: usize) {
-        let ref vx4 = self.vx4[vx4_idx];
+        let vx4 = &self.vx4[vx4_idx];
         for row in 0..4 {
             for col in 0..4 {
                 let top_y = row * 8;
@@ -864,7 +862,7 @@ impl TerrainInfo {
                         x: i32, y: i32,
                         stride: usize, buffer_height: usize,
                         flipped: bool) {
-        let ref imgdata = self.vr4[vr4_idx].bitmap;
+        let imgdata = &self.vr4[vr4_idx].bitmap;
         for row in 0..8 {
             for col in 0..8 {
                 if (y + row as i32) < 0 || (x + col as i32) < 0 ||

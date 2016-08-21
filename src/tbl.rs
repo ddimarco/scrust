@@ -38,7 +38,7 @@ pub fn read_tbl<T: Read + Seek>(file: &mut T) -> std::vec::Vec<String> {
     for _ in 0..string_count {
         string_offsets.push(file.read_u16::<LittleEndian>().unwrap());
     }
-    for i in 0..(string_count ) {
+    for i in 0..string_count {
         file.seek(SeekFrom::Start(string_offsets[i] as u64)).ok();
         let len =
             if i == (string_count - 1) {

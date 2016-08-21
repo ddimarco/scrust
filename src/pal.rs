@@ -23,7 +23,7 @@ impl Palette {
         for i in 0..256 {
             let bytes_read = f.read(&mut read_buf).unwrap();
             assert_eq!(bytes_read, 4);
-            data[i*3 + 0] = read_buf[0];
+            data[i*3   ] = read_buf[0];
             data[i*3 + 1] = read_buf[1];
             data[i*3 + 2] = read_buf[2];
         }
@@ -36,13 +36,12 @@ impl Palette {
     pub fn to_sdl(&self) -> sdl2::pixels::Palette {
         let mut cols = [Color::RGB(0, 0, 0); 256];
         for i in 0..256 {
-            let r = self.data[i*3 + 0];
+            let r = self.data[i*3   ];
             let g = self.data[i*3 + 1];
             let b = self.data[i*3 + 2];
             cols[i] = Color::RGB(r,g,b);
         }
-        let pal = sdl2::pixels::Palette::with_colors(&cols).unwrap();
-        pal
+        sdl2::pixels::Palette::with_colors(&cols).unwrap()
     }
 
 }

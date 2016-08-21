@@ -86,10 +86,10 @@ impl GRP {
                 GRP::read_line_offsets(file, frame_int.frameoffset, frame_int.frameheight as usize);
             let fl = (header.width as usize) * (header.height as usize);
             let mut frame_data = vec![0 as u8; fl];
-            for i in 0..line_offsets.len() {
+            for (i, line_offset) in line_offsets.iter().enumerate() {
                 GRP::read_line_data(file,
                                     frame_int.y_offset as usize + i,
-                                    frame_int.frameoffset as u64 + line_offsets[i] as u64,
+                                    frame_int.frameoffset as u64 + *line_offset as u64,
                                     frame_int.x_offset as usize,
                                     frame_int.framewidth,
                                     &mut frame_data,
@@ -115,19 +115,19 @@ impl GRP {
             if val >= 128 {
                 // skip val - 128 bytes
                 let to_skip = val - 128;
-                x = x + to_skip as usize;
+                x += to_skip as usize;
             } else if val >= 64 {
                 // repeat the next byte val - 64 times
                 let next_val = file.read_u8().unwrap();
                 for _ in 0..val - 64 {
                     data[data_start + x] = next_val;
-                    x = x + 1;
+                    x += 1;
                 }
             } else {
                 // just copy the next val bytes as they are
                 for _ in 0..val {
                     data[data_start + x] = file.read_u8().unwrap();
-                    x = x + 1;
+                    x += 1;
                 }
             }
         }
@@ -148,9 +148,8 @@ impl GRP {
         outfile.write_fmt(format_args!("P3\n")).ok();
         outfile.write_fmt(format_args!("{0} {1}\n", self.header.width, self.header.height)).ok();
         outfile.write_fmt(format_args!("255\n")).ok();
-        let frame = &self.frames[frame];
-        for i in 0..(self.header.width as usize) * (self.header.height as usize) {
-            let pal_idx: usize = 3 * (frame[i] as usize);
+        for b in &self.frames[frame] {
+            let pal_idx: usize = 3 * (*b as usize);
             outfile.write_fmt(format_args!("{0} {1} {2}\n", pal_idx, pal_idx, pal_idx))
                 .ok();
         }

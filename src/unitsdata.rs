@@ -1,8 +1,5 @@
 use std::io::Read;
 
-extern crate byteorder;
-use byteorder::{LittleEndian, ReadBytesExt};
-
 // TODO: macroify?
 use ::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
 
