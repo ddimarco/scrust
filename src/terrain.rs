@@ -523,6 +523,43 @@ impl Map {
         }
     }
 
+    pub fn render_minimap(&self) -> Vec<u8> {
+        let mut minimap = vec![0 as u8; (self.data.width * self.data.height) as usize];
+        for y in 0..self.data.height as usize {
+            for x in 0..self.data.width as usize {
+                let mtxm_idx = self.data.mtxm[y*self.data.width as usize + x];
+                let cv5_id = mtxm_idx >> 4;
+                let sub_id = mtxm_idx & 0x000F;
+                let mega_tile_idx = if cv5_id < 1024 {
+                    self.terrain_info.cv5[cv5_id as usize].mega_tiles[sub_id as usize]
+                } else {
+                    self.terrain_info.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]
+                };
+
+                let mut col_counts = vec![0 as usize; 256];
+                let vx4 = &self.terrain_info.vx4[mega_tile_idx as usize];
+                for i in 0..16 {
+                    let vxentry = vx4.data[i];
+                    let vr4_idx = vxentry >> 1;
+                    let imgdata = &self.terrain_info.vr4[vr4_idx as usize].bitmap;
+                    for j in 0..64 {
+                        col_counts[imgdata[j] as usize] += 1;
+                    }
+                }
+                let mut dominant_col = 0;
+                let mut dom_col_count = 0;
+                for i in 0..256 {
+                    if col_counts[i] > dom_col_count {
+                        dominant_col = i as u8;
+                        dom_col_count = col_counts[i];
+                    }
+                }
+                minimap[y*self.data.width as usize + x] = dominant_col;
+            }
+        }
+        minimap
+    }
+
     pub fn name(&self) -> &str {
         if self.data.scenario_name_str_idx > 0 {
             &self.data.strings[self.data.scenario_name_str_idx - 1]
@@ -831,7 +868,7 @@ impl TerrainInfo {
                        buffer_height: usize) {
         let cv5_id = mtxm_idx >> 4;
         let sub_id = mtxm_idx & 0x000F;
-        let mega_tile_idx = if cv5_id <= 1024 {
+        let mega_tile_idx = if cv5_id < 1024 {
             self.cv5[cv5_id as usize].mega_tiles[sub_id as usize]
         } else {
             self.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]

@@ -23,6 +23,7 @@ pub mod terrain;
 pub mod scunits;
 pub mod lox;
 pub mod spk;
+pub mod ui;
 
 use std::path::Path;
 use sdl2::render::Renderer;
