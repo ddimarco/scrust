@@ -99,6 +99,53 @@ impl UnitsLayer {
     }
 }
 
+struct MiniMap {
+    minimap: Texture,
+    mmapwratio: f32,
+    mmaphratio: f32,
+    mmap_cur_rect: Rect,
+    mmap_rect: Rect,
+}
+impl MiniMap {
+    fn new(context: &mut GameContext, map: &Map) -> Self {
+        let mmap_bmp = map.render_minimap();
+        let mmap = palimg_to_texture(&mut context.renderer,
+                                     map.data.width as u32, map.data.height as u32,
+                                     &mmap_bmp, &map.terrain_info.pal);
+
+        let mapw2mmapw_ratio: f32 = 128. / (map.data.width as f32);
+        let maph2mmaph_ratio: f32 = 128. / (map.data.height as f32);
+
+        // FIXME: move into common const module?
+        const MAP_RENDER_W: u16 = 20;
+        const MAP_RENDER_H: u16 = 12;
+        let mmap_cur_rect = Rect::new(0, 0,
+                                      (MAP_RENDER_W as f32 * mapw2mmapw_ratio) as u32,
+                                      (MAP_RENDER_H as f32 * maph2mmaph_ratio) as u32);
+
+        MiniMap {
+            minimap: mmap,
+            mmap_rect: Rect::new(6, 348, 128, 128),
+            mmap_cur_rect: mmap_cur_rect,
+            mmapwratio: mapw2mmapw_ratio,
+            mmaphratio: maph2mmaph_ratio,
+        }
+    }
+
+    fn update(&mut self, map_x: u16, map_y: u16) {
+        let new_x = 6 + (map_x as f32 * self.mmapwratio / 32.) as i32;
+        let new_y = 348 + (map_y as f32 * self.mmaphratio / 32.) as i32;
+        self.mmap_cur_rect.set_x(new_x);
+        self.mmap_cur_rect.set_y(new_y);
+    }
+
+    fn render(&mut self, context: &mut GameContext) {
+        context.renderer.copy(&self.minimap, None, Some(self.mmap_rect));
+
+        context.renderer.set_draw_color(Color::RGB(255, 255, 255));
+        context.renderer.draw_rect(self.mmap_cur_rect);
+    }
+}
 
 struct MapView {
     map: Map,
@@ -107,10 +154,8 @@ struct MapView {
 
     units_layer: UnitsLayer,
     ui_layer: UiLayer,
-    minimap: Texture,
-    mmapwratio: f32,
-    mmaphratio: f32,
-    mmap_cur_rect: Rect,
+
+    minimap: MiniMap,
 }
 const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
@@ -122,16 +167,7 @@ impl MapView {
         context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
         let units_layer = UnitsLayer::from_map(context, &map);
 
-        let mmap_bmp = map.render_minimap();
-        let mmap = palimg_to_texture(&mut context.renderer,
-                                     map.data.width as u32, map.data.height as u32,
-                                     &mmap_bmp, &map.terrain_info.pal);
-
-        let mapw2mmapw_ratio: f32 = 128. / (map.data.width as f32);
-        let maph2mmaph_ratio: f32 = 128. / (map.data.height as f32);
-        let mmap_cur_rect = Rect::new(0, 0,
-                                      (MAP_RENDER_W as f32 * mapw2mmapw_ratio) as u32,
-                                      (MAP_RENDER_H as f32 * maph2mmaph_ratio) as u32);
+        let minimap = MiniMap::new(context, &map);
 
         MapView {
             map: map,
@@ -139,10 +175,8 @@ impl MapView {
             map_y: 0,
             units_layer: units_layer,
             ui_layer: UiLayer::new(context),
-            minimap: mmap,
-            mmap_cur_rect: mmap_cur_rect,
-            mmapwratio: mapw2mmapw_ratio,
-            mmaphratio: maph2mmaph_ratio,
+
+            minimap: minimap,
         }
     }
 }
@@ -170,6 +204,8 @@ impl View for MapView {
                 self.map_y += SCROLLING_SPEED;
             }
         }
+
+        self.minimap.update(self.map_x, self.map_y);
 
         self.units_layer.update(context);
         self.ui_layer.update(context);
@@ -208,15 +244,7 @@ impl View for MapView {
     fn render_layers(&mut self, context: &mut GameContext) {
         self.ui_layer.render(&mut context.renderer);
 
-        context.renderer.copy(&self.minimap, None, Some(self.ui_layer.mmap_rect));
-
-        let new_x = 6 + (self.map_x as f32 * self.mmapwratio / 32.) as i32;
-        let new_y = 348 + (self.map_y as f32 * self.mmaphratio / 32.) as i32;
-        self.mmap_cur_rect.set_x(new_x);
-        self.mmap_cur_rect.set_y(new_y);
-
-        context.renderer.set_draw_color(Color::RGB(255, 255, 255));
-        context.renderer.draw_rect(self.mmap_cur_rect);
+        self.minimap.render(context);
     }
 }
 

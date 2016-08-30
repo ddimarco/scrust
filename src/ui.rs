@@ -129,7 +129,6 @@ pub struct UiLayer {
     ticks: u16,
     hud_texture: Texture,
     hud_rect: Rect,
-    pub mmap_rect: Rect,
 }
 impl UiLayer {
     pub fn new(context: &mut GameContext) -> UiLayer {
@@ -145,7 +144,6 @@ impl UiLayer {
             ticks: 0,
             hud_texture: text,
             hud_rect: Rect::new(0, 0, 640, 480),
-            mmap_rect: Rect::new(6, 348, 128, 128),
         }
     }
 }
