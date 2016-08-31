@@ -2,7 +2,7 @@ use std::env;
 
 #[macro_use]
 extern crate scrust;
-use scrust::{GameContext, View, ViewAction};
+use scrust::{GameContext, View, ViewAction, GameEvents};
 use scrust::terrain::Map;
 use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction};
 use scrust::gamedata::GRPCache;
@@ -14,7 +14,7 @@ use scrust::ui::UiLayer;
 extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::render::Texture;
-use sdl2::rect::Rect;
+use sdl2::rect::{Rect, Point};
 
 
 struct UnitsLayer {
@@ -62,6 +62,11 @@ impl UnitsLayer {
         }
     }
 
+    fn generate_events(&self, gc: &GameContext) -> Vec<GameEvents> {
+        let events = Vec::<GameEvents>::new();
+        events
+    }
+
     fn render(&self,
               map_x: u16,
               map_y: u16,
@@ -99,63 +104,12 @@ impl UnitsLayer {
     }
 }
 
-struct MiniMap {
-    minimap: Texture,
-    mmapwratio: f32,
-    mmaphratio: f32,
-    mmap_cur_rect: Rect,
-    mmap_rect: Rect,
-}
-impl MiniMap {
-    fn new(context: &mut GameContext, map: &Map) -> Self {
-        let mmap_bmp = map.render_minimap();
-        let mmap = palimg_to_texture(&mut context.renderer,
-                                     map.data.width as u32, map.data.height as u32,
-                                     &mmap_bmp, &map.terrain_info.pal);
-
-        let mapw2mmapw_ratio: f32 = 128. / (map.data.width as f32);
-        let maph2mmaph_ratio: f32 = 128. / (map.data.height as f32);
-
-        // FIXME: move into common const module?
-        const MAP_RENDER_W: u16 = 20;
-        const MAP_RENDER_H: u16 = 12;
-        let mmap_cur_rect = Rect::new(0, 0,
-                                      (MAP_RENDER_W as f32 * mapw2mmapw_ratio) as u32,
-                                      (MAP_RENDER_H as f32 * maph2mmaph_ratio) as u32);
-
-        MiniMap {
-            minimap: mmap,
-            mmap_rect: Rect::new(6, 348, 128, 128),
-            mmap_cur_rect: mmap_cur_rect,
-            mmapwratio: mapw2mmapw_ratio,
-            mmaphratio: maph2mmaph_ratio,
-        }
-    }
-
-    fn update(&mut self, map_x: u16, map_y: u16) {
-        let new_x = 6 + (map_x as f32 * self.mmapwratio / 32.) as i32;
-        let new_y = 348 + (map_y as f32 * self.mmaphratio / 32.) as i32;
-        self.mmap_cur_rect.set_x(new_x);
-        self.mmap_cur_rect.set_y(new_y);
-    }
-
-    fn render(&mut self, context: &mut GameContext) {
-        context.renderer.copy(&self.minimap, None, Some(self.mmap_rect));
-
-        context.renderer.set_draw_color(Color::RGB(255, 255, 255));
-        context.renderer.draw_rect(self.mmap_cur_rect);
-    }
-}
 
 struct MapView {
     map: Map,
-    map_x: u16,
-    map_y: u16,
 
     units_layer: UnitsLayer,
     ui_layer: UiLayer,
-
-    minimap: MiniMap,
 }
 const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
@@ -166,46 +120,20 @@ impl MapView {
         println!("map desc: {}", map.description());
         context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
         let units_layer = UnitsLayer::from_map(context, &map);
-
-        let minimap = MiniMap::new(context, &map);
+        let ui_layer = UiLayer::new(context, &map);
 
         MapView {
             map: map,
-            map_x: 0,
-            map_y: 0,
             units_layer: units_layer,
-            ui_layer: UiLayer::new(context),
-
-            minimap: minimap,
+            ui_layer: ui_layer,
         }
     }
 }
 impl View for MapView {
     fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
-        const SCROLLING_SPEED: u16 = 4;
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
-        if context.events.key_left {
-            if self.map_x > 0 {
-                self.map_x -= SCROLLING_SPEED;
-            }
-        } else if context.events.key_right {
-            if self.map_x / 32 + MAP_RENDER_W < self.map.data.width {
-                self.map_x += SCROLLING_SPEED;
-            }
-        }
-        if context.events.key_up {
-            if self.map_y > 0 {
-                self.map_y -= SCROLLING_SPEED;
-            }
-        } else if context.events.key_down {
-            if self.map_y / 32 + MAP_RENDER_H < self.map.data.height {
-                self.map_y += SCROLLING_SPEED;
-            }
-        }
-
-        self.minimap.update(self.map_x, self.map_y);
 
         self.units_layer.update(context);
         self.ui_layer.update(context);
@@ -216,36 +144,62 @@ impl View for MapView {
         // HACK
         let buffer_height = 480;
 
+        let map_x = context.map_pos.x() as u16;
+        let map_y = context.map_pos.y() as u16;
+
         {
             let grp_cache = &*context.gd.grp_cache.borrow();
-            let mut screen = &mut context.screen;
-            screen.with_lock_mut(|buffer: &mut [u8]| {
-                self.map.render(self.map_x,
-                                self.map_y,
-                                MAP_RENDER_W,
-                                MAP_RENDER_H,
-                                buffer,
-                                screen_pitch);
+                let mut screen = &mut context.screen;
+                screen.with_lock_mut(|buffer: &mut [u8]| {
+                    self.map.render(map_x,
+                                    map_y,
+                                    MAP_RENDER_W,
+                                    MAP_RENDER_H,
+                                    buffer,
+                                    screen_pitch);
 
-                self.units_layer.render(self.map_x,
-                                        self.map_y,
-                                        grp_cache,
-                                        buffer,
-                                        screen_pitch,
-                                        buffer_height);
+                    self.units_layer.render(map_x,
+                                            map_y,
+                                            grp_cache,
+                                            buffer,
+                                            screen_pitch,
+                                            buffer_height);
 
-            });
+                });
+            }
+
+
+            ViewAction::None
+        }
+
+        fn render_layers(&mut self, context: &mut GameContext) {
+            self.ui_layer.render(&mut context.renderer);
+        }
+        fn process_layer_events(&mut self, gc: &mut GameContext) {
+            for ev in &gc.game_events {
+                if self.ui_layer.process_event(ev) {
+                    continue;
+                }
+
+                // FIXME: create map layer
+                match *ev {
+                    GameEvents::MoveMap(x, y) => {
+                        gc.map_pos = Point::new(x, y);
+                    },
+                    _ => {}
+            }
         }
 
 
-        ViewAction::None
+        gc.game_events.clear();
     }
 
-    fn render_layers(&mut self, context: &mut GameContext) {
-        self.ui_layer.render(&mut context.renderer);
+    fn generate_layer_events(&self, context: &mut GameContext) {
+        let mut vecevents = self.ui_layer.generate_events(context);
 
-        self.minimap.render(context);
+        context.game_events.extend(vecevents);
     }
+
 }
 
 

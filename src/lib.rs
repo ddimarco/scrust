@@ -50,15 +50,52 @@ struct_events! (
         key_d: D,
         key_e: E
     },
+    mouse: {
+        mouse_left: Left,
+        mouse_right: Right
+    },
     else: {
         quit: Quit { .. }
     }
 );
 
+#[derive(Copy,Clone,PartialEq,Debug)]
+pub enum MousePointerType {
+    Arrow = 0,
+    ScrollLeft,
+    ScrollRight,
+    ScrollUp,
+    ScrollDown,
+
+    ScrollDownLeft,
+    ScrollDownRight,
+    ScrollUpLeft,
+    ScrollUpRight,
+
+    Drag,
+    Illegal,
+    Time,
+    TargetGreen,
+    TargetYellow,
+    TargetRed,
+    TargetYellowStatic,
+    MagnifierGreen,
+    MagnifierRed,
+    MagnifierYellow,
+}
+
+pub enum GameEvents {
+    ChangeMouseCursor(MousePointerType),
+    MoveMap(i32, i32),
+}
 
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
     fn update(&mut self, gc: &GameContext);
+    fn generate_events(&self, gc: &GameContext) -> Vec<GameEvents>;
+
+    /// return true when processed, false if not
+    fn process_event(&mut self, event: &GameEvents) -> bool;
 }
 
 pub struct GameContext<'window> {
@@ -67,6 +104,10 @@ pub struct GameContext<'window> {
     pub events: Events,
     pub renderer: Renderer<'window>,
     pub screen: Surface<'window>,
+
+    pub game_events: Vec<GameEvents>,
+
+    pub map_pos: Point,
 
     // debug stuff
     //pub timer: Timer<'window>,
@@ -79,6 +120,9 @@ impl<'window> GameContext<'window> {
             events: events,
             renderer: renderer,
             screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(),
+
+            game_events: Vec::<GameEvents>::new(),
+            map_pos: Point::new(0,0),
             // timer: timer,
         }
     }
@@ -101,6 +145,12 @@ pub trait View {
     fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction;
 
     fn render_layers(&mut self, _: &mut GameContext) {
+    }
+
+    fn generate_layer_events(&self, _: &mut GameContext) {
+    }
+
+    fn process_layer_events(&mut self, _: &mut GameContext) {
     }
 }
 
@@ -172,6 +222,9 @@ where F: Fn(&mut GameContext) -> Box<View> {
         }
 
         context.events.pump(&mut context.renderer);
+
+        current_view.generate_layer_events(&mut context);
+        current_view.process_layer_events(&mut context);
 
         let start = timer.ticks();
         let render_res = current_view.render(&mut context, elapsed);
