@@ -7,11 +7,19 @@ authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
 # enable debug symbols in release
 debug = true
 
+[profile.dev]
+lto = false
+rpath = false
+opt-level = 0
+codegen-units = 4  # controls whether the compiler passes `-C codegen-units`
+# `codegen-units` is ignored when `lto = true      `
+
 [dependencies]
-sdl2 = "0.22.0"
+#sdl2 = "0.22.0"
+sdl2 = "*"
 byteorder = "*"
 libc = "*"
 enum_primitive = "*"
 num = "*"
 rand = "*"
-linked-list = "0.0.3"
+#linked-list = "0.0.3"

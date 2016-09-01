@@ -92,7 +92,7 @@ pub enum GameEvents {
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
     fn update(&mut self, gc: &GameContext);
-    fn generate_events(&self, gc: &GameContext) -> Vec<GameEvents>;
+    fn generate_events(&mut self, gc: &GameContext) -> Vec<GameEvents>;
 
     /// return true when processed, false if not
     fn process_event(&mut self, event: &GameEvents) -> bool;
@@ -147,7 +147,7 @@ pub trait View {
     fn render_layers(&mut self, _: &mut GameContext) {
     }
 
-    fn generate_layer_events(&self, _: &mut GameContext) {
+    fn generate_layer_events(&mut self, _: &mut GameContext) {
     }
 
     fn process_layer_events(&mut self, _: &mut GameContext) {

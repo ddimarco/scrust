@@ -199,6 +199,7 @@ pub struct UiLayer {
     hud_texture: Texture,
     hud_rect: Rect,
     minimap: MiniMap,
+    is_scrolling: bool,
 }
 impl UiLayer {
     pub fn new(context: &mut GameContext, map: &Map) -> UiLayer {
@@ -216,6 +217,7 @@ impl UiLayer {
             hud_texture: text,
             hud_rect: Rect::new(0, 0, 640, 480),
             minimap: minimap,
+            is_scrolling: false,
         }
     }
 
@@ -272,7 +274,7 @@ impl LayerTrait for UiLayer {
         }
     }
 
-    fn generate_events(&self, gc: &GameContext) -> Vec<GameEvents> {
+    fn generate_events(&mut self, gc: &GameContext) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
         let mpos = gc.events.mouse_pos;
 
@@ -323,14 +325,18 @@ impl LayerTrait for UiLayer {
             } else {
                 panic!("logic error!");
             };
+            self.is_scrolling = true;
             events.push(GameEvents::ChangeMouseCursor(mpt));
 
             events.push(self.make_map_move_from_scroll(scroll_horizontal, scroll_vertical,
                                                        gc));
 
-        } else if scroll_vertical == 0 && scroll_horizontal == 0 {
+        } else if self.is_scrolling && scroll_vertical == 0 && scroll_horizontal == 0 {
             // stop scrolling
-            events.push(GameEvents::ChangeMouseCursor(MousePointerType::Arrow));
+            if self.is_scrolling {
+                events.push(GameEvents::ChangeMouseCursor(MousePointerType::Arrow));
+                self.is_scrolling = false;
+            }
         }
 
         // minimap click events

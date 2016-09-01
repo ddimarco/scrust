@@ -52,19 +52,6 @@ macro_rules! def_opcodes {
     }
 }
 
-// extern crate linked_list;
-// use linked_list::LinkedList;
-// struct IScriptEntityLayer {
-//     pub imgs: LinkedList<SCImage>,
-// }
-// impl IScriptEntityLayer {
-//     fn new() -> IScriptEntityLayer {
-//         IScriptEntityLayer {
-//             imgs: LinkedList::<SCImage>::new(),
-//         }
-//     }
-// }
-
 pub enum IScriptEntityAction {
     CreateImageUnderlay {image_id: u16, rel_x: i8, rel_y: i8},
     CreateImageOverlay {image_id: u16, rel_x: i8, rel_y: i8},
@@ -669,6 +656,9 @@ pub struct SCSpriteSelectable {
     circle_offset: u8,
     // FIXME: inefficient
     circle_grp_id: u32,
+
+    pub sel_width: u16,
+    pub sel_height: u16,
 }
 
 pub struct SCSprite {
@@ -711,13 +701,22 @@ impl SCSprite {
         if sprite_id >= 130 {
             let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
             let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
+
+            let sel_width;
+            let sel_height;
             {
-                gd.grp_cache.borrow_mut().load(gd, circle_grp_id);
+                let mut grpcache = gd.grp_cache.borrow_mut();
+                grpcache.load(gd, circle_grp_id);
+                sel_width = grpcache.grp_ro(circle_grp_id).header.width.clone();
+                sel_height = grpcache.grp_ro(circle_grp_id).header.height.clone();
             }
+
             Some(SCSpriteSelectable {
                 health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
                 circle_offset: gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
                 circle_grp_id: circle_grp_id,
+                sel_width: sel_width,
+                sel_height: sel_height,
             })
         } else {
             None

@@ -2,19 +2,17 @@ use std::env;
 
 #[macro_use]
 extern crate scrust;
-use scrust::{GameContext, View, ViewAction, GameEvents};
+use scrust::{GameContext, View, ViewAction, GameEvents, MousePointerType};
 use scrust::terrain::Map;
-use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction};
+use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction, SCSpriteTrait};
 use scrust::gamedata::GRPCache;
-use scrust::pal::palimg_to_texture;
 
 use scrust::LayerTrait;
-use scrust::ui::UiLayer;
+use scrust::ui::{UiLayer};
 
 extern crate sdl2;
 use sdl2::pixels::Color;
-use sdl2::render::Texture;
-use sdl2::rect::{Rect, Point};
+use sdl2::rect::{Point};
 
 
 struct UnitsLayer {
@@ -22,6 +20,8 @@ struct UnitsLayer {
 
     // XXX distinguish high & low layer
     sprites: Vec<SCSprite>,
+
+    cursor_over_unit: bool,
 }
 impl UnitsLayer {
     fn from_map(context: &mut GameContext, map: &Map) -> Self {
@@ -41,6 +41,7 @@ impl UnitsLayer {
         UnitsLayer {
             units: units,
             sprites: sprites,
+            cursor_over_unit: false,
         }
     }
 
@@ -62,8 +63,44 @@ impl UnitsLayer {
         }
     }
 
-    fn generate_events(&self, gc: &GameContext) -> Vec<GameEvents> {
-        let events = Vec::<GameEvents>::new();
+    fn generate_events(&mut self, gc: &GameContext) -> Vec<GameEvents> {
+        let mut events = Vec::<GameEvents>::new();
+
+        // mouse over unit?
+        let mouse_pos_map = gc.map_pos + gc.events.mouse_pos;
+        //let sel_radius = 10;
+        let mut over_unit = false;
+        for u in &self.units {
+            // TODO: use sdl rects & points?
+            match u.get_scsprite().selectable_data {
+                Some(ref seldata) => {
+                    let halfw = seldata.sel_width as i32 / 2;
+                    let halfh = seldata.sel_height as i32 / 2;
+
+                    let ux = u.get_iscript_state().map_pos_x as i32;
+                    let uy = u.get_iscript_state().map_pos_y as i32;
+
+                    if mouse_pos_map.x() > ux - halfw &&
+                        mouse_pos_map.x() < ux + halfw &&
+                        mouse_pos_map.y() > uy - halfh &&
+                        mouse_pos_map.y() < uy + halfh {
+                            over_unit = true;
+                            break;
+                        }
+                },
+                _ => {}
+            }
+
+        }
+
+        if over_unit && !self.cursor_over_unit {
+            events.push(GameEvents::ChangeMouseCursor(MousePointerType::MagnifierGreen));
+            self.cursor_over_unit = true;
+        } else if !over_unit && self.cursor_over_unit {
+            events.push(GameEvents::ChangeMouseCursor(MousePointerType::Arrow));
+            self.cursor_over_unit = false;
+        }
+
         events
     }
 
@@ -194,8 +231,10 @@ impl View for MapView {
         gc.game_events.clear();
     }
 
-    fn generate_layer_events(&self, context: &mut GameContext) {
+    fn generate_layer_events(&mut self, context: &mut GameContext) {
         let mut vecevents = self.ui_layer.generate_events(context);
+
+        vecevents.extend(self.units_layer.generate_events(context));
 
         context.game_events.extend(vecevents);
     }
