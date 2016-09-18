@@ -14,9 +14,11 @@ extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point};
 
+use std::collections::BTreeMap;
 
 struct UnitsLayer {
-    units: Vec<SCUnit>,
+    unit_instances: BTreeMap<u32, SCUnit>,
+    next_free_uid: u32,
 
     // XXX distinguish high & low layer
     sprites: Vec<SCSprite>,
@@ -26,11 +28,13 @@ struct UnitsLayer {
 impl UnitsLayer {
     fn from_map(context: &mut GameContext, map: &Map) -> Self {
         // create map units
-        let mut units = Vec::<SCUnit>::new();
+        let mut next_free_uid = 1;
+        let mut unit_instances = BTreeMap::<u32, SCUnit>::new();
         for mapunit in &map.data.units {
             // XXX: make use of mapunit data
             let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize, mapunit.x, mapunit.y);
-            units.push(unit);
+            unit_instances.insert(next_free_uid, unit);
+            next_free_uid += 1;
         }
 
         let mut sprites = Vec::<SCSprite>::new();
@@ -39,14 +43,16 @@ impl UnitsLayer {
             sprites.push(sprite);
         }
         UnitsLayer {
-            units: units,
             sprites: sprites,
             cursor_over_unit: false,
+
+            next_free_uid: next_free_uid,
+            unit_instances: unit_instances,
         }
     }
 
     fn update(&mut self, context: &GameContext) {
-        for u in &mut self.units {
+        for (_, u) in &mut self.unit_instances {
             let action = u.get_scimg_mut().step(&context.gd);
             match action {
                 // XXX distinguish high & low layer
@@ -69,8 +75,8 @@ impl UnitsLayer {
         // mouse over unit?
         let mouse_pos_map = gc.map_pos + gc.events.mouse_pos;
         //let sel_radius = 10;
-        let mut over_unit = false;
-        for u in &self.units {
+        let mut over_unit_instance = None;
+        for (uinstance, u) in &self.unit_instances {
             // TODO: use sdl rects & points?
             match u.get_scsprite().selectable_data {
                 Some(ref seldata) => {
@@ -84,7 +90,7 @@ impl UnitsLayer {
                         mouse_pos_map.x() < ux + halfw &&
                         mouse_pos_map.y() > uy - halfh &&
                         mouse_pos_map.y() < uy + halfh {
-                            over_unit = true;
+                            over_unit_instance = Some(uinstance);
                             break;
                         }
                 },
@@ -93,12 +99,17 @@ impl UnitsLayer {
 
         }
 
-        if over_unit && !self.cursor_over_unit {
+        if over_unit_instance.is_some() && !self.cursor_over_unit {
             events.push(GameEvents::ChangeMouseCursor(MousePointerType::MagnifierGreen));
+
             self.cursor_over_unit = true;
-        } else if !over_unit && self.cursor_over_unit {
+        } else if over_unit_instance.is_none() && self.cursor_over_unit {
             events.push(GameEvents::ChangeMouseCursor(MousePointerType::Arrow));
             self.cursor_over_unit = false;
+        }
+
+        if over_unit_instance.is_some() && gc.events.now.mouse_left {
+            events.push(GameEvents::SelectUnit(*over_unit_instance.unwrap()));
         }
 
         events
@@ -127,7 +138,7 @@ impl UnitsLayer {
             }
         }
 
-        for u in &self.units {
+        for (_, u) in &self.unit_instances {
             if u.get_iscript_state().map_pos_x > map_x &&
                u.get_iscript_state().map_pos_x < right_map_x &&
                u.get_iscript_state().map_pos_y > map_y &&

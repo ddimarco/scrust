@@ -84,9 +84,11 @@ pub enum MousePointerType {
     MagnifierYellow,
 }
 
+// game changing events are handled via GameEvent messages
 pub enum GameEvents {
     ChangeMouseCursor(MousePointerType),
     MoveMap(i32, i32),
+    SelectUnit(u32),
 }
 
 pub trait LayerTrait {
