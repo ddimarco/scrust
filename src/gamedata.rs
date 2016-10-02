@@ -58,6 +58,8 @@ pub struct GameData {
 
     pub grp_cache: RefCell<GRPCache>,
     pub lox_cache: RefCell<LOXCache>,
+
+    pub unit_wireframe_grp: GRP,
 }
 
 impl GameData {
@@ -112,6 +114,10 @@ impl GameData {
             }
         }
 
+        let unit_wireframe_grp = GRP::read(&mut GameData::open_(&archives,
+                                                                "unit/wirefram/wirefram.grp")
+                                           .unwrap());
+
         GameData {
             mpq_archives: archives,
             fonts: fonts,
@@ -141,6 +147,8 @@ impl GameData {
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),
             lox_cache: RefCell::new(LOXCache::new()),
+
+            unit_wireframe_grp: unit_wireframe_grp,
         }
     }
     fn load_fonts(archives: &[MPQArchive]) -> Vec<Font> {

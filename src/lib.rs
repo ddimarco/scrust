@@ -98,6 +98,7 @@ pub enum GameEvents {
 pub struct GameState {
     // pub unit_instances: BTreeMap<u32, SCUnit>,
     pub unit_instances: Stash<SCUnit>,
+    pub selected_units: Vec<usize>,
 
     pub game_events: Vec<GameEvents>,
     pub map_pos: Point,
@@ -106,6 +107,7 @@ impl GameState {
     fn new() -> Self {
         GameState {
             unit_instances: Stash::<SCUnit>::new(),
+            selected_units: Vec::<usize>::new(),
             game_events: Vec::<GameEvents>::new(),
             map_pos: Point::new(0,0),
         }
@@ -115,7 +117,7 @@ impl GameState {
 
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
-    fn update(&mut self, gc: &GameContext, state: &mut GameState);
+    fn update(&mut self, gc: &mut GameContext, state: &mut GameState);
     fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
 
     /// return true when processed, false if not

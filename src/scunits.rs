@@ -794,10 +794,11 @@ impl SCSprite {
 }
 
 pub struct SCUnit {
-    unit_id: usize,
+    pub unit_id: usize,
     // merging flingy and unit for now
     flingy_id: usize,
     sprite: SCSprite,
+    pub kill_count: usize,
 }
 impl IScriptableTrait for SCUnit {
     fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
@@ -828,6 +829,7 @@ impl SCUnit {
             unit_id: unit_id as usize,
             flingy_id: flingy_id as usize,
             sprite: sprite,
+            kill_count: 0,
         }
     }
 }

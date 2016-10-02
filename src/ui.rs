@@ -1,15 +1,21 @@
 extern crate sdl2;
 use sdl2::rect::{Rect, Point};
 use sdl2::render::{Renderer, Texture};
-use sdl2::pixels::Color;
+use sdl2::pixels::{Color, PixelFormatEnum};
+use sdl2::surface::Surface;
 
 use ::grp::GRP;
 use ::pal::{Palette, palimg_to_texture};
 use ::pcx::PCX;
 use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 use ::terrain::Map;
+use ::scunits::SCUnit;
+use ::font::{FontSize,RenderText};
+
+use ::stash::Stash;
 
 use std::cmp::{min, max};
+
 
 fn grp_to_textures(renderer: &mut Renderer, grp: &GRP, pal: &Palette) -> Vec<Texture> {
     let header = &grp.header;
@@ -193,6 +199,87 @@ impl MiniMap {
     }
 }
 
+/// contents of the center panel
+struct SelectionPanel {
+    selected_units: Vec<usize>,
+    buffer: Vec<u8>,
+    unit_name_rect: Rect,
+    text: Texture,
+
+    pos_rect: Rect,
+}
+impl SelectionPanel {
+    pub fn new(ctx: &mut GameContext) -> Self {
+        let buffer = vec![0; 230*90];
+        let text = palimg_to_texture(&mut ctx.renderer, 230, 90, &buffer,
+                                     &ctx.gd.font_reindex.palette);
+        SelectionPanel {
+            selected_units: Vec::<usize>::new(),
+
+            buffer: buffer,
+            unit_name_rect: Rect::new(80, 10, 50, 80),
+            text: text,
+
+            pos_rect: Rect::new(175, 390, 230, 90),
+        }
+    }
+
+    fn need_update(&self, sel_units: &Vec<usize>) -> bool {
+        if sel_units.len() != self.selected_units.len() {
+            return true;
+        }
+        for i in 0..sel_units.len() {
+            if sel_units[i] != self.selected_units[i] {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn update(&mut self, ctx: &mut GameContext, sel_units: &Vec<usize>, unit_instances: &Stash<SCUnit>) {
+        if !self.need_update(sel_units) {
+            return;
+        }
+        self.selected_units = sel_units.clone();
+        // FIXME only 1 unit selected for now
+        let fnt = ctx.gd.font(FontSize::Font10);
+        let pitch = 230;
+        let reindex = &ctx.gd.font_reindex.data;
+
+        for i in 0..self.buffer.len() {
+            self.buffer[i] = 0;
+        }
+
+        let selunit = unit_instances.get(sel_units[0]).unwrap();
+        let unitname = ctx.gd.stat_txt_tbl[selunit.unit_id].to_owned();
+        fnt.render_textbox(&unitname,
+                           0,
+                           reindex,
+                           &mut self.buffer,
+                           pitch,
+                           &self.unit_name_rect);
+
+        // draw unit wireframe
+        let wf_data = &ctx.gd.unit_wireframe_grp.frames[selunit.unit_id];
+        let w = ctx.gd.unit_wireframe_grp.header.width as usize;
+        let h = ctx.gd.unit_wireframe_grp.header.height as usize;
+        for y in 0..h {
+            for x in 0..w {
+                self.buffer[y*230 + x] = wf_data[y*w + x];
+            }
+        }
+
+
+        self.text = palimg_to_texture(&mut ctx.renderer, 230, 90,
+                                      &self.buffer,
+                                      &ctx.gd.font_reindex.palette);
+    }
+
+    pub fn render(&self, renderer: &mut Renderer) {
+        renderer.copy(&self.text, None, Some(self.pos_rect));
+    }
+}
+
 pub struct UiLayer {
     pub mp: MousePointer,
     ticks: u16,
@@ -200,9 +287,11 @@ pub struct UiLayer {
     hud_rect: Rect,
     minimap: MiniMap,
     is_scrolling: bool,
+
+    selection_panel: SelectionPanel,
 }
 impl UiLayer {
-    pub fn new(context: &mut GameContext, map: &Map) -> UiLayer {
+    pub fn new(context: &mut GameContext, map: &Map) -> Self {
         let hud = PCX::read(&mut context.gd.open("game/tconsole.pcx").unwrap());
         let text = palimg_to_texture(&mut context.renderer,
                                      hud.header.width as u32,
@@ -218,6 +307,7 @@ impl UiLayer {
             hud_rect: Rect::new(0, 0, 640, 480),
             minimap: minimap,
             is_scrolling: false,
+            selection_panel: SelectionPanel::new(context),
         }
     }
 
@@ -250,7 +340,7 @@ impl UiLayer {
 
 }
 impl LayerTrait for UiLayer {
-    fn update(&mut self, gc: &GameContext, state: &mut GameState) {
+    fn update(&mut self, gc: &mut GameContext, state: &mut GameState) {
         self.minimap.update(state.map_pos.x() as u16, state.map_pos.y() as u16);
 
         if let Some((mouse_x, mouse_y)) = gc.events.now.mouse_move {
@@ -261,6 +351,8 @@ impl LayerTrait for UiLayer {
         if self.ticks % 10 == 0 {
             self.mp.update();
         }
+
+        self.selection_panel.update(gc, &state.selected_units, &state.unit_instances);
     }
     fn process_event(&mut self, event: &GameEvents) -> bool {
         match *event {
@@ -374,9 +466,11 @@ impl LayerTrait for UiLayer {
 
         events
     }
+
     fn render(&self, renderer: &mut Renderer) {
         renderer.copy(&self.hud_texture, None, Some(self.hud_rect));
         self.minimap.render(renderer);
         self.mp.render(renderer);
+        self.selection_panel.render(renderer);
     }
 }

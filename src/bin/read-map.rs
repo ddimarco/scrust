@@ -14,9 +14,6 @@ extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point};
 
-extern crate stash;
-use stash::Stash;
-
 struct UnitsLayer {
     // XXX distinguish high & low layer
     sprites: Vec<SCSprite>,
@@ -30,14 +27,16 @@ impl UnitsLayer {
         //let mut unit_instances = BTreeMap::<u32, SCUnit>::new();
         for mapunit in &map.data.units {
             // XXX: make use of mapunit data
-            let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize, mapunit.x, mapunit.y);
+            let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize,
+                                   mapunit.x, mapunit.y);
             //unit_instances.insert(next_free_uid, unit);
             let _ = state.unit_instances.put(unit);
         }
 
         let mut sprites = Vec::<SCSprite>::new();
         for mapsprite in &map.data.sprites {
-            let sprite = SCSprite::new(&context.gd, mapsprite.sprite_no, mapsprite.x, mapsprite.y);
+            let sprite = SCSprite::new(&context.gd, mapsprite.sprite_no,
+                                       mapsprite.x, mapsprite.y);
             sprites.push(sprite);
         }
         UnitsLayer {
@@ -111,7 +110,7 @@ impl UnitsLayer {
     }
 
     fn render(&self,
-              unit_instances: &Stash<SCUnit>,
+              state: &GameState,
               map_x: u16,
               map_y: u16,
               grp_cache: &GRPCache,
@@ -134,15 +133,25 @@ impl UnitsLayer {
             }
         }
 
-        for (_, u) in unit_instances {
+        for (idx, u) in &state.unit_instances {
             if u.get_iscript_state().map_pos_x > map_x &&
                u.get_iscript_state().map_pos_x < right_map_x &&
                u.get_iscript_state().map_pos_y > map_y &&
                u.get_iscript_state().map_pos_y < bottom_map_y {
-                let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
-                let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
+                   let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
+                   let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
 
-                u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+                   let is_selected = state.selected_units.contains(&idx);
+                   if is_selected {
+                       u.get_scsprite().draw_selection_circle(&grp_cache, cx, cy,
+                                                              buffer, screen_pitch);
+                   }
+                   u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+
+                   if is_selected {
+                       u.get_scsprite().draw_healthbar(cx, cy, buffer, screen_pitch);
+                   }
+
             }
         }
     }
@@ -204,7 +213,7 @@ impl View for MapView {
                                     buffer,
                                     screen_pitch);
 
-                    self.units_layer.render(&state.unit_instances,
+                    self.units_layer.render(&state,
                                             map_x,
                                             map_y,
                                             grp_cache,
@@ -232,6 +241,10 @@ impl View for MapView {
                 match *ev {
                     GameEvents::MoveMap(x, y) => {
                         state.map_pos = Point::new(x, y);
+                    },
+                    GameEvents::SelectUnit(uid) => {
+                        state.selected_units.clear();
+                        state.selected_units.push(uid);
                     },
                     _ => {}
             }
