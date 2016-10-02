@@ -7,7 +7,7 @@ use sdl2::rect::Rect;
 extern crate scrust;
 use scrust::font::FontSize;
 use scrust::font::RenderText;
-use scrust::{GameContext, View, ViewAction};
+use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::iscript::{AnimationType};
 use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
 
@@ -44,7 +44,7 @@ impl UnitsView {
     }
 }
 impl View for UnitsView {
-    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -139,7 +139,7 @@ impl View for UnitsView {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let unit_id = if args.len() == 2 {args[1].parse::<usize>().unwrap() } else {0};
-    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
         Box::new(UnitsView::new(gc, unit_id))
     });
 }

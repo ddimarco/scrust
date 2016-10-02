@@ -5,7 +5,7 @@ extern crate scrust;
 use scrust::font::{FontSize};
 
 use scrust::font::RenderText;
-use scrust::{GameContext, View, ViewAction};
+use scrust::{GameContext, GameState, View, ViewAction};
 
 struct FontView {
     text: String,
@@ -26,7 +26,7 @@ impl FontView {
     }
 }
 impl View for FontView {
-    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -49,7 +49,7 @@ impl View for FontView {
 
 
 fn main() {
-    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
         Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0))
     });
 

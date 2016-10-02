@@ -2,7 +2,7 @@ extern crate scrust;
 use scrust::pcx::{PCX};
 
 
-use scrust::{GameContext, View, ViewAction};
+use scrust::{GameContext, GameState, View, ViewAction};
 
 struct PCXView {
     pcx: PCX,
@@ -17,7 +17,7 @@ impl PCXView {
     }
 }
 impl View for PCXView {
-    fn render(&mut self, context: &mut GameContext, _: f64) -> ViewAction {
+    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -31,7 +31,7 @@ impl View for PCXView {
 }
 
 fn main() {
-    ::scrust::spawn("pcx loading", "/home/dm/.wine/drive_c/StarCraft/", |gc| {
+    ::scrust::spawn("pcx loading", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
         Box::new(PCXView::new(gc, "glue\\title\\title.pcx"))
     });
 }

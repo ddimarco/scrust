@@ -4,6 +4,7 @@ extern crate libc;
 extern crate num;
 extern crate sdl2;
 extern crate rand;
+extern crate stash;
 
 #[macro_use]
 pub mod events;
@@ -30,8 +31,11 @@ use sdl2::render::Renderer;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
+use scunits::SCUnit;
 
 use std::rc::Rc;
+
+use stash::Stash;
 
 struct_events! (
     keyboard: {
@@ -88,17 +92,36 @@ pub enum MousePointerType {
 pub enum GameEvents {
     ChangeMouseCursor(MousePointerType),
     MoveMap(i32, i32),
-    SelectUnit(u32),
+    SelectUnit(usize),
 }
+
+pub struct GameState {
+    // pub unit_instances: BTreeMap<u32, SCUnit>,
+    pub unit_instances: Stash<SCUnit>,
+
+    pub game_events: Vec<GameEvents>,
+    pub map_pos: Point,
+}
+impl GameState {
+    fn new() -> Self {
+        GameState {
+            unit_instances: Stash::<SCUnit>::new(),
+            game_events: Vec::<GameEvents>::new(),
+            map_pos: Point::new(0,0),
+        }
+    }
+}
+
 
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
-    fn update(&mut self, gc: &GameContext);
-    fn generate_events(&mut self, gc: &GameContext) -> Vec<GameEvents>;
+    fn update(&mut self, gc: &GameContext, state: &mut GameState);
+    fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
 
     /// return true when processed, false if not
     fn process_event(&mut self, event: &GameEvents) -> bool;
 }
+
 
 pub struct GameContext<'window> {
     // gamedata is ref-counted so that refs can be kept by other objects
@@ -107,9 +130,9 @@ pub struct GameContext<'window> {
     pub renderer: Renderer<'window>,
     pub screen: Surface<'window>,
 
-    pub game_events: Vec<GameEvents>,
+    // pub game_events: Vec<GameEvents>,
 
-    pub map_pos: Point,
+    // pub map_pos: Point,
 
     // debug stuff
     //pub timer: Timer<'window>,
@@ -123,8 +146,6 @@ impl<'window> GameContext<'window> {
             renderer: renderer,
             screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(),
 
-            game_events: Vec::<GameEvents>::new(),
-            map_pos: Point::new(0,0),
             // timer: timer,
         }
     }
@@ -143,16 +164,19 @@ pub enum ViewAction {
 }
 
 pub trait View {
+    fn update(&mut self, _: &mut GameContext, _: &mut GameState) {
+    }
+
     /// renders the current view into context.screen
-    fn render(&mut self, context: &mut GameContext, elapsed: f64) -> ViewAction;
+    fn render(&mut self, context: &mut GameContext, state: &GameState, elapsed: f64) -> ViewAction;
 
     fn render_layers(&mut self, _: &mut GameContext) {
     }
 
-    fn generate_layer_events(&mut self, _: &mut GameContext) {
+    fn generate_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {
     }
 
-    fn process_layer_events(&mut self, _: &mut GameContext) {
+    fn process_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {
     }
 }
 
@@ -173,7 +197,7 @@ SDL_DestroyTexture(t8);
 
 
 pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
-where F: Fn(&mut GameContext) -> Box<View> {
+where F: Fn(&mut GameContext, &mut GameState) -> Box<View> {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window(title, 640, 480)
@@ -192,7 +216,8 @@ where F: Fn(&mut GameContext) -> Box<View> {
         window.renderer().accelerated().build().unwrap(),
     );
     sdl_context.mouse().show_cursor(false);
-    let mut current_view = init(&mut context);
+    let mut state = GameState::new();
+    let mut current_view = init(&mut context, &mut state);
 
     let interval = 1_000 / 60;
     let mut before = timer.ticks();
@@ -224,12 +249,13 @@ where F: Fn(&mut GameContext) -> Box<View> {
         }
 
         context.events.pump(&mut context.renderer);
+        current_view.update(&mut context, &mut state);
 
-        current_view.generate_layer_events(&mut context);
-        current_view.process_layer_events(&mut context);
+        current_view.generate_layer_events(&mut context, &mut state);
+        current_view.process_layer_events(&mut context, &mut state);
 
         let start = timer.ticks();
-        let render_res = current_view.render(&mut context, elapsed);
+        let render_res = current_view.render(&mut context, &state, elapsed);
         let end = timer.ticks();
         render_time_sum += end - start;
         render_count += 1;

@@ -6,7 +6,7 @@ use sdl2::pixels::Color;
 use ::grp::GRP;
 use ::pal::{Palette, palimg_to_texture};
 use ::pcx::PCX;
-use ::{GameContext, LayerTrait, GameEvents, MousePointerType};
+use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 use ::terrain::Map;
 
 use std::cmp::{min, max};
@@ -222,36 +222,36 @@ impl UiLayer {
     }
 
     fn make_map_move_from_scroll(&self, scroll_horizontal: i16, scroll_vertical: i16,
-                                 gc: &GameContext) -> GameEvents {
+                                 map_pos: &Point) -> GameEvents {
         const SCROLLING_SPEED: i32 = 10;
         let map_x =
             if scroll_horizontal < 0 {
-                max(0, (gc.map_pos.x() -
+                max(0, (map_pos.x() -
                         SCROLLING_SPEED as i32))
             } else if scroll_horizontal > 0 {
                 min((self.minimap.map_size.x() - MAP_RENDER_W as i32) * 32,
-                    gc.map_pos.x() + SCROLLING_SPEED)
+                    map_pos.x() + SCROLLING_SPEED)
             } else {
-                gc.map_pos.x()
+                map_pos.x()
             };
 
         let map_y =
             if scroll_vertical < 0 {
-                max(0, (gc.map_pos.y() -
+                max(0, (map_pos.y() -
                         SCROLLING_SPEED as i32))
             } else if scroll_vertical > 0 {
                 min((self.minimap.map_size.y() - MAP_RENDER_H as i32) * 32,
-                    gc.map_pos.y() + SCROLLING_SPEED)
+                    map_pos.y() + SCROLLING_SPEED)
             } else {
-                gc.map_pos.y()
+                map_pos.y()
             };
         GameEvents::MoveMap(map_x, map_y)
     }
 
 }
 impl LayerTrait for UiLayer {
-    fn update(&mut self, gc: &GameContext) {
-        self.minimap.update(gc.map_pos.x() as u16, gc.map_pos.y() as u16);
+    fn update(&mut self, gc: &GameContext, state: &mut GameState) {
+        self.minimap.update(state.map_pos.x() as u16, state.map_pos.y() as u16);
 
         if let Some((mouse_x, mouse_y)) = gc.events.now.mouse_move {
             self.mp.update_pos(mouse_x, mouse_y);
@@ -274,7 +274,7 @@ impl LayerTrait for UiLayer {
         }
     }
 
-    fn generate_events(&mut self, gc: &GameContext) -> Vec<GameEvents> {
+    fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
         let mpos = gc.events.mouse_pos;
 
@@ -329,7 +329,7 @@ impl LayerTrait for UiLayer {
             events.push(GameEvents::ChangeMouseCursor(mpt));
 
             events.push(self.make_map_move_from_scroll(scroll_horizontal, scroll_vertical,
-                                                       gc));
+                                                       &state.map_pos));
 
         } else if self.is_scrolling && scroll_vertical == 0 && scroll_horizontal == 0 {
             // stop scrolling
@@ -368,7 +368,7 @@ impl LayerTrait for UiLayer {
             if scroll_horizontal != 0 || scroll_vertical != 0 {
                 events.push(self.make_map_move_from_scroll(scroll_horizontal,
                                                            scroll_vertical,
-                                                           gc));
+                                                           &state.map_pos));
             }
         }
 
