@@ -10,9 +10,11 @@ use num::FromPrimitive;
 use ::rand::Rng;
 
 use std::rc::Rc;
+use std::cmp::min;
 
 use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
+use ::grp::GRP;
 
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -491,6 +493,7 @@ impl SCImage {
         }
     }
 
+    // FIXME: merge with render_buffer
     fn _draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
         if !self.iscript_state.visible {
             return;
@@ -692,6 +695,58 @@ impl SCSpriteTrait for SCSprite {
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { self }
 }
 
+fn render_buffer(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
+                 cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    let yoffset =
+        if cy < height/2 {
+            height/2 - cy
+        } else {
+            0
+        };
+    let xoffset =
+        if cx < width/2 {
+            width/2 - cx
+        } else {
+            0
+        };
+
+    let buffer_height = buffer.len() as u32/buffer_pitch;
+    let youtend = cy + yoffset + height/2;
+    let ystop =
+        if youtend > buffer_height {
+            height - (youtend - buffer_height)
+        } else {
+            height
+        };
+
+    let xoutend = cx + xoffset + width/2;
+    let xstop =
+        if xoutend > buffer_pitch {
+            width - (xoutend - buffer_pitch)
+        } else {
+            width
+        };
+    let x_skip = width - xstop;
+
+    let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
+        + (cx + xoffset - width / 2);
+    let mut inpos = yoffset*width + xoffset;
+
+    // FIXME: reindexing
+    for _ in yoffset..ystop {
+        for _ in xoffset..xstop {
+            let col = inbuffer[inpos as usize];
+            if col > 0 {
+                buffer[outpos as usize] = col;
+            }
+            outpos += 1;
+            inpos += 1;
+        }
+        outpos += buffer_pitch - width + xoffset + x_skip;
+        inpos += xoffset + x_skip;
+    }
+}
+
 impl SCSprite {
     pub fn new(gd: &Rc<GameData>, sprite_id: u16, map_x: u16, map_y: u16) -> SCSprite {
         let image_id = gd.sprites_dat.image_id[sprite_id as usize];
@@ -743,7 +798,8 @@ impl SCSprite {
                 let width = 2 + (box_width * boxes) + (boxes - 1);
                 let height = 8;
 
-                let mut outpos = (cy - height / 2) * buffer_pitch + (cx - width / 2);
+                let mut outpos = ((cy + selectable.circle_offset as u32) - height / 2)
+                    * buffer_pitch + (cx - width / 2);
                 for y in 0..height {
                     for x in 0..width {
                         let outer_border = y == 0 || y == height-1 || x == 0 || x == (width-1);
@@ -767,24 +823,12 @@ impl SCSprite {
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);
-                let width = grp.header.width as u32;
-                let height = grp.header.height as u32;
-
-                let mut outpos = ((cy + selectable.circle_offset as u32)
-                                  - height / 2) * buffer_pitch + (cx - width / 2);
-                let mut inpos = 0;
-                // FIXME: reindexing
-                for _ in 0..height {
-                    for _ in 0..width {
-                        let col = grp.frames[0][inpos as usize];
-                        if col > 0 {
-                            buffer[outpos as usize] = col;
-                        }
-                        outpos += 1;
-                        inpos += 1;
-                    }
-                    outpos += buffer_pitch - width;
-                }
+                render_buffer(&grp.frames[0],
+                           grp.header.width as u32,
+                           grp.header.height as u32,
+                           false,
+                           cx, cy + selectable.circle_offset as u32,
+                           buffer, buffer_pitch);
             },
             None => {
                 panic!();
