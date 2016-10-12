@@ -10,11 +10,11 @@ use num::FromPrimitive;
 use ::rand::Rng;
 
 use std::rc::Rc;
-use std::cmp::min;
+
+use std::cmp::max;
 
 use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
-use ::grp::GRP;
 
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -502,6 +502,13 @@ impl SCImage {
         let remap = self.remapping(self.iscript_state.gd.as_ref());
         let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
                                                     remap);
+        // let reindexing_map= |inval: u8, out: u8| -> Option<u8> {
+        //     if inval > 0 {
+        //         return Some(reindex[((inval as usize) - 1)*256 + out as usize]);
+        //     }
+        //     None
+        // };
+
 
         let fridx = self.frame_idx();
         let grp = grp_cache.grp_ro(self.grp_id);
@@ -512,85 +519,23 @@ impl SCImage {
         }
         let udata = &grp.frames[fridx];
 
-        let w = grp.header.width;
-        let h = grp.header.height;
-        let x_center = (cx as i32 + self.iscript_state.rel_x as i32) as u32;
+        let w = grp.header.width as u32;
+        let h = grp.header.height as u32;
+        // FIXME: sometimes, cx/cy < rel_x/y. what then?
+        let x_center = max(0, cx as i32 + self.iscript_state.rel_x as i32) as u32;
+        let y_center = max(0, cy as i32 + self.iscript_state.rel_y as i32) as u32;
 
-        let (in_pitch, x_in_offset, x_start) =
-            if x_center < (w as u32 / 2) {
-                // clip (image is at left border)
-                let xio = (w as u32 / 2) - x_center;
-                ((w as u32)-xio, xio, 0)
-            } else {
-                let x_start = x_center - (w as u32 / 2);
-                (w as u32, 0, x_start as usize)
-            };
-        if x_start > buffer_pitch as usize {
+        // FIXME this will cut off units that are more outside the screen
+        if x_center >= 640 || y_center >= 480 {
             return;
         }
-        let in_width =
-            if (x_center + in_pitch / 2) > buffer_pitch {
-                buffer_pitch - (x_start as u32)
-            } else {
-                in_pitch
-            };
 
-        let y_center = (cy as i32 + self.iscript_state.rel_y as i32) as u32;
-        let (_y_in_height, y_in_offset, y_start) =
-            if y_center < (h as u32 / 2) {
-                // clip (top border)
-                let yio = (h as u32 / 2) - y_center;
-                ((h as u32)-yio, yio, 0)
-            } else {
-                let y_start = y_center - (h as u32 / 2);
-                (h as u32, 0, y_start)
-            };
-        let buf_height = buffer.len() / buffer_pitch as usize;
-        if y_start as usize > buf_height {
-            return;
-        }
-        let y_in_height =
-            if (y_center + _y_in_height / 2) as usize > buf_height {
-                buf_height as u32 - y_start
-            } else {
-                _y_in_height
-            };
-
-        let mut outpos = (y_start * buffer_pitch) as usize + x_start;
-        let mut inpos = (y_in_offset as usize * (w as usize)) + x_in_offset as usize;
-        let flipped = self.draw_flipped();
-        if !flipped {
-            for _ in 0..y_in_height {
-                for _ in 0..in_width {
-                    let dest = udata[inpos] as usize;
-                    if dest > 0 {
-                        let src = buffer[outpos] as usize;
-                        buffer[outpos] = reindex[(dest - 1) * 256 + src];
-                    }
-                    outpos += 1;
-                    inpos += 1;
-                }
-                let to_skip = (w as u32 - in_width) as usize;
-                inpos += to_skip;
-                outpos += to_skip + (buffer_pitch - w as u32) as usize;
-            }
-        } else {
-            // draw flipped
-            for y in (y_in_offset as usize)..(y_in_offset as usize + y_in_height as usize) {
-                for x in (x_in_offset as usize)..(x_in_offset as usize + in_width as usize) {
-                    let dest = udata[(y*(w as usize) + ((w as usize) - x - 1)) as usize] as usize;
-                    if dest > 0 {
-                        let src = buffer[outpos] as usize;
-                        buffer[outpos] = reindex[(dest - 1) * 256 + src];
-                    }
-                    outpos += 1;
-                }
-                let to_skip = (w as u32 - in_width) as usize;
-                outpos += to_skip + (buffer_pitch - w as u32) as usize;
-            }
-        }
+        render_buffer_with_reindexing(udata, w, h, self.draw_flipped(),
+                      x_center, y_center, buffer, buffer_pitch,
+                      &reindex);
     }
 
+    /// cx, cy: screen coordinates
     pub fn draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         // draw underlays
         for ul in &self.underlays {
@@ -694,9 +639,9 @@ impl SCSpriteTrait for SCSprite {
     fn get_scsprite<'a>(&'a self) -> &'a SCSprite { self }
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { self }
 }
-
-fn render_buffer(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
-                 cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+pub fn render_buffer_faster(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
+                     cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    unsafe {
     let yoffset =
         if cy < height/2 {
             height/2 - cy
@@ -730,22 +675,206 @@ fn render_buffer(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
 
     let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
         + (cx + xoffset - width / 2);
-    let mut inpos = yoffset*width + xoffset;
 
-    // FIXME: reindexing
-    for _ in yoffset..ystop {
-        for _ in xoffset..xstop {
-            let col = inbuffer[inpos as usize];
-            if col > 0 {
-                buffer[outpos as usize] = col;
+    if flipped {
+        for y in yoffset..ystop {
+            for x in xoffset..xstop {
+                //let col = inbuffer[(y*width + (width - x - 1)) as usize];
+                let idx = (y*width + (width - x - 1)) as usize;
+                let col = inbuffer.get_unchecked(idx);
+                if *col > 0 {
+                    //buffer[outpos as usize] = col;
+                    *buffer.get_unchecked_mut(outpos as usize) = *col;
+                }
+                outpos += 1;
             }
-            outpos += 1;
-            inpos += 1;
+            outpos += buffer_pitch - width + xoffset + x_skip;
         }
-        outpos += buffer_pitch - width + xoffset + x_skip;
-        inpos += xoffset + x_skip;
+    } else {
+        let mut inpos = yoffset*width + xoffset;
+        for _ in yoffset..ystop {
+            for _ in xoffset..xstop {
+                //let col = inbuffer[inpos as usize];
+                let idx = inpos as usize;
+                let col = inbuffer.get_unchecked(idx);
+                if *col > 0 {
+                    //buffer[outpos as usize] = col;
+                    *buffer.get_unchecked_mut(outpos as usize) = *col;
+                }
+                outpos += 1;
+                inpos += 1;
+            }
+            outpos += buffer_pitch - width + xoffset + x_skip;
+            inpos += xoffset + x_skip;
+        }
+    }
+        }
+}
+
+macro_rules! render_function {
+    ($fname:ident, $func:expr; $($param:ident: $param_ty:ty),* ) => {
+        pub fn $fname(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
+                      cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32,
+                      $($param: $param_ty), *) {
+            unsafe {
+                let yoffset =
+                    if cy < height/2 {
+                        height/2 - cy
+                    } else {
+                        0
+                    };
+                let xoffset =
+                    if cx < width/2 {
+                        width/2 - cx
+                    } else {
+                        0
+                    };
+
+                let buffer_height = buffer.len() as u32/buffer_pitch;
+                let youtend = cy + yoffset + height/2;
+                let ystop =
+                    if youtend > buffer_height {
+                        height - (youtend - buffer_height)
+                    } else {
+                        height
+                    };
+
+                let xoutend = cx + xoffset + width/2;
+                let xstop =
+                    if xoutend > buffer_pitch {
+                        width - (xoutend - buffer_pitch)
+                    } else {
+                        width
+                    };
+                let x_skip = width - xstop;
+
+                let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
+                    + (cx + xoffset - width / 2);
+
+                if flipped {
+                    for y in yoffset..ystop {
+                        for x in xoffset..xstop {
+                            let col = inbuffer.get_unchecked((y*width + (width - x - 1)) as usize);
+                            $func(*col, buffer, outpos as usize,
+                                  $($param),*
+                            );
+                            outpos += 1;
+                        }
+                        outpos += buffer_pitch - width + xoffset + x_skip;
+                    }
+                } else {
+                    let mut inpos = yoffset*width + xoffset;
+                    for _ in yoffset..ystop {
+                        for _ in xoffset..xstop {
+                            let col = inbuffer.get_unchecked(inpos as usize);
+                            $func(*col, buffer, outpos as usize,
+                                  $($param),*);
+                            outpos += 1;
+                            inpos += 1;
+                        }
+                        outpos += buffer_pitch - width + xoffset + x_skip;
+                        inpos += xoffset + x_skip;
+                    }
+                }
+            }
+        }
     }
 }
+
+// FIXME: should also allow ranges <0 and > screen_size
+// FIXME: a lot of time spent here, speed this up
+render_function!(render_buffer_with_transparency, |col: u8, buffer: &mut [u8], outpos: usize| {
+    let ob = buffer.get_unchecked_mut(outpos);
+    if col > 0 {
+        *ob = col;
+    }
+};);
+render_function!(render_buffer_with_reindexing, |col: u8, buffer: &mut [u8], outpos: usize,
+                 reindex: &[u8]| {
+     let ob = buffer.get_unchecked_mut(outpos);
+     if col > 0 {
+         *ob = reindex[((col as usize) - 1)*256 + *ob as usize];
+     }
+}; reindex: &[u8]);
+// just for testing
+render_function!(render_buffer_macro, |col: u8, buffer: &mut [u8], outpos: usize, myint: u8| {
+    let ob = buffer.get_unchecked_mut(outpos);
+    if col > 0 {
+        *ob = col;
+    }
+}; myint: u8);
+
+
+// pub fn render_buffer(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
+//                      cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32,
+//                      f: &Fn(u8, u8) -> Option<u8>) {
+//     let yoffset =
+//         if cy < height/2 {
+//             height/2 - cy
+//         } else {
+//             0
+//         };
+//     let xoffset =
+//         if cx < width/2 {
+//             width/2 - cx
+//         } else {
+//             0
+//         };
+
+//     let buffer_height = buffer.len() as u32/buffer_pitch;
+//     let youtend = cy + yoffset + height/2;
+//     let ystop =
+//         if youtend > buffer_height {
+//             height - (youtend - buffer_height)
+//         } else {
+//             height
+//         };
+
+//     let xoutend = cx + xoffset + width/2;
+//     let xstop =
+//         if xoutend > buffer_pitch {
+//             width - (xoutend - buffer_pitch)
+//         } else {
+//             width
+//         };
+//     let x_skip = width - xstop;
+
+//     let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
+//         + (cx + xoffset - width / 2);
+
+//     if flipped {
+//         for y in yoffset..ystop {
+//             for x in xoffset..xstop {
+//                 let col = inbuffer[(y*width + (width - x - 1)) as usize];
+//                 match f(col, buffer[outpos as usize]) {
+//                     None => {},
+//                     Some(val) => {
+//                         buffer[outpos as usize] = val;
+//                     }
+//                 }
+//                 outpos += 1;
+//             }
+//             outpos += buffer_pitch - width + xoffset + x_skip;
+//         }
+//     } else {
+//         let mut inpos = yoffset*width + xoffset;
+//         for _ in yoffset..ystop {
+//             for _ in xoffset..xstop {
+//                 let col = inbuffer[inpos as usize];
+//                 match f(col, buffer[outpos as usize]) {
+//                     None => {},
+//                     Some(val) => {
+//                         buffer[outpos as usize] = val;
+//                     }
+//                 }
+//                 outpos += 1;
+//                 inpos += 1;
+//             }
+//             outpos += buffer_pitch - width + xoffset + x_skip;
+//             inpos += xoffset + x_skip;
+//         }
+//     }
+// }
 
 impl SCSprite {
     pub fn new(gd: &Rc<GameData>, sprite_id: u16, map_x: u16, map_y: u16) -> SCSprite {
@@ -819,16 +948,23 @@ impl SCSprite {
         }
     }
 
+
     pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        // let simple_map = |col: u8, _: u8| -> Option<u8> {
+        //         if col == 0 {
+        //             return None;
+        //         }
+        //         Some(col)
+        // };
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);
-                render_buffer(&grp.frames[0],
+                render_buffer_with_transparency(&grp.frames[0],
                            grp.header.width as u32,
                            grp.header.height as u32,
                            false,
                            cx, cy + selectable.circle_offset as u32,
-                           buffer, buffer_pitch);
+                              buffer, buffer_pitch);
             },
             None => {
                 panic!();

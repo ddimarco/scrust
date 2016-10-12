@@ -1,8 +1,7 @@
 extern crate sdl2;
 use sdl2::rect::{Rect, Point};
 use sdl2::render::{Renderer, Texture};
-use sdl2::pixels::{Color, PixelFormatEnum};
-use sdl2::surface::Surface;
+use sdl2::pixels::{Color};
 
 use ::grp::GRP;
 use ::pal::{Palette, palimg_to_texture};
@@ -195,7 +194,7 @@ impl MiniMap {
         renderer.copy(&self.minimap, None, Some(self.mmap_rect));
 
         renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.draw_rect(self.mmap_cur_rect);
+        let _ = renderer.draw_rect(self.mmap_cur_rect);
     }
 }
 

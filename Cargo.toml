@@ -22,5 +22,10 @@ libc = "*"
 enum_primitive = "*"
 num = "*"
 rand = "*"
-#linked-list = "0.0.3"
 stash = "*"
+# benchmarks
+bencher = "*"
+
+[[bench]]
+name="render_buf"
+harness=false
