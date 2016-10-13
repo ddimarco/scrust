@@ -267,7 +267,7 @@ where F: Fn(&mut GameContext, &mut GameState) -> Box<View> {
         {
             // XXX make screen another layer
             let t8 = context.renderer.create_texture_from_surface(&context.screen).unwrap();
-            context.renderer.copy(&t8, None, None);
+            let _ = context.renderer.copy(&t8, None, None);
 
             current_view.render_layers(&mut context);
 

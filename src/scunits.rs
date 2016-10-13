@@ -639,78 +639,6 @@ impl SCSpriteTrait for SCSprite {
     fn get_scsprite<'a>(&'a self) -> &'a SCSprite { self }
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { self }
 }
-pub fn render_buffer_faster(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
-                     cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
-    unsafe {
-    let yoffset =
-        if cy < height/2 {
-            height/2 - cy
-        } else {
-            0
-        };
-    let xoffset =
-        if cx < width/2 {
-            width/2 - cx
-        } else {
-            0
-        };
-
-    let buffer_height = buffer.len() as u32/buffer_pitch;
-    let youtend = cy + yoffset + height/2;
-    let ystop =
-        if youtend > buffer_height {
-            height - (youtend - buffer_height)
-        } else {
-            height
-        };
-
-    let xoutend = cx + xoffset + width/2;
-    let xstop =
-        if xoutend > buffer_pitch {
-            width - (xoutend - buffer_pitch)
-        } else {
-            width
-        };
-    let x_skip = width - xstop;
-
-    let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
-        + (cx + xoffset - width / 2);
-
-    if flipped {
-        for y in yoffset..ystop {
-            for x in xoffset..xstop {
-                //let col = inbuffer[(y*width + (width - x - 1)) as usize];
-                let idx = (y*width + (width - x - 1)) as usize;
-                let col = inbuffer.get_unchecked(idx);
-                if *col > 0 {
-                    //buffer[outpos as usize] = col;
-                    *buffer.get_unchecked_mut(outpos as usize) = *col;
-                }
-                outpos += 1;
-            }
-            outpos += buffer_pitch - width + xoffset + x_skip;
-        }
-    } else {
-        let mut inpos = yoffset*width + xoffset;
-        for _ in yoffset..ystop {
-            for _ in xoffset..xstop {
-                //let col = inbuffer[inpos as usize];
-                let idx = inpos as usize;
-                let col = inbuffer.get_unchecked(idx);
-                if *col > 0 {
-                    //buffer[outpos as usize] = col;
-                    *buffer.get_unchecked_mut(outpos as usize) = *col;
-                }
-                outpos += 1;
-                inpos += 1;
-            }
-            outpos += buffer_pitch - width + xoffset + x_skip;
-            inpos += xoffset + x_skip;
-        }
-    }
-        }
-}
-
 macro_rules! render_function {
     ($fname:ident, $func:expr; $($param:ident: $param_ty:ty),* ) => {
         pub fn $fname(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
@@ -793,88 +721,9 @@ render_function!(render_buffer_with_reindexing, |col: u8, buffer: &mut [u8], out
                  reindex: &[u8]| {
      let ob = buffer.get_unchecked_mut(outpos);
      if col > 0 {
-         *ob = reindex[((col as usize) - 1)*256 + *ob as usize];
+         *ob = *reindex.get_unchecked(((col as usize) - 1)*256 + *ob as usize);
      }
 }; reindex: &[u8]);
-// just for testing
-render_function!(render_buffer_macro, |col: u8, buffer: &mut [u8], outpos: usize, myint: u8| {
-    let ob = buffer.get_unchecked_mut(outpos);
-    if col > 0 {
-        *ob = col;
-    }
-}; myint: u8);
-
-
-// pub fn render_buffer(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
-//                      cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32,
-//                      f: &Fn(u8, u8) -> Option<u8>) {
-//     let yoffset =
-//         if cy < height/2 {
-//             height/2 - cy
-//         } else {
-//             0
-//         };
-//     let xoffset =
-//         if cx < width/2 {
-//             width/2 - cx
-//         } else {
-//             0
-//         };
-
-//     let buffer_height = buffer.len() as u32/buffer_pitch;
-//     let youtend = cy + yoffset + height/2;
-//     let ystop =
-//         if youtend > buffer_height {
-//             height - (youtend - buffer_height)
-//         } else {
-//             height
-//         };
-
-//     let xoutend = cx + xoffset + width/2;
-//     let xstop =
-//         if xoutend > buffer_pitch {
-//             width - (xoutend - buffer_pitch)
-//         } else {
-//             width
-//         };
-//     let x_skip = width - xstop;
-
-//     let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
-//         + (cx + xoffset - width / 2);
-
-//     if flipped {
-//         for y in yoffset..ystop {
-//             for x in xoffset..xstop {
-//                 let col = inbuffer[(y*width + (width - x - 1)) as usize];
-//                 match f(col, buffer[outpos as usize]) {
-//                     None => {},
-//                     Some(val) => {
-//                         buffer[outpos as usize] = val;
-//                     }
-//                 }
-//                 outpos += 1;
-//             }
-//             outpos += buffer_pitch - width + xoffset + x_skip;
-//         }
-//     } else {
-//         let mut inpos = yoffset*width + xoffset;
-//         for _ in yoffset..ystop {
-//             for _ in xoffset..xstop {
-//                 let col = inbuffer[inpos as usize];
-//                 match f(col, buffer[outpos as usize]) {
-//                     None => {},
-//                     Some(val) => {
-//                         buffer[outpos as usize] = val;
-//                     }
-//                 }
-//                 outpos += 1;
-//                 inpos += 1;
-//             }
-//             outpos += buffer_pitch - width + xoffset + x_skip;
-//             inpos += xoffset + x_skip;
-//         }
-//     }
-// }
 
 impl SCSprite {
     pub fn new(gd: &Rc<GameData>, sprite_id: u16, map_x: u16, map_y: u16) -> SCSprite {
@@ -912,6 +761,7 @@ impl SCSprite {
         }
     }
 
+    // FIXME: clipping
     pub fn draw_healthbar(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
         match self.selectable_data {
             None => {
@@ -950,12 +800,6 @@ impl SCSprite {
 
 
     pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
-        // let simple_map = |col: u8, _: u8| -> Option<u8> {
-        //         if col == 0 {
-        //             return None;
-        //         }
-        //         Some(col)
-        // };
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);

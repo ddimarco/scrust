@@ -105,7 +105,7 @@ impl MousePointer {
     pub fn render(&self, renderer: &mut Renderer) {
         let cursor_idx = self.cursor_type as usize;
         let ref texture = self.textures[cursor_idx];
-        renderer.copy(&texture[self.frame_idx], None, Some(self.rect));
+        let _ = renderer.copy(&texture[self.frame_idx], None, Some(self.rect));
     }
 
     pub fn update(&mut self) {
@@ -191,7 +191,7 @@ impl MiniMap {
     }
 
     fn render(&self, renderer: &mut Renderer) {
-        renderer.copy(&self.minimap, None, Some(self.mmap_rect));
+        let _ = renderer.copy(&self.minimap, None, Some(self.mmap_rect));
 
         renderer.set_draw_color(Color::RGB(255, 255, 255));
         let _ = renderer.draw_rect(self.mmap_cur_rect);
@@ -275,7 +275,7 @@ impl SelectionPanel {
     }
 
     pub fn render(&self, renderer: &mut Renderer) {
-        renderer.copy(&self.text, None, Some(self.pos_rect));
+        let _ = renderer.copy(&self.text, None, Some(self.pos_rect));
     }
 }
 
@@ -467,7 +467,7 @@ impl LayerTrait for UiLayer {
     }
 
     fn render(&self, renderer: &mut Renderer) {
-        renderer.copy(&self.hud_texture, None, Some(self.hud_rect));
+        let _ = renderer.copy(&self.hud_texture, None, Some(self.hud_rect));
         self.minimap.render(renderer);
         self.mp.render(renderer);
         self.selection_panel.render(renderer);
