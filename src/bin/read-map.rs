@@ -115,28 +115,20 @@ impl UnitsLayer {
               screen_pitch: u32,
               screen_height: usize) {
         // units
-        let right_map_x = map_x + screen_pitch as u16;
-        let bottom_map_y = map_y + screen_height as u16;
         // FIXME: draw in proper order
         for u in &self.sprites {
-            if u.get_iscript_state().map_pos_x > map_x &&
-               u.get_iscript_state().map_pos_x < right_map_x &&
-               u.get_iscript_state().map_pos_y > map_y &&
-               u.get_iscript_state().map_pos_y < bottom_map_y {
-                let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
-                let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
+             {
+                let cx = u.get_iscript_state().map_pos_x as i32 - map_x as i32;
+                let cy = u.get_iscript_state().map_pos_y as i32 - map_y as i32;
 
                 u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
             }
         }
 
         for (idx, u) in &state.unit_instances {
-            if u.get_iscript_state().map_pos_x > map_x &&
-               u.get_iscript_state().map_pos_x < right_map_x &&
-               u.get_iscript_state().map_pos_y > map_y &&
-               u.get_iscript_state().map_pos_y < bottom_map_y {
-                   let cx = (u.get_iscript_state().map_pos_x - map_x) as u32;
-                   let cy = (u.get_iscript_state().map_pos_y - map_y) as u32;
+             {
+                   let cx = u.get_iscript_state().map_pos_x as i32 - map_x as i32;
+                   let cy = u.get_iscript_state().map_pos_y as i32 - map_y as i32;
 
                    let is_selected = state.selected_units.contains(&idx);
                    if is_selected {

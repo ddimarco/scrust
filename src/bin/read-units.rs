@@ -18,6 +18,8 @@ struct UnitsView {
     anim_str: String,
     unit_name_str: String,
     unit: SCUnit,
+    unit_cx: i32,
+    unit_cy: i32,
 }
 impl UnitsView {
     fn new(gc: &mut GameContext, unit_id: usize) -> UnitsView {
@@ -40,6 +42,8 @@ impl UnitsView {
             //img: SCImage::new(&gd, image_id),
             //sprite: SCSprite::new(&gd, sprite_id),
             unit: SCUnit::new(&gc.gd, unit_id, 0, 0),
+            unit_cx: 100,
+            unit_cy: 100,
         }
     }
 }
@@ -87,6 +91,17 @@ impl View for UnitsView {
             self.unit.get_iscript_state_mut().set_animation(AnimationType::Walking);
         }
 
+        if context.events.now.key_up == Some(true) {
+            self.unit_cy -= 1;
+        } else if context.events.now.key_down == Some(true) {
+            self.unit_cy += 1;
+        }
+        if context.events.now.key_left == Some(true) {
+            self.unit_cx -= 1;
+        } else if context.events.now.key_right == Some(true) {
+            self.unit_cx += 1;
+        }
+
         {
             self.unit.get_scimg_mut().step(&gd);
             {
@@ -124,9 +139,12 @@ impl View for UnitsView {
                                screen_pitch,
                                &animstr_rect);
 
-            self.unit.get_scsprite().draw_selection_circle(&grp_cache, 100, 100, buffer, screen_pitch);
+            self.unit.get_scsprite().draw_selection_circle(&grp_cache,
+                                                           self.unit_cx, self.unit_cy,
+                                                           buffer, screen_pitch);
             // unit
-            self.unit.get_scimg().draw(grp_cache, 100, 100, buffer, screen_pitch);
+            self.unit.get_scimg().draw(grp_cache, self.unit_cx, self.unit_cy,
+                                       buffer, screen_pitch);
 
             self.unit.get_scsprite().draw_healthbar(100, 140, buffer, screen_pitch);
 
@@ -139,7 +157,7 @@ impl View for UnitsView {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let unit_id = if args.len() == 2 {args[1].parse::<usize>().unwrap() } else {0};
-    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
+    ::scrust::spawn("units rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
         Box::new(UnitsView::new(gc, unit_id))
     });
 }

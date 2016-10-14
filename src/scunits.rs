@@ -11,8 +11,6 @@ use ::rand::Rng;
 
 use std::rc::Rc;
 
-use std::cmp::max;
-
 use ::gamedata::{GameData, GRPCache};
 use ::iscript::{AnimationType, OpCode};
 
@@ -488,7 +486,7 @@ impl SCImage {
         }
     }
 
-    fn _draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
+    fn _draw(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
         if !self.iscript_state.visible {
             return;
         }
@@ -508,14 +506,8 @@ impl SCImage {
 
         let w = grp.header.width as u32;
         let h = grp.header.height as u32;
-        // FIXME: sometimes, cx/cy < rel_x/y. what then?
-        let x_center = max(0, cx as i32 + self.iscript_state.rel_x as i32) as u32;
-        let y_center = max(0, cy as i32 + self.iscript_state.rel_y as i32) as u32;
-
-        // FIXME this will cut off units that are more outside the screen
-        if x_center >= 640 || y_center >= 480 {
-            return;
-        }
+        let x_center = cx + self.iscript_state.rel_x as i32;
+        let y_center = cy + self.iscript_state.rel_y as i32;
 
         render_buffer_with_reindexing(udata, w, h, self.draw_flipped(),
                       x_center, y_center, buffer, buffer_pitch,
@@ -523,7 +515,7 @@ impl SCImage {
     }
 
     /// cx, cy: screen coordinates
-    pub fn draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32) {
         // draw underlays
         for ul in &self.underlays {
             ul._draw(grp_cache, cx, cy, buffer, buffer_pitch, true);
@@ -629,42 +621,60 @@ impl SCSpriteTrait for SCSprite {
 macro_rules! render_function {
     ($fname:ident, $func:expr; $($param:ident: $param_ty:ty),* ) => {
         pub fn $fname(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
-                      cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32,
+                      cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32,
                       $($param: $param_ty), *) {
             unsafe {
-                let yoffset =
-                    if cy < height/2 {
-                        height/2 - cy
-                    } else {
-                        0
-                    };
-                let xoffset =
-                    if cx < width/2 {
-                        width/2 - cx
-                    } else {
-                        0
-                    };
-
+                let halfheight = (height as i32)/2;
+                let halfwidth = (width as i32)/2;
                 let buffer_height = buffer.len() as u32/buffer_pitch;
-                let youtend = cy + yoffset + height/2;
+
+                if (cx - halfwidth > buffer_pitch as i32) ||
+                    (cy - halfheight > buffer_height as i32) {
+                    return;
+                }
+
+                let yoffset =
+                    (if cy < halfheight  {
+                        halfheight - cy
+                    } else {
+                        0
+                    }) as u32;
+                let xoffset =
+                    (if cx < halfwidth {
+                        halfwidth - cx
+                    } else {
+                        0
+                    }) as u32;
+
+                let youtend = cy + halfheight;
                 let ystop =
-                    if youtend > buffer_height {
-                        height - (youtend - buffer_height)
+                    if youtend as u32 > buffer_height {
+                        let rest = youtend as u32 - buffer_height;
+                        if height < rest {
+                            height
+                        } else {
+                            height - rest
+                        }
                     } else {
                         height
                     };
 
-                let xoutend = cx + xoffset + width/2;
+                let xoutend = cx + halfwidth;
                 let xstop =
-                    if xoutend > buffer_pitch {
-                        width - (xoutend - buffer_pitch)
+                    if xoutend as u32 > buffer_pitch {
+                        let rest = xoutend as u32 - buffer_pitch;
+                        if width < rest {
+                            width
+                        } else {
+                            width - rest
+                        }
                     } else {
                         width
                     };
                 let x_skip = width - xstop;
 
-                let mut outpos = (cy + yoffset - height / 2) * buffer_pitch
-                    + (cx + xoffset - width / 2);
+                let mut outpos = (cy + yoffset as i32 - halfheight) as u32 * buffer_pitch +
+                    (cx + xoffset as i32 - halfwidth) as u32;
 
                 if flipped {
                     for y in yoffset..ystop {
@@ -696,7 +706,6 @@ macro_rules! render_function {
     }
 }
 
-// FIXME: should also allow ranges <0 and > screen_size
 // FIXME: a lot of time spent here, speed this up
 render_function!(render_buffer_with_transparency, |col: u8, buffer: &mut [u8], outpos: usize| {
     let ob = buffer.get_unchecked_mut(outpos);
@@ -786,16 +795,16 @@ impl SCSprite {
     }
 
 
-    pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32) {
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);
                 render_buffer_with_transparency(&grp.frames[0],
-                           grp.header.width as u32,
-                           grp.header.height as u32,
-                           false,
-                           cx, cy + selectable.circle_offset as u32,
-                              buffer, buffer_pitch);
+                                                grp.header.width as u32,
+                                                grp.header.height as u32,
+                                                false,
+                                                cx, cy + selectable.circle_offset as i32,
+                                                buffer, buffer_pitch);
             },
             None => {
                 panic!();
