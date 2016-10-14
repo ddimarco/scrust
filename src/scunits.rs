@@ -203,8 +203,9 @@ impl IScriptState {
         let opcode = OpCode::from_u8(val).unwrap();
 
         // FIXME: is this right? seems required for phoenix walking overlay
-        if parent.is_some() {
-            self.direction = parent.unwrap().direction;
+        match parent {
+            Some(s) => {self.direction = s.direction;},
+            _ => {},
         }
 
         if self.follow_main_graphic && parent.is_some() {
@@ -430,18 +431,12 @@ impl SCImage {
     pub fn new(gd: &Rc<GameData>, image_id: u16, map_x: u16, map_y: u16) -> SCImage {
         let iscript_id = gd.images_dat.iscript_id[image_id as usize];
         let grp_id = gd.images_dat.grp_id[image_id as usize];
-        // let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
-        // println!("grp id: {}, filename: {}", grp_id, name);
         {
             gd.grp_cache.borrow_mut().load(gd, grp_id);
         }
-        //let grp = GRP::read(&mut gd.open(&name).unwrap());
-        // let grp = (*grp_cache.grp(gd, grp_id)).clone();
-
 
         SCImage {
             image_id: image_id,
-            //grp: grp,
             grp_id: grp_id,
             iscript_state: IScriptState::new(&gd, iscript_id, image_id, map_x, map_y),
             // FIXME we probably only need 1 overlay & 1 underlay
@@ -493,7 +488,6 @@ impl SCImage {
         }
     }
 
-    // FIXME: merge with render_buffer
     fn _draw(&self, grp_cache: &GRPCache, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
         if !self.iscript_state.visible {
             return;
@@ -502,13 +496,6 @@ impl SCImage {
         let remap = self.remapping(self.iscript_state.gd.as_ref());
         let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
                                                     remap);
-        // let reindexing_map= |inval: u8, out: u8| -> Option<u8> {
-        //     if inval > 0 {
-        //         return Some(reindex[((inval as usize) - 1)*256 + out as usize]);
-        //     }
-        //     None
-        // };
-
 
         let fridx = self.frame_idx();
         let grp = grp_cache.grp_ro(self.grp_id);

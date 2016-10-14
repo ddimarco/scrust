@@ -23,13 +23,10 @@ struct UnitsLayer {
 impl UnitsLayer {
     fn from_map(context: &mut GameContext, state: &mut GameState, map: &Map) -> Self {
         // create map units
-        // let mut next_free_uid = 1;
-        //let mut unit_instances = BTreeMap::<u32, SCUnit>::new();
         for mapunit in &map.data.units {
             // XXX: make use of mapunit data
             let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize,
                                    mapunit.x, mapunit.y);
-            //unit_instances.insert(next_free_uid, unit);
             let _ = state.unit_instances.put(unit);
         }
 
@@ -148,9 +145,10 @@ impl UnitsLayer {
                    }
                    u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
 
-                   if is_selected {
-                       u.get_scsprite().draw_healthbar(cx, cy, buffer, screen_pitch);
-                   }
+                   // FIXME
+                   // if is_selected {
+                   //     u.get_scsprite().draw_healthbar(cx, cy, buffer, screen_pitch);
+                   // }
 
             }
         }
@@ -237,7 +235,6 @@ impl View for MapView {
                     continue;
                 }
 
-                // FIXME: create map layer
                 match *ev {
                     GameEvents::MoveMap(x, y) => {
                         state.map_pos = Point::new(x, y);
@@ -261,19 +258,18 @@ impl View for MapView {
 
         state.game_events.extend(vecevents);
     }
-
 }
 
 
 fn main() {
-    ::scrust::spawn("font rendering",
+    ::scrust::spawn("map rendering",
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gc, state| {
         let args: Vec<String> = env::args().collect();
         let mapfn = if args.len() == 2 {
             args[1].clone()
         } else {
-            String::from("/home/dm/.wine/drive_c/StarCraft/Maps/(2)Space Madness.scm")
+            String::from("test.scx")
         };
         Box::new(MapView::new(gc, state, &mapfn))
     });
