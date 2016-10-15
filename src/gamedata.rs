@@ -41,10 +41,11 @@ pub struct GameData {
     pub bfire_reindexing: PCX,
     pub gfire_reindexing: PCX,
     pub bexpl_reindexing: PCX,
-    pub unit_reindexing: PCX,
-    pub dark_reindexing: PCX,
+    // pub unit_reindexing: PCX,
+    // pub dark_reindexing: PCX,
     pub null_reindexing: Vec<u8>,
     pub shadow_reindexing: Vec<u8>,
+    pub player_reindexing: Vec<u8>,
 
     // TODO: encapsulate this stuff
     pub images_dat: ImagesDat,
@@ -87,7 +88,6 @@ impl GameData {
 
         let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe").unwrap());
 
-        // let unit_pcx = PCX::read(&mut GameData::open_(&archives, "game/tunit.pcx").unwrap());
         let iscript = IScript::read(&mut GameData::open_(&archives, "scripts/iscript.bin").unwrap());
 
         // FIXME depends on tileset
@@ -111,6 +111,21 @@ impl GameData {
             for c in 0..256 {
                 shadow_reindexing[r*256+c] = dark_reindexing.data[inpos];
                 inpos += 1;
+            }
+        }
+
+        // player colors reindex
+        let mut player_reindexing = vec![0 as u8; 12*256];
+        for p in 0..11 {
+            for c in 0..255 {
+                // color indices depending on player no
+                player_reindexing[p*256 + c] =
+                    if (c > 7) && (c < 16) {
+                        // 128 × 1 pixel
+                        unit_reindexing.data[p*8 + (c - 8)]
+                } else {
+                    (c+1) as u8
+                };
             }
         }
 
@@ -140,9 +155,10 @@ impl GameData {
             bfire_reindexing: bfire_reindexing,
             gfire_reindexing: gfire_reindexing,
             bexpl_reindexing: bexpl_reindexing,
-            unit_reindexing: unit_reindexing,
-            dark_reindexing: dark_reindexing,
+            // unit_reindexing: unit_reindexing,
+            // dark_reindexing: dark_reindexing,
             shadow_reindexing: shadow_reindexing,
+            player_reindexing: player_reindexing,
 
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),

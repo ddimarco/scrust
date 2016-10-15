@@ -102,6 +102,10 @@ impl View for UnitsView {
             self.unit_cx += 1;
         }
 
+        if context.events.now.key_c == Some(true) {
+            self.unit.get_scimg_mut().player_id += 1;
+        }
+
         {
             self.unit.get_scimg_mut().step(&gd);
             {

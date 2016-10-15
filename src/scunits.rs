@@ -396,6 +396,7 @@ impl IScriptState {
 pub struct SCImage {
     pub image_id: u16,
     pub grp_id: u32,
+    pub player_id: usize,
     iscript_state: IScriptState,
     underlays: Vec<SCImage>,
     overlays: Vec<SCImage>,
@@ -440,6 +441,7 @@ impl SCImage {
             // FIXME we probably only need 1 overlay & 1 underlay
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
+            player_id: 0,
         }
     }
 
@@ -475,25 +477,10 @@ impl SCImage {
         }
     }
 
-    pub fn get_reindexing_table(gd: &GameData, remap: SCImageRemapping) -> &Vec<u8>{
-        match remap {
-            SCImageRemapping::OFire => &gd.ofire_reindexing.data,
-            SCImageRemapping::BFire => &gd.bfire_reindexing.data,
-            SCImageRemapping::GFire => &gd.gfire_reindexing.data,
-            SCImageRemapping::BExpl => &gd.bexpl_reindexing.data,
-            SCImageRemapping::Normal => &gd.null_reindexing,
-            SCImageRemapping::Shadow => &gd.shadow_reindexing,
-        }
-    }
-
     fn _draw(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
         if !self.iscript_state.visible {
             return;
         }
-
-        let remap = self.remapping(self.iscript_state.gd.as_ref());
-        let reindex = SCImage::get_reindexing_table(self.iscript_state.gd.as_ref(),
-                                                    remap);
 
         let fridx = self.frame_idx();
         let grp = grp_cache.grp_ro(self.grp_id);
@@ -509,9 +496,39 @@ impl SCImage {
         let x_center = cx + self.iscript_state.rel_x as i32;
         let y_center = cy + self.iscript_state.rel_y as i32;
 
-        render_buffer_with_reindexing(udata, w, h, self.draw_flipped(),
-                      x_center, y_center, buffer, buffer_pitch,
-                      &reindex);
+        let remap = self.remapping(self.iscript_state.gd.as_ref());
+        let reindex =
+            match remap {
+                SCImageRemapping::OFire => &self.iscript_state.gd.ofire_reindexing.data,
+                SCImageRemapping::BFire => &self.iscript_state.gd.bfire_reindexing.data,
+                SCImageRemapping::GFire => &self.iscript_state.gd.gfire_reindexing.data,
+                SCImageRemapping::BExpl => &self.iscript_state.gd.bexpl_reindexing.data,
+                SCImageRemapping::Shadow => &self.iscript_state.gd.shadow_reindexing,
+                SCImageRemapping::Normal => {
+                    if self.player_id < 11 {
+                        let startpt = self.player_id as usize *256;
+                        &self.iscript_state.gd.player_reindexing[startpt..startpt+256]
+                    } else {
+                        // neutral player (i.e. minerals, critters, etc)
+                        &self.iscript_state.gd.player_reindexing[0..256]
+                    }
+                },
+            };
+        match remap {
+            SCImageRemapping::OFire | SCImageRemapping::BFire | SCImageRemapping::GFire |
+            SCImageRemapping::BExpl | SCImageRemapping::Shadow => {
+                render_buffer_with_transparency_reindexing(udata, w, h, self.draw_flipped(),
+                                                           x_center, y_center, buffer, buffer_pitch,
+                                                           &reindex);
+            },
+            SCImageRemapping::Normal => {
+                render_buffer_with_solid_reindexing(udata, w, h, self.draw_flipped(),
+                                                           x_center, y_center, buffer, buffer_pitch,
+                                                           &reindex);
+            }
+        }
+
+
     }
 
     /// cx, cy: screen coordinates
@@ -713,13 +730,20 @@ render_function!(render_buffer_with_transparency, |col: u8, buffer: &mut [u8], o
         *ob = col;
     }
 };);
-render_function!(render_buffer_with_reindexing, |col: u8, buffer: &mut [u8], outpos: usize,
-                 reindex: &[u8]| {
+render_function!(render_buffer_with_transparency_reindexing,
+                 |col: u8, buffer: &mut [u8], outpos: usize, reindex: &[u8]| {
      let ob = buffer.get_unchecked_mut(outpos);
      if col > 0 {
          *ob = *reindex.get_unchecked(((col as usize) - 1)*256 + *ob as usize);
      }
 }; reindex: &[u8]);
+render_function!(render_buffer_with_solid_reindexing,
+                 |col: u8, buffer: &mut [u8], outpos: usize, reindex: &[u8]| {
+                     let ob = buffer.get_unchecked_mut(outpos);
+                     if col > 0 {
+                         *ob = *reindex.get_unchecked(col as usize - 1);
+                     }
+                 }; reindex: &[u8]);
 
 impl SCSprite {
     pub fn new(gd: &Rc<GameData>, sprite_id: u16, map_x: u16, map_y: u16) -> SCSprite {
@@ -841,10 +865,12 @@ impl SCSpriteTrait for SCUnit {
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { &mut self.sprite }
 }
 impl SCUnit {
-    pub fn new(gd: &Rc<GameData>, unit_id: usize, map_x: u16, map_y: u16) -> SCUnit {
+    pub fn new(gd: &Rc<GameData>, unit_id: usize, map_x: u16, map_y: u16,
+               player_id: usize) -> SCUnit {
         let flingy_id = gd.units_dat.flingy_id[unit_id];
         let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-        let sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
+        let mut sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
+        sprite.get_scimg_mut().player_id = player_id;
         SCUnit {
             unit_id: unit_id as usize,
             flingy_id: flingy_id as usize,

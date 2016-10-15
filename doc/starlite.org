@@ -25,3 +25,8 @@
 *** Image class
     - inherits ImageIScriptInterface, ImageSpriteInterface
     - private methods for iscript functions (e.g. playframe etc)
+** infos:
+*** player colors in palette: [8,15]
+    - reindexing table: tunit.pcx
+    - contains mappings for 12 players
+    - player_reindexers[player][i] = ((Uint8*)unit_pcx_surf->pixels)[player*8 + (i - 8)];

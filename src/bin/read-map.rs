@@ -26,7 +26,7 @@ impl UnitsLayer {
         for mapunit in &map.data.units {
             // XXX: make use of mapunit data
             let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize,
-                                   mapunit.x, mapunit.y);
+                                   mapunit.x, mapunit.y, mapunit.player_no as usize);
             let _ = state.unit_instances.put(unit);
         }
 
