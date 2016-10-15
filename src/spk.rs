@@ -4,7 +4,7 @@ use std::collections::HashMap;
 extern crate byteorder;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-use ::utils::{read_vec_u16};
+use ::utils::read_vec_u16;
 
 pub struct SPK {
     pub layers: Vec<Vec<SPKStar>>,
@@ -64,8 +64,8 @@ impl SPK {
                                            height: h,
                                            data: buffer,
                                        });
-                    },
-                    Some(_) => {},
+                    }
+                    Some(_) => {}
                 }
             }
         }

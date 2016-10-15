@@ -53,10 +53,10 @@ macro_rules! def_opcodes {
 }
 
 pub enum IScriptEntityAction {
-    CreateImageUnderlay {image_id: u16, rel_x: i8, rel_y: i8},
-    CreateImageOverlay {image_id: u16, rel_x: i8, rel_y: i8},
-    CreateSpriteOverlay {sprite_id: u16, x: u16, y: u16},
-    CreateSpriteUnderlay {sprite_id: u16, x: u16, y: u16},
+    CreateImageUnderlay { image_id: u16, rel_x: i8, rel_y: i8 },
+    CreateImageOverlay { image_id: u16, rel_x: i8, rel_y: i8 },
+    CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
+    CreateSpriteUnderlay { sprite_id: u16, x: u16, y: u16 },
 }
 
 pub struct IScriptState {
@@ -112,7 +112,12 @@ pub enum SCImageRemapping {
 }
 
 impl IScriptState {
-    pub fn new(gd: &Rc<GameData>, iscript_id: u32, image_id: u16, map_x: u16, map_y: u16) -> IScriptState {
+    pub fn new(gd: &Rc<GameData>,
+               iscript_id: u32,
+               image_id: u16,
+               map_x: u16,
+               map_y: u16)
+               -> IScriptState {
         let start_pos;
         {
             let ref iscript_anim_offsets = gd.iscript.id_offsets_map.get(&iscript_id).unwrap();
@@ -120,7 +125,7 @@ impl IScriptState {
             // for anim_idx in 0..iscript_anim_offsets.len() {
             //     let anim = AnimationType::from_usize(anim_idx).unwrap();
             //     let pos = iscript_anim_offsets[anim_idx];
-                // println!("{:?}: {}", anim, pos);
+            // println!("{:?}: {}", anim, pos);
             // }
             start_pos = iscript_anim_offsets[AnimationType::Init as usize];
         }
@@ -202,8 +207,10 @@ impl IScriptState {
 
         // FIXME: is this right? seems required for phoenix walking overlay
         match parent {
-            Some(s) => {self.direction = s.direction;},
-            _ => {},
+            Some(s) => {
+                self.direction = s.direction;
+            }
+            _ => {}
         }
 
         if self.follow_main_graphic && parent.is_some() {
@@ -213,12 +220,12 @@ impl IScriptState {
 
         def_opcodes! (
             self,
-            // show debug output?
-            //parent.is_some(),
+        // show debug output?
+        // parent.is_some(),
             false,
             opcode,
         OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
-            // shadows and such; img* is associated with the current entity
+        // shadows and such; img* is associated with the current entity
             return Some(IScriptEntityAction::CreateImageUnderlay {
                 image_id: image_id,
                 rel_x: rel_x as i8,
@@ -226,7 +233,7 @@ impl IScriptState {
             });
         },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
-            // e.g. explosions on death
+        // e.g. explosions on death
             return Some(IScriptEntityAction::CreateImageOverlay {
                 image_id: image_id,
                 rel_x: rel_x as i8,
@@ -234,8 +241,8 @@ impl IScriptState {
             });
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-            // independent overlay, e.g. scanner sweep
-            // FIXME
+        // independent overlay, e.g. scanner sweep
+        // FIXME
             println!("--- sprol not implemented yet ---");
             return Some(IScriptEntityAction::CreateSpriteOverlay {
                 sprite_id: sprite_id,
@@ -244,7 +251,7 @@ impl IScriptState {
             });
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
-            // independent underlay, e.g. gore
+        // independent underlay, e.g. gore
         // FIXME
             println!("--- lowsprul not implemented yet ---");
             return Some(IScriptEntityAction::CreateSpriteUnderlay {
@@ -264,14 +271,14 @@ impl IScriptState {
             };
             return Some(IScriptEntityAction::CreateImageOverlay {
                 image_id: smoke_img_id,
-                // FIXME signed or unsigned?
+        // FIXME signed or unsigned?
                 rel_x: rx,
                 rel_y: ry,
             });
         },
 
         OpCode::PlayFram => (frame: u16) {
-            // println!("playfram: {}", frame);
+        // println!("playfram: {}", frame);
             self.frameset = frame;
         },
         OpCode::PlayFramTile => (frame: u16) {
@@ -279,7 +286,7 @@ impl IScriptState {
         // FIXME
         },
         OpCode::EngFrame => (frame: u8) {
-            // FIXME is this right: same as playfram?
+        // FIXME is this right: same as playfram?
             self.frameset = frame as u16;
         },
         OpCode::FollowMainGraphic => () {
@@ -287,7 +294,7 @@ impl IScriptState {
             self.follow_main_graphic = true;
         },
         OpCode::EngSet => () {
-            // same as FollowMainGraphic
+        // same as FollowMainGraphic
             assert!(parent.is_some());
             self.follow_main_graphic = true;
         },
@@ -297,7 +304,7 @@ impl IScriptState {
         },
         OpCode::WaitRand => (minticks: u8, maxticks: u8) {
             let r = ::rand::thread_rng().gen_range(minticks, maxticks+1);
-            // println!(" -> {}", r);
+        // println!(" -> {}", r);
             self.waiting_ticks_left += r as usize;
         },
         OpCode::SigOrder => (signal: u8) {
@@ -310,7 +317,7 @@ impl IScriptState {
         OpCode::RandCondJmp => (val: u8, target: u16) {
             let r = ::rand::random::<u8>();
             if r < val {
-                // println!(" jumping!");
+        // println!(" jumping!");
                 self.pos = target;
             }
         },
@@ -338,7 +345,7 @@ impl IScriptState {
             self.rel_x = val as i8;
         },
         OpCode::Move => (dist: u8) {
-            // FIXME
+        // FIXME
             println!("move not implemented!");
         },
 
@@ -355,12 +362,12 @@ impl IScriptState {
         // FIXME
         },
         OpCode::TmpRmGraphicStart => () {
-            // Sets the current image overlay state to hidden
+        // Sets the current image overlay state to hidden
             println!("tmprmgraphicstart, has parent: {}", parent.is_some());
             self.visible = false;
         },
         OpCode::TmpRmGraphicEnd => () {
-            // Sets the current image overlay state to visible
+        // Sets the current image overlay state to visible
             println!("tmprmgraphicend, has parent: {}", parent.is_some());
             self.visible = true;
         },
@@ -380,7 +387,7 @@ impl IScriptState {
         // FIXME
         },
         OpCode::SetFlSpeed => (speed: u16) {
-            // FIXME
+        // FIXME
         },
 
         OpCode::End => () {
@@ -391,7 +398,6 @@ impl IScriptState {
     );
         None
     }
-
 }
 pub struct SCImage {
     pub image_id: u16,
@@ -413,7 +419,7 @@ impl IScriptableTrait for SCImage {
         &mut self.iscript_state
     }
 }
-pub trait SCImageTrait : IScriptableTrait {
+pub trait SCImageTrait: IScriptableTrait {
     fn get_scimg<'a>(&'a self) -> &'a SCImage;
     fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage;
 }
@@ -466,18 +472,28 @@ impl SCImage {
         let idat_draw_func = gd.images_dat.draw_function[self.image_id as usize];
         match idat_draw_func {
             10 => SCImageRemapping::Shadow,
-            9 => match gd.images_dat.remapping[self.image_id as usize] {
-                1 => SCImageRemapping::OFire,
-                2 => SCImageRemapping::GFire,
-                3 => SCImageRemapping::BFire,
-                4 => SCImageRemapping::BExpl,
-                x => { panic!("unknown remapping {}!", x); }
-            },
+            9 => {
+                match gd.images_dat.remapping[self.image_id as usize] {
+                    1 => SCImageRemapping::OFire,
+                    2 => SCImageRemapping::GFire,
+                    3 => SCImageRemapping::BFire,
+                    4 => SCImageRemapping::BExpl,
+                    x => {
+                        panic!("unknown remapping {}!", x);
+                    }
+                }
+            }
             _ => SCImageRemapping::Normal,
         }
     }
 
-    fn _draw(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32, has_parent: bool) {
+    fn _draw(&self,
+             grp_cache: &GRPCache,
+             cx: i32,
+             cy: i32,
+             buffer: &mut [u8],
+             buffer_pitch: u32,
+             has_parent: bool) {
         if !self.iscript_state.visible {
             return;
         }
@@ -497,34 +513,45 @@ impl SCImage {
         let y_center = cy + self.iscript_state.rel_y as i32;
 
         let remap = self.remapping(self.iscript_state.gd.as_ref());
-        let reindex =
-            match remap {
-                SCImageRemapping::OFire => &self.iscript_state.gd.ofire_reindexing.data,
-                SCImageRemapping::BFire => &self.iscript_state.gd.bfire_reindexing.data,
-                SCImageRemapping::GFire => &self.iscript_state.gd.gfire_reindexing.data,
-                SCImageRemapping::BExpl => &self.iscript_state.gd.bexpl_reindexing.data,
-                SCImageRemapping::Shadow => &self.iscript_state.gd.shadow_reindexing,
-                SCImageRemapping::Normal => {
-                    if self.player_id < 11 {
-                        let startpt = self.player_id as usize *256;
-                        &self.iscript_state.gd.player_reindexing[startpt..startpt+256]
-                    } else {
-                        // neutral player (i.e. minerals, critters, etc)
-                        &self.iscript_state.gd.player_reindexing[0..256]
-                    }
-                },
-            };
+        let reindex = match remap {
+            SCImageRemapping::OFire => &self.iscript_state.gd.ofire_reindexing.data,
+            SCImageRemapping::BFire => &self.iscript_state.gd.bfire_reindexing.data,
+            SCImageRemapping::GFire => &self.iscript_state.gd.gfire_reindexing.data,
+            SCImageRemapping::BExpl => &self.iscript_state.gd.bexpl_reindexing.data,
+            SCImageRemapping::Shadow => &self.iscript_state.gd.shadow_reindexing,
+            SCImageRemapping::Normal => {
+                if self.player_id < 11 {
+                    let startpt = self.player_id as usize * 256;
+                    &self.iscript_state.gd.player_reindexing[startpt..startpt + 256]
+                } else {
+                    // neutral player (i.e. minerals, critters, etc)
+                    &self.iscript_state.gd.player_reindexing[0..256]
+                }
+            }
+        };
         match remap {
             SCImageRemapping::OFire | SCImageRemapping::BFire | SCImageRemapping::GFire |
             SCImageRemapping::BExpl | SCImageRemapping::Shadow => {
-                render_buffer_with_transparency_reindexing(udata, w, h, self.draw_flipped(),
-                                                           x_center, y_center, buffer, buffer_pitch,
+                render_buffer_with_transparency_reindexing(udata,
+                                                           w,
+                                                           h,
+                                                           self.draw_flipped(),
+                                                           x_center,
+                                                           y_center,
+                                                           buffer,
+                                                           buffer_pitch,
                                                            &reindex);
-            },
+            }
             SCImageRemapping::Normal => {
-                render_buffer_with_solid_reindexing(udata, w, h, self.draw_flipped(),
-                                                           x_center, y_center, buffer, buffer_pitch,
-                                                           &reindex);
+                render_buffer_with_solid_reindexing(udata,
+                                                    w,
+                                                    h,
+                                                    self.draw_flipped(),
+                                                    x_center,
+                                                    y_center,
+                                                    buffer,
+                                                    buffer_pitch,
+                                                    &reindex);
             }
         }
 
@@ -532,7 +559,12 @@ impl SCImage {
     }
 
     /// cx, cy: screen coordinates
-    pub fn draw(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw(&self,
+                grp_cache: &GRPCache,
+                cx: i32,
+                cy: i32,
+                buffer: &mut [u8],
+                buffer_pitch: u32) {
         // draw underlays
         for ul in &self.underlays {
             ul._draw(grp_cache, cx, cy, buffer, buffer_pitch, true);
@@ -547,7 +579,8 @@ impl SCImage {
 
     pub fn step(&mut self,
                 // just for creating new entities
-                gd: &Rc<GameData>) -> Option<IScriptEntityAction> {
+                gd: &Rc<GameData>)
+                -> Option<IScriptEntityAction> {
         // FIXME: death animation for marine: shadow tries to display wrong frameset
         for ul in &mut self.underlays {
             let action = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
@@ -566,28 +599,26 @@ impl SCImage {
 
         // create additional entities if necessary
         match iscript_action {
-            Some(IScriptEntityAction::CreateImageUnderlay {image_id, rel_x, rel_y}) => {
+            Some(IScriptEntityAction::CreateImageUnderlay { image_id, rel_x, rel_y }) => {
                 let mut underlay = SCImage::new(gd, image_id, 0, 0);
                 underlay.iscript_state.rel_x = rel_x;
                 underlay.iscript_state.rel_y = rel_y;
                 self.underlays.push(underlay);
                 None
-            },
-            Some(IScriptEntityAction::CreateImageOverlay {image_id, rel_x, rel_y}) => {
+            }
+            Some(IScriptEntityAction::CreateImageOverlay { image_id, rel_x, rel_y }) => {
                 let mut overlay = SCImage::new(gd, image_id, 0, 0);
                 overlay.iscript_state.rel_x = rel_x;
                 overlay.iscript_state.rel_y = rel_y;
                 self.overlays.push(overlay);
                 None
-            },
-            _ => {
-                iscript_action
-            },
+            }
+            _ => iscript_action,
         }
     }
 }
 
-////////////////////////////////////////
+/// /////////////////////////////////////
 
 // sprite: additional features:
 // - health bar
@@ -632,9 +663,14 @@ pub trait SCSpriteTrait: SCImageTrait {
     fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite;
 }
 impl SCSpriteTrait for SCSprite {
-    fn get_scsprite<'a>(&'a self) -> &'a SCSprite { self }
-    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { self }
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite {
+        self
+    }
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite {
+        self
+    }
 }
+// FIXME: a lot of time spent here, speed this up
 macro_rules! render_function {
     ($fname:ident, $func:expr; $($param:ident: $param_ty:ty),* ) => {
         pub fn $fname(inbuffer: &[u8], width: u32, height: u32, flipped: bool,
@@ -723,7 +759,6 @@ macro_rules! render_function {
     }
 }
 
-// FIXME: a lot of time spent here, speed this up
 render_function!(render_buffer_with_transparency, |col: u8, buffer: &mut [u8], outpos: usize| {
     let ob = buffer.get_unchecked_mut(outpos);
     if col > 0 {
@@ -750,8 +785,7 @@ impl SCSprite {
         let image_id = gd.sprites_dat.image_id[sprite_id as usize];
         let img = SCImage::new(gd, image_id, map_x, map_y);
 
-        let selectable_data =
-        if sprite_id >= 130 {
+        let selectable_data = if sprite_id >= 130 {
             let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
             let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
 
@@ -786,7 +820,7 @@ impl SCSprite {
         match self.selectable_data {
             None => {
                 panic!();
-            },
+            }
             Some(ref selectable) => {
                 let boxes = selectable.health_bar as u32 / 3;
                 let box_width = 3;
@@ -797,12 +831,12 @@ impl SCSprite {
                 let width = 2 + (box_width * boxes) + (boxes - 1);
                 let height = 8;
 
-                let mut outpos = ((cy + selectable.circle_offset as u32) - height / 2)
-                    * buffer_pitch + (cx - width / 2);
+                let mut outpos = ((cy + selectable.circle_offset as u32) - height / 2) *
+                                 buffer_pitch + (cx - width / 2);
                 for y in 0..height {
                     for x in 0..width {
-                        let outer_border = y == 0 || y == height-1 || x == 0 || x == (width-1);
-                        let inner_border = x % (box_width+1) == 0;
+                        let outer_border = y == 0 || y == height - 1 || x == 0 || x == (width - 1);
+                        let inner_border = x % (box_width + 1) == 0;
                         if inner_border || outer_border {
                             // black
                             buffer[outpos as usize] = 0;
@@ -819,7 +853,12 @@ impl SCSprite {
     }
 
 
-    pub fn draw_selection_circle(&self, grp_cache: &GRPCache, cx: i32, cy: i32, buffer: &mut [u8], buffer_pitch: u32) {
+    pub fn draw_selection_circle(&self,
+                                 grp_cache: &GRPCache,
+                                 cx: i32,
+                                 cy: i32,
+                                 buffer: &mut [u8],
+                                 buffer_pitch: u32) {
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);
@@ -827,9 +866,11 @@ impl SCSprite {
                                                 grp.header.width as u32,
                                                 grp.header.height as u32,
                                                 false,
-                                                cx, cy + selectable.circle_offset as i32,
-                                                buffer, buffer_pitch);
-            },
+                                                cx,
+                                                cy + selectable.circle_offset as i32,
+                                                buffer,
+                                                buffer_pitch);
+            }
             None => {
                 panic!();
             }
@@ -861,12 +902,20 @@ impl SCImageTrait for SCUnit {
     }
 }
 impl SCSpriteTrait for SCUnit {
-    fn get_scsprite<'a>(&'a self) -> &'a SCSprite { &self.sprite }
-    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite { &mut self.sprite }
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite {
+        &self.sprite
+    }
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite {
+        &mut self.sprite
+    }
 }
 impl SCUnit {
-    pub fn new(gd: &Rc<GameData>, unit_id: usize, map_x: u16, map_y: u16,
-               player_id: usize) -> SCUnit {
+    pub fn new(gd: &Rc<GameData>,
+               unit_id: usize,
+               map_x: u16,
+               map_y: u16,
+               player_id: usize)
+               -> SCUnit {
         let flingy_id = gd.units_dat.flingy_id[unit_id];
         let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
         let mut sprite = SCSprite::new(gd, sprite_id, map_x, map_y);

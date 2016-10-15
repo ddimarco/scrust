@@ -1,5 +1,5 @@
 extern crate scrust;
-use scrust::pcx::{PCX};
+use scrust::pcx::PCX;
 
 
 use scrust::{GameContext, GameState, View, ViewAction};
@@ -11,9 +11,7 @@ impl PCXView {
     fn new(context: &mut GameContext, pcx_filename: &str) -> PCXView {
         let pcx = PCX::read(&mut context.gd.open(pcx_filename).unwrap());
         context.screen.set_palette(&pcx.palette.to_sdl()).expect("could not set palette");
-        PCXView {
-            pcx: pcx,
-        }
+        PCXView { pcx: pcx }
     }
 }
 impl View for PCXView {
@@ -31,7 +29,7 @@ impl View for PCXView {
 }
 
 fn main() {
-    ::scrust::spawn("pcx loading", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
-        Box::new(PCXView::new(gc, "glue\\title\\title.pcx"))
-    });
+    ::scrust::spawn("pcx loading",
+                    "/home/dm/.wine/drive_c/StarCraft/",
+                    |gc, _| Box::new(PCXView::new(gc, "glue\\title\\title.pcx")));
 }

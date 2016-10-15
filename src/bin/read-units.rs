@@ -8,7 +8,7 @@ extern crate scrust;
 use scrust::font::FontSize;
 use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
-use scrust::iscript::{AnimationType};
+use scrust::iscript::AnimationType;
 use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
 
 
@@ -27,7 +27,7 @@ impl UnitsView {
         let anim_str = format!("Animation: {:?}", current_anim);
         let unit_name_str = format!("{}: {}", unit_id, gc.gd.stat_txt_tbl[unit_id].to_owned());
         // let flingy_id = gd.units_dat.flingy_id[unit_id];
-        //let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
         // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
 
         // FIXME: move this to some generic initialization function
@@ -39,9 +39,9 @@ impl UnitsView {
             current_anim: current_anim,
             anim_str: anim_str,
             unit_name_str: unit_name_str,
-            //img: SCImage::new(&gd, image_id),
-            //sprite: SCSprite::new(&gd, sprite_id),
-            unit: SCUnit::new(&gc.gd, unit_id, 0, 0),
+            // img: SCImage::new(&gd, image_id),
+            // sprite: SCSprite::new(&gd, sprite_id),
+            unit: SCUnit::new(&gc.gd, unit_id, 0, 0, 0),
             unit_cx: 100,
             unit_cy: 100,
         }
@@ -53,31 +53,33 @@ impl View for UnitsView {
             return ViewAction::Quit;
         }
         // clear the screen
-        context.screen.fill_rect(None, Color::RGB(0,0,120)).ok();
+        context.screen.fill_rect(None, Color::RGB(0, 0, 120)).ok();
         let gd = &context.gd;
         if context.events.now.key_n == Some(true) {
             self.unit_id += 1;
 
-            self.unit_name_str = format!("{}: {}", self.unit_id,
+            self.unit_name_str = format!("{}: {}",
+                                         self.unit_id,
                                          gd.stat_txt_tbl[self.unit_id].to_owned());
             // let flingy_id = gd.units_dat.flingy_id[self.unit_id];
             // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
             // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-            //self.img = SCImage::new(&gd, image_id);
-            //self.sprite = SCSprite::new(&gd, sprite_id);
-            self.unit = SCUnit::new(&gd, self.unit_id, 0, 0);
+            // self.img = SCImage::new(&gd, image_id);
+            // self.sprite = SCSprite::new(&gd, sprite_id);
+            self.unit = SCUnit::new(&gd, self.unit_id, 0, 0, 0);
         } else if context.events.now.key_p == Some(true) {
             if self.unit_id > 0 {
                 self.unit_id -= 1;
 
-                self.unit_name_str = format!("{}: {}", self.unit_id,
+                self.unit_name_str = format!("{}: {}",
+                                             self.unit_id,
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
                 // let flingy_id = gd.units_dat.flingy_id[self.unit_id];
                 // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
                 // let image_id = gd.sprites_dat.image_id[sprite_id as usize];
-                //self.img = SCImage::new(&gd, image_id);
-                //self.sprite = SCSprite::new(&gd, sprite_id);
-                self.unit = SCUnit::new(&gd, self.unit_id, 0, 0);
+                // self.img = SCImage::new(&gd, image_id);
+                // self.sprite = SCSprite::new(&gd, sprite_id);
+                self.unit = SCUnit::new(&gd, self.unit_id, 0, 0, 0);
             }
         }
         if context.events.now.key_q == Some(true) {
@@ -144,11 +146,12 @@ impl View for UnitsView {
                                &animstr_rect);
 
             self.unit.get_scsprite().draw_selection_circle(&grp_cache,
-                                                           self.unit_cx, self.unit_cy,
-                                                           buffer, screen_pitch);
+                                                           self.unit_cx,
+                                                           self.unit_cy,
+                                                           buffer,
+                                                           screen_pitch);
             // unit
-            self.unit.get_scimg().draw(grp_cache, self.unit_cx, self.unit_cy,
-                                       buffer, screen_pitch);
+            self.unit.get_scimg().draw(grp_cache, self.unit_cx, self.unit_cy, buffer, screen_pitch);
 
             self.unit.get_scsprite().draw_healthbar(100, 140, buffer, screen_pitch);
 
@@ -160,8 +163,12 @@ impl View for UnitsView {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let unit_id = if args.len() == 2 {args[1].parse::<usize>().unwrap() } else {0};
-    ::scrust::spawn("units rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
-        Box::new(UnitsView::new(gc, unit_id))
-    });
+    let unit_id = if args.len() == 2 {
+        args[1].parse::<usize>().unwrap()
+    } else {
+        0
+    };
+    ::scrust::spawn("units rendering",
+                    "/home/dm/.wine/drive_c/StarCraft/",
+                    |gc, _| Box::new(UnitsView::new(gc, unit_id)));
 }

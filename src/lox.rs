@@ -3,7 +3,7 @@ use std::io::{Read, Seek, SeekFrom};
 extern crate byteorder;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-use ::utils::{read_vec_u32};
+use ::utils::read_vec_u32;
 
 pub struct LOX {
     pub frames: Vec<LOXFrame>,
@@ -28,13 +28,8 @@ impl LOX {
                 let y = f.read_i8().unwrap();
                 overlay_offsets.push((x, y));
             }
-            frames.push(LOXFrame {
-                offsets: overlay_offsets,
-            });
+            frames.push(LOXFrame { offsets: overlay_offsets });
         }
-        LOX {
-            frames: frames,
-        }
+        LOX { frames: frames }
     }
-
 }

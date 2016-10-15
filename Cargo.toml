@@ -23,7 +23,8 @@ enum_primitive = "*"
 num = "*"
 rand = "*"
 stash = "*"
-# benchmarks
+
+[dev-dependencies]
 bencher = "*"
 
 [[bench]]

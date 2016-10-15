@@ -2,7 +2,7 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 
 extern crate scrust;
-use scrust::font::{FontSize};
+use scrust::font::FontSize;
 
 use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
@@ -14,7 +14,11 @@ struct FontView {
     trg_rect: Rect,
 }
 impl FontView {
-    fn new(context: &mut GameContext, text: &str, font_size: FontSize, color_idx: usize) -> FontView {
+    fn new(context: &mut GameContext,
+           text: &str,
+           font_size: FontSize,
+           color_idx: usize)
+           -> FontView {
         let pal = context.gd.fontmm_reindex.palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         FontView {
@@ -49,8 +53,8 @@ impl View for FontView {
 
 
 fn main() {
-    ::scrust::spawn("font rendering", "/home/dm/.wine/drive_c/StarCraft/", |gc, _| {
-        Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0))
-    });
+    ::scrust::spawn("font rendering",
+                    "/home/dm/.wine/drive_c/StarCraft/",
+                    |gc, _| Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0)));
 
 }

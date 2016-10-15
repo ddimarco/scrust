@@ -1,7 +1,7 @@
 extern crate sdl2;
 use sdl2::rect::{Rect, Point};
 use sdl2::render::{Renderer, Texture};
-use sdl2::pixels::{Color};
+use sdl2::pixels::Color;
 
 use ::grp::GRP;
 use ::pal::{Palette, palimg_to_texture};
@@ -9,7 +9,7 @@ use ::pcx::PCX;
 use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 use ::terrain::Map;
 use ::scunits::SCUnit;
-use ::font::{FontSize,RenderText};
+use ::font::{FontSize, RenderText};
 
 use ::stash::Stash;
 
@@ -142,13 +142,16 @@ impl MiniMap {
     fn new(context: &mut GameContext, map: &Map) -> Self {
         let mmap_bmp = map.render_minimap();
         let mmap = palimg_to_texture(&mut context.renderer,
-                                     map.data.width as u32, map.data.height as u32,
-                                     &mmap_bmp, &map.terrain_info.pal);
+                                     map.data.width as u32,
+                                     map.data.height as u32,
+                                     &mmap_bmp,
+                                     &map.terrain_info.pal);
 
         let mapw2mmapw_ratio: f32 = 128. / (map.data.width as f32);
         let maph2mmaph_ratio: f32 = 128. / (map.data.height as f32);
 
-        let mmap_cur_rect = Rect::new(0, 0,
+        let mmap_cur_rect = Rect::new(0,
+                                      0,
                                       (MAP_RENDER_W as f32 * mapw2mmapw_ratio) as u32,
                                       (MAP_RENDER_H as f32 * maph2mmaph_ratio) as u32);
 
@@ -168,18 +171,15 @@ impl MiniMap {
         } else {
             let screen_offset = *screen_pt - self.mmap_rect.top_left();
 
-            let mapx = (screen_offset.x() as f32 * 32. / self.mmapwratio) as i32
-                - (MAP_RENDER_W * 32) as i32/2
-                ;
-            let mapy = (screen_offset.y() as f32 * 32. / self.mmaphratio) as i32
-                - (MAP_RENDER_H * 32) as i32/2
-                ;
+            let mapx = (screen_offset.x() as f32 * 32. / self.mmapwratio) as i32 -
+                       (MAP_RENDER_W * 32) as i32 / 2;
+            let mapy = (screen_offset.y() as f32 * 32. / self.mmaphratio) as i32 -
+                       (MAP_RENDER_H * 32) as i32 / 2;
 
             Some(Point::new(min(max(mapx as i32, 0),
                                 ((self.map_size.x() - 1 - MAP_RENDER_W as i32)) * 32),
                             min(max(mapy as i32, 0),
-                                (self.map_size.y() - 1 - MAP_RENDER_H as i32) * 32)
-            ))
+                                (self.map_size.y() - 1 - MAP_RENDER_H as i32) * 32)))
         }
     }
 
@@ -210,7 +210,10 @@ struct SelectionPanel {
 impl SelectionPanel {
     pub fn new(ctx: &mut GameContext) -> Self {
         let buffer = vec![0; 230*90];
-        let text = palimg_to_texture(&mut ctx.renderer, 230, 90, &buffer,
+        let text = palimg_to_texture(&mut ctx.renderer,
+                                     230,
+                                     90,
+                                     &buffer,
                                      &ctx.gd.font_reindex.palette);
         SelectionPanel {
             selected_units: Vec::<usize>::new(),
@@ -235,7 +238,10 @@ impl SelectionPanel {
         return false;
     }
 
-    pub fn update(&mut self, ctx: &mut GameContext, sel_units: &Vec<usize>, unit_instances: &Stash<SCUnit>) {
+    pub fn update(&mut self,
+                  ctx: &mut GameContext,
+                  sel_units: &Vec<usize>,
+                  unit_instances: &Stash<SCUnit>) {
         if !self.need_update(sel_units) {
             return;
         }
@@ -264,12 +270,14 @@ impl SelectionPanel {
         let h = ctx.gd.unit_wireframe_grp.header.height as usize;
         for y in 0..h {
             for x in 0..w {
-                self.buffer[y*230 + x] = wf_data[y*w + x];
+                self.buffer[y * 230 + x] = wf_data[y * w + x];
             }
         }
 
 
-        self.text = palimg_to_texture(&mut ctx.renderer, 230, 90,
+        self.text = palimg_to_texture(&mut ctx.renderer,
+                                      230,
+                                      90,
                                       &self.buffer,
                                       &ctx.gd.font_reindex.palette);
     }
@@ -310,33 +318,31 @@ impl UiLayer {
         }
     }
 
-    fn make_map_move_from_scroll(&self, scroll_horizontal: i16, scroll_vertical: i16,
-                                 map_pos: &Point) -> GameEvents {
+    fn make_map_move_from_scroll(&self,
+                                 scroll_horizontal: i16,
+                                 scroll_vertical: i16,
+                                 map_pos: &Point)
+                                 -> GameEvents {
         const SCROLLING_SPEED: i32 = 10;
-        let map_x =
-            if scroll_horizontal < 0 {
-                max(0, (map_pos.x() -
-                        SCROLLING_SPEED as i32))
-            } else if scroll_horizontal > 0 {
-                min((self.minimap.map_size.x() - MAP_RENDER_W as i32) * 32,
-                    map_pos.x() + SCROLLING_SPEED)
-            } else {
-                map_pos.x()
-            };
+        let map_x = if scroll_horizontal < 0 {
+            max(0, (map_pos.x() - SCROLLING_SPEED as i32))
+        } else if scroll_horizontal > 0 {
+            min((self.minimap.map_size.x() - MAP_RENDER_W as i32) * 32,
+                map_pos.x() + SCROLLING_SPEED)
+        } else {
+            map_pos.x()
+        };
 
-        let map_y =
-            if scroll_vertical < 0 {
-                max(0, (map_pos.y() -
-                        SCROLLING_SPEED as i32))
-            } else if scroll_vertical > 0 {
-                min((self.minimap.map_size.y() - MAP_RENDER_H as i32) * 32,
-                    map_pos.y() + SCROLLING_SPEED)
-            } else {
-                map_pos.y()
-            };
+        let map_y = if scroll_vertical < 0 {
+            max(0, (map_pos.y() - SCROLLING_SPEED as i32))
+        } else if scroll_vertical > 0 {
+            min((self.minimap.map_size.y() - MAP_RENDER_H as i32) * 32,
+                map_pos.y() + SCROLLING_SPEED)
+        } else {
+            map_pos.y()
+        };
         GameEvents::MoveMap(map_x, map_y)
     }
-
 }
 impl LayerTrait for UiLayer {
     fn update(&mut self, gc: &mut GameContext, state: &mut GameState) {
@@ -358,10 +364,8 @@ impl LayerTrait for UiLayer {
             GameEvents::ChangeMouseCursor(tpe) => {
                 self.mp.set_type(tpe);
                 true
-            },
-            _ => {
-                false
             }
+            _ => false,
         }
     }
 
@@ -369,22 +373,20 @@ impl LayerTrait for UiLayer {
         let mut events = Vec::<GameEvents>::new();
         let mpos = gc.events.mouse_pos;
 
-        let scroll_horizontal =
-            if mpos.x() > 620 {
-                1
-            } else if mpos.x() < 20 {
-                -1
-            } else {
-                0
-            };
-        let scroll_vertical =
-            if mpos.y() > 460 {
-                1
-            } else if mpos.y() < 20 {
-                -1
-            } else {
-                0
-            };
+        let scroll_horizontal = if mpos.x() > 620 {
+            1
+        } else if mpos.x() < 20 {
+            -1
+        } else {
+            0
+        };
+        let scroll_vertical = if mpos.y() > 460 {
+            1
+        } else if mpos.y() < 20 {
+            -1
+        } else {
+            0
+        };
         if scroll_vertical != 0 || scroll_horizontal != 0 {
             let mpt: MousePointerType = if scroll_vertical > 0 {
                 // down
@@ -434,9 +436,9 @@ impl LayerTrait for UiLayer {
         if gc.events.now.mouse_left {
             match self.minimap.minimap_to_map_coords(&gc.events.mouse_pos) {
                 Some(map_pos) => {
-                    events.push(GameEvents::MoveMap(map_pos.x() , map_pos.y() ));
-                },
-                None => {},
+                    events.push(GameEvents::MoveMap(map_pos.x(), map_pos.y()));
+                }
+                None => {}
             }
         }
 
@@ -458,8 +460,8 @@ impl LayerTrait for UiLayer {
             };
             if scroll_horizontal != 0 || scroll_vertical != 0 {
                 events.push(self.make_map_move_from_scroll(scroll_horizontal,
-                                                           scroll_vertical,
-                                                           &state.map_pos));
+                                                         scroll_vertical,
+                                                         &state.map_pos));
             }
         }
 

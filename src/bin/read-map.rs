@@ -4,15 +4,16 @@ use std::env;
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
 use scrust::terrain::Map;
-use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction, SCSpriteTrait};
+use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction,
+                      SCSpriteTrait};
 use scrust::gamedata::GRPCache;
 
 use scrust::LayerTrait;
-use scrust::ui::{UiLayer};
+use scrust::ui::UiLayer;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
-use sdl2::rect::{Point};
+use sdl2::rect::Point;
 
 struct UnitsLayer {
     // XXX distinguish high & low layer
@@ -25,15 +26,17 @@ impl UnitsLayer {
         // create map units
         for mapunit in &map.data.units {
             // XXX: make use of mapunit data
-            let unit = SCUnit::new(&context.gd, mapunit.unit_id as usize,
-                                   mapunit.x, mapunit.y, mapunit.player_no as usize);
+            let unit = SCUnit::new(&context.gd,
+                                   mapunit.unit_id as usize,
+                                   mapunit.x,
+                                   mapunit.y,
+                                   mapunit.player_no as usize);
             let _ = state.unit_instances.put(unit);
         }
 
         let mut sprites = Vec::<SCSprite>::new();
         for mapsprite in &map.data.sprites {
-            let sprite = SCSprite::new(&context.gd, mapsprite.sprite_no,
-                                       mapsprite.x, mapsprite.y);
+            let sprite = SCSprite::new(&context.gd, mapsprite.sprite_no, mapsprite.x, mapsprite.y);
             sprites.push(sprite);
         }
         UnitsLayer {
@@ -47,14 +50,14 @@ impl UnitsLayer {
             let action = u.get_scimg_mut().step(&context.gd);
             match action {
                 // XXX distinguish high & low layer
-                Some(IScriptEntityAction::CreateSpriteOverlay {sprite_id, x, y}) => {
+                Some(IScriptEntityAction::CreateSpriteOverlay { sprite_id, x, y }) => {
                     let sprite = SCSprite::new(&context.gd, sprite_id, x, y);
                     self.sprites.push(sprite);
-                },
-                Some(IScriptEntityAction::CreateSpriteUnderlay {sprite_id, x, y}) => {
+                }
+                Some(IScriptEntityAction::CreateSpriteUnderlay { sprite_id, x, y }) => {
                     let sprite = SCSprite::new(&context.gd, sprite_id, x, y);
                     self.sprites.push(sprite);
-                },
+                }
                 _ => {}
             }
         }
@@ -65,7 +68,7 @@ impl UnitsLayer {
 
         // mouse over unit?
         let mouse_pos_map = state.map_pos + gc.events.mouse_pos;
-        //let sel_radius = 10;
+        // let sel_radius = 10;
         let mut over_unit_instance = None;
         for (uinstance, u) in &state.unit_instances {
             // TODO: use sdl rects & points?
@@ -77,14 +80,13 @@ impl UnitsLayer {
                     let ux = u.get_iscript_state().map_pos_x as i32;
                     let uy = u.get_iscript_state().map_pos_y as i32;
 
-                    if mouse_pos_map.x() > ux - halfw &&
-                        mouse_pos_map.x() < ux + halfw &&
-                        mouse_pos_map.y() > uy - halfh &&
-                        mouse_pos_map.y() < uy + halfh {
-                            over_unit_instance = Some(uinstance);
-                            break;
-                        }
-                },
+                    if mouse_pos_map.x() > ux - halfw && mouse_pos_map.x() < ux + halfw &&
+                       mouse_pos_map.y() > uy - halfh &&
+                       mouse_pos_map.y() < uy + halfh {
+                        over_unit_instance = Some(uinstance);
+                        break;
+                    }
+                }
                 _ => {}
             }
 
@@ -112,12 +114,10 @@ impl UnitsLayer {
               map_y: u16,
               grp_cache: &GRPCache,
               buffer: &mut [u8],
-              screen_pitch: u32,
-              screen_height: usize) {
-        // units
+              screen_pitch: u32) {
         // FIXME: draw in proper order
         for u in &self.sprites {
-             {
+            {
                 let cx = u.get_iscript_state().map_pos_x as i32 - map_x as i32;
                 let cy = u.get_iscript_state().map_pos_y as i32 - map_y as i32;
 
@@ -126,21 +126,21 @@ impl UnitsLayer {
         }
 
         for (idx, u) in &state.unit_instances {
-             {
-                   let cx = u.get_iscript_state().map_pos_x as i32 - map_x as i32;
-                   let cy = u.get_iscript_state().map_pos_y as i32 - map_y as i32;
+            {
+                let cx = u.get_iscript_state().map_pos_x as i32 - map_x as i32;
+                let cy = u.get_iscript_state().map_pos_y as i32 - map_y as i32;
 
-                   let is_selected = state.selected_units.contains(&idx);
-                   if is_selected {
-                       u.get_scsprite().draw_selection_circle(&grp_cache, cx, cy,
-                                                              buffer, screen_pitch);
-                   }
-                   u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
+                let is_selected = state.selected_units.contains(&idx);
+                if is_selected {
+                    u.get_scsprite()
+                        .draw_selection_circle(&grp_cache, cx, cy, buffer, screen_pitch);
+                }
+                u.get_scimg().draw(grp_cache, cx, cy, buffer, screen_pitch);
 
-                   // FIXME
-                   // if is_selected {
-                   //     u.get_scsprite().draw_healthbar(cx, cy, buffer, screen_pitch);
-                   // }
+                // FIXME
+                // if is_selected {
+                //     u.get_scsprite().draw_healthbar(cx, cy, buffer, screen_pitch);
+                // }
 
             }
         }
@@ -173,7 +173,6 @@ impl MapView {
     }
 }
 impl View for MapView {
-
     fn update(&mut self, context: &mut GameContext, state: &mut GameState) {
         self.units_layer.update(context, state);
         self.ui_layer.update(context, state);
@@ -186,56 +185,48 @@ impl View for MapView {
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
         let screen_pitch = context.screen.pitch();
-        // HACK
-        let buffer_height = 480;
 
         let map_x = state.map_pos.x() as u16;
         let map_y = state.map_pos.y() as u16;
 
         {
             let grp_cache = &*context.gd.grp_cache.borrow();
-                let mut screen = &mut context.screen;
-                screen.with_lock_mut(|buffer: &mut [u8]| {
-                    self.map.render(map_x,
-                                    map_y,
-                                    MAP_RENDER_W,
-                                    MAP_RENDER_H,
-                                    buffer,
-                                    screen_pitch);
+            let mut screen = &mut context.screen;
+            screen.with_lock_mut(|buffer: &mut [u8]| {
+                self.map.render(map_x,
+                                map_y,
+                                MAP_RENDER_W,
+                                MAP_RENDER_H,
+                                buffer,
+                                screen_pitch);
 
-                    self.units_layer.render(&state,
-                                            map_x,
-                                            map_y,
-                                            grp_cache,
-                                            buffer,
-                                            screen_pitch,
-                                            buffer_height);
+                self.units_layer.render(&state, map_x, map_y, grp_cache, buffer, screen_pitch);
 
-                });
+            });
+        }
+
+
+        ViewAction::None
+    }
+
+    fn render_layers(&mut self, context: &mut GameContext) {
+        self.ui_layer.render(&mut context.renderer);
+    }
+    fn process_layer_events(&mut self, _: &mut GameContext, state: &mut GameState) {
+        for ev in &state.game_events {
+            if self.ui_layer.process_event(ev) {
+                continue;
             }
 
-
-            ViewAction::None
-        }
-
-        fn render_layers(&mut self, context: &mut GameContext) {
-            self.ui_layer.render(&mut context.renderer);
-        }
-        fn process_layer_events(&mut self, _: &mut GameContext, state: &mut GameState) {
-            for ev in &state.game_events {
-                if self.ui_layer.process_event(ev) {
-                    continue;
+            match *ev {
+                GameEvents::MoveMap(x, y) => {
+                    state.map_pos = Point::new(x, y);
                 }
-
-                match *ev {
-                    GameEvents::MoveMap(x, y) => {
-                        state.map_pos = Point::new(x, y);
-                    },
-                    GameEvents::SelectUnit(uid) => {
-                        state.selected_units.clear();
-                        state.selected_units.push(uid);
-                    },
-                    _ => {}
+                GameEvents::SelectUnit(uid) => {
+                    state.selected_units.clear();
+                    state.selected_units.push(uid);
+                }
+                _ => {}
             }
         }
 

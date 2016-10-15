@@ -1,6 +1,7 @@
 extern crate byteorder;
 extern crate libc;
-#[macro_use] extern crate enum_primitive;
+#[macro_use]
+extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
 extern crate rand;
@@ -110,7 +111,7 @@ impl GameState {
             unit_instances: Stash::<SCUnit>::new(),
             selected_units: Vec::<usize>::new(),
             game_events: Vec::<GameEvents>::new(),
-            map_pos: Point::new(0,0),
+            map_pos: Point::new(0, 0),
         }
     }
 }
@@ -131,33 +132,30 @@ pub struct GameContext<'window> {
     pub gd: Rc<GameData>,
     pub events: Events,
     pub renderer: Renderer<'window>,
-    pub screen: Surface<'window>,
-
-    // pub game_events: Vec<GameEvents>,
-
-    // pub map_pos: Point,
-
-    // debug stuff
-    //pub timer: Timer<'window>,
+    pub screen: Surface<'window>, /* pub game_events: Vec<GameEvents>,
+                                   *
+                                   * pub map_pos: Point,
+                                   *
+                                   * debug stuff
+                                   * pub timer: Timer<'window>, */
 }
 impl<'window> GameContext<'window> {
-    fn new(gd: GameData, events: Events, renderer: Renderer<'window>,
-           /*timer: Timer<'window>*/) -> GameContext<'window> {
+    fn new(gd: GameData,
+           events: Events,
+           renderer: Renderer<'window> /* timer: Timer<'window> */)
+           -> GameContext<'window> {
         GameContext {
             gd: Rc::new(gd),
             events: events,
             renderer: renderer,
-            screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(),
-
-            // timer: timer,
+            screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(), // timer: timer,
         }
     }
 
     pub fn output_size(&self) -> (u32, u32) {
         let (w, h) = self.renderer.output_size().unwrap();
-        (w,h)
+        (w, h)
     }
-
 }
 
 pub enum ViewAction {
@@ -167,40 +165,38 @@ pub enum ViewAction {
 }
 
 pub trait View {
-    fn update(&mut self, _: &mut GameContext, _: &mut GameState) {
-    }
+    fn update(&mut self, _: &mut GameContext, _: &mut GameState) {}
 
     /// renders the current view into context.screen
     fn render(&mut self, context: &mut GameContext, state: &GameState, elapsed: f64) -> ViewAction;
 
-    fn render_layers(&mut self, _: &mut GameContext) {
-    }
+    fn render_layers(&mut self, _: &mut GameContext) {}
 
-    fn generate_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {
-    }
+    fn generate_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {}
 
-    fn process_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {
-    }
+    fn process_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {}
 }
 
 // useful links for SDL2 & 8bit rendering:
 // http://comments.gmane.org/gmane.comp.lib.sdl/64885
-/*
-My quick experiment used a reusable SDL_Surface to hold the 8-bit greyscale pixels. Using
-SDL_GetTicks(), it seems pretty clear that, on my system, using:
+//
+// My quick experiment used a reusable SDL_Surface to hold the 8-bit greyscale pixels. Using
+// SDL_GetTicks(), it seems pretty clear that, on my system, using:
+//
+// SDL_Texture *t8 = SDL_CreateTextureFromSurface(renderer, surf8);
+//
+// SDL_SetRenderTarget(renderer, texture);
+// SDL_RenderCopy(renderer, t8, NULL, NULL);
+// SDL_SetRenderTarget(renderer, NULL);
+//
+// SDL_DestroyTexture(t8);
+//
 
-SDL_Texture *t8 = SDL_CreateTextureFromSurface(renderer, surf8);
-
-SDL_SetRenderTarget(renderer, texture);
-SDL_RenderCopy(renderer, t8, NULL, NULL);
-SDL_SetRenderTarget(renderer, NULL);
-
-SDL_DestroyTexture(t8);
- */
 
 
 pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
-where F: Fn(&mut GameContext, &mut GameState) -> Box<View> {
+    where F: Fn(&mut GameContext, &mut GameState) -> Box<View>
+{
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window(title, 640, 480)
@@ -213,11 +209,9 @@ where F: Fn(&mut GameContext, &mut GameState) -> Box<View> {
     let mut timer = sdl_context.timer().unwrap();
 
     // FIXME: set a default palette for screen surface
-    let mut context = GameContext::new(
-        GameData::init(&Path::new(scdata_path)),
-        Events::new(sdl_context.event_pump().unwrap()),
-        window.renderer().accelerated().build().unwrap(),
-    );
+    let mut context = GameContext::new(GameData::init(&Path::new(scdata_path)),
+                                       Events::new(sdl_context.event_pump().unwrap()),
+                                       window.renderer().accelerated().build().unwrap());
     sdl_context.mouse().show_cursor(false);
     let mut state = GameState::new();
     let mut current_view = init(&mut context, &mut state);
@@ -273,15 +267,14 @@ where F: Fn(&mut GameContext, &mut GameState) -> Box<View> {
             current_view.render_layers(&mut context);
 
             context.renderer.present();
-            }
+        }
         // let end = timer.ticks();
-        //println!("rendering took {} ticks", end-start);
+        // println!("rendering took {} ticks", end-start);
 
         match render_res {
             ViewAction::None => context.renderer.present(),
             ViewAction::Quit => break,
-            ViewAction::ChangeView(new_view) =>
-                current_view = new_view,
+            ViewAction::ChangeView(new_view) => current_view = new_view,
         }
 
     }

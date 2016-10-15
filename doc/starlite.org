@@ -30,3 +30,8 @@
     - reindexing table: tunit.pcx
     - contains mappings for 12 players
     - player_reindexers[player][i] = ((Uint8*)unit_pcx_surf->pixels)[player*8 + (i - 8)];
+*** palette cycling
+    - some color intervals are pairwise swapped
+    - tileset specific, hard-coded
+    - done every frame
+*** mega tiles are cached

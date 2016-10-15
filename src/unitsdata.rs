@@ -83,7 +83,7 @@ dat_struct! (
 dat_struct! (
     UnitsDat
     {
-        // called "graphics" earlier
+// called "graphics" earlier
         flingy_id                       :u8   ;228,
         subunit1                        :u16  ;228,
         subunit2                        :u16  ;228,

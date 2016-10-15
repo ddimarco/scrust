@@ -1,21 +1,19 @@
-use std::io::{Read};
+use std::io::Read;
 
 extern crate sdl2;
-use sdl2::pixels::{Color};
+use sdl2::pixels::Color;
 use sdl2::render::{Renderer, Texture};
 
 pub struct Palette {
     pub data: Vec<u8>,
 }
 impl Palette {
-    pub fn from_buffer(buffer: &[u8; 256*3]) -> Palette {
-        let mut vec = Vec::<u8>::with_capacity(256*3);
+    pub fn from_buffer(buffer: &[u8; 256 * 3]) -> Palette {
+        let mut vec = Vec::<u8>::with_capacity(256 * 3);
         for i in buffer.iter() {
             vec.push(*i);
         }
-        Palette {
-            data: vec,
-        }
+        Palette { data: vec }
     }
 
     pub fn read_wpe<T: Read>(f: &mut T) -> Palette {
@@ -24,35 +22,32 @@ impl Palette {
         for i in 0..256 {
             let bytes_read = f.read(&mut read_buf).unwrap();
             assert_eq!(bytes_read, 4);
-            data[i*3   ] = read_buf[0];
-            data[i*3 + 1] = read_buf[1];
-            data[i*3 + 2] = read_buf[2];
+            data[i * 3] = read_buf[0];
+            data[i * 3 + 1] = read_buf[1];
+            data[i * 3 + 2] = read_buf[2];
         }
 
-        Palette {
-            data: data,
-        }
+        Palette { data: data }
     }
 
     pub fn to_sdl(&self) -> sdl2::pixels::Palette {
         let mut cols = [Color::RGB(0, 0, 0); 256];
         for i in 0..256 {
-            let r = self.data[i*3   ];
-            let g = self.data[i*3 + 1];
-            let b = self.data[i*3 + 2];
-            cols[i] = Color::RGB(r,g,b);
+            let r = self.data[i * 3];
+            let g = self.data[i * 3 + 1];
+            let b = self.data[i * 3 + 2];
+            cols[i] = Color::RGB(r, g, b);
         }
         sdl2::pixels::Palette::with_colors(&cols).unwrap()
     }
-
 }
 
 pub fn palimg_to_texture(renderer: &mut Renderer,
-                     width: u32,
-                     height: u32,
-                     inbuf: &[u8],
-                     pal: &Palette)
-                     -> Texture {
+                         width: u32,
+                         height: u32,
+                         inbuf: &[u8],
+                         pal: &Palette)
+                         -> Texture {
     // XXX need to specify the pixel_mask like this, otherwise we get wrong colors
     let pixel_mask = sdl2::pixels::PixelMasks {
         bpp: 32,
@@ -67,11 +62,7 @@ pub fn palimg_to_texture(renderer: &mut Renderer,
         let mut outidx = 0;
         for i in 0..inbuf.len() {
             let col = inbuf[i] as usize;
-            let a = if col == 0 {
-                0
-            } else {
-                255
-            };
+            let a = if col == 0 { 0 } else { 255 };
             let r = pal.data[col * 3 + 0];
             let g = pal.data[col * 3 + 1];
             let b = pal.data[col * 3 + 2];
@@ -87,5 +78,3 @@ pub fn palimg_to_texture(renderer: &mut Renderer,
     });
     renderer.create_texture_from_surface(surf).unwrap()
 }
-
-

@@ -46,6 +46,7 @@ pub struct GameData {
     pub null_reindexing: Vec<u8>,
     pub shadow_reindexing: Vec<u8>,
     pub player_reindexing: Vec<u8>,
+    pub twire_reindexing: Vec<u8>,
 
     // TODO: encapsulate this stuff
     pub images_dat: ImagesDat,
@@ -65,8 +66,8 @@ pub struct GameData {
 
 impl GameData {
     pub fn init(data_path: &Path) -> GameData {
-        let data_filenames = ["patch_rt.mpq", "BroodWar.mpq", "BrooDat.mpq",
-                              "StarDat.mpq", "Starcraft.mpq"];
+        let data_filenames =
+            ["patch_rt.mpq", "BroodWar.mpq", "BrooDat.mpq", "StarDat.mpq", "Starcraft.mpq"];
         let mut archives = Vec::<MPQArchive>::new();
         for filename in &data_filenames {
             let combined = data_path.join(filename);
@@ -76,40 +77,58 @@ impl GameData {
         }
 
         let fonts = GameData::load_fonts(&archives);
-        let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx").unwrap());
-        let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx").unwrap());
+        let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx")
+            .unwrap());
+        let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx")
+            .unwrap());
         let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
         let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
 
-        let images_dat = ImagesDat::read(&mut GameData::open_(&archives, "arr/images.dat").unwrap());
+        let images_dat = ImagesDat::read(&mut GameData::open_(&archives, "arr/images.dat")
+            .unwrap());
         let units_dat = UnitsDat::read(&mut GameData::open_(&archives, "arr/units.dat").unwrap());
-        let sprites_dat = SpritesDat::read(&mut GameData::open_(&archives, "arr/sprites.dat").unwrap());
-        let flingy_dat = FlingyDat::read(&mut GameData::open_(&archives, "arr/flingy.dat").unwrap());
+        let sprites_dat = SpritesDat::read(&mut GameData::open_(&archives, "arr/sprites.dat")
+            .unwrap());
+        let flingy_dat = FlingyDat::read(&mut GameData::open_(&archives, "arr/flingy.dat")
+            .unwrap());
 
-        let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe").unwrap());
+        let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe")
+            .unwrap());
 
-        let iscript = IScript::read(&mut GameData::open_(&archives, "scripts/iscript.bin").unwrap());
+        let iscript = IScript::read(&mut GameData::open_(&archives, "scripts/iscript.bin")
+            .unwrap());
 
         // FIXME depends on tileset
-        let ofire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/ofire.pcx").unwrap());
-        let bfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bfire.pcx").unwrap());
-        let gfire_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/gfire.pcx").unwrap());
-        let bexpl_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset/install/bexpl.pcx").unwrap());
-        let unit_reindexing = PCX::read(&mut GameData::open_(&archives, "game\\tunit.pcx").unwrap());
-        let dark_reindexing = PCX::read(&mut GameData::open_(&archives, "tileset\\install\\dark.pcx").unwrap());
+        let ofire_reindexing =
+            PCX::read(&mut GameData::open_(&archives, "tileset/install/ofire.pcx").unwrap());
+        let bfire_reindexing =
+            PCX::read(&mut GameData::open_(&archives, "tileset/install/bfire.pcx").unwrap());
+        let gfire_reindexing =
+            PCX::read(&mut GameData::open_(&archives, "tileset/install/gfire.pcx").unwrap());
+        let bexpl_reindexing =
+            PCX::read(&mut GameData::open_(&archives, "tileset/install/bexpl.pcx").unwrap());
+        let unit_reindexing = PCX::read(&mut GameData::open_(&archives, "game\\tunit.pcx")
+            .unwrap());
+        let dark_reindexing =
+            PCX::read(&mut GameData::open_(&archives, "tileset\\install\\dark.pcx").unwrap());
+
+        // FIXME: figure out how to apply this
+        // 24 × 1 pixel
+        let twire_reindexing = PCX::read(&mut GameData::open_(&archives, "game/twire.pcx")
+            .unwrap());
 
         let mut null_reindexing = vec![0 as u8; 256*256];
         for i in 0..255 {
             for j in 0..255 {
-                null_reindexing[i*256 + j] = (i+1) as u8;
+                null_reindexing[i * 256 + j] = (i + 1) as u8;
             }
         }
 
         let mut shadow_reindexing = vec![0 as u8; 256*256];
         for r in 0..256 {
-            let mut inpos = 256*16;
+            let mut inpos = 256 * 16;
             for c in 0..256 {
-                shadow_reindexing[r*256+c] = dark_reindexing.data[inpos];
+                shadow_reindexing[r * 256 + c] = dark_reindexing.data[inpos];
                 inpos += 1;
             }
         }
@@ -119,19 +138,17 @@ impl GameData {
         for p in 0..11 {
             for c in 0..255 {
                 // color indices depending on player no
-                player_reindexing[p*256 + c] =
-                    if (c > 7) && (c < 16) {
-                        // 128 × 1 pixel
-                        unit_reindexing.data[p*8 + (c - 8)]
+                player_reindexing[p * 256 + c] = if (c > 7) && (c < 16) {
+                    // 128 × 1 pixel
+                    unit_reindexing.data[p * 8 + (c - 8)]
                 } else {
-                    (c+1) as u8
+                    (c + 1) as u8
                 };
             }
         }
 
-        let unit_wireframe_grp = GRP::read(&mut GameData::open_(&archives,
-                                                                "unit/wirefram/wirefram.grp")
-                                           .unwrap());
+        let unit_wireframe_grp =
+            GRP::read(&mut GameData::open_(&archives, "unit/wirefram/wirefram.grp").unwrap());
 
         GameData {
             mpq_archives: archives,
@@ -155,10 +172,10 @@ impl GameData {
             bfire_reindexing: bfire_reindexing,
             gfire_reindexing: gfire_reindexing,
             bexpl_reindexing: bexpl_reindexing,
-            // unit_reindexing: unit_reindexing,
             // dark_reindexing: dark_reindexing,
             shadow_reindexing: shadow_reindexing,
             player_reindexing: player_reindexing,
+            twire_reindexing: twire_reindexing.data,
 
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),
@@ -183,7 +200,7 @@ impl GameData {
     fn open_(archives: &[MPQArchive], filename: &str) -> Option<MPQArchiveFile> {
         for mpq in archives {
             if mpq.has_file(filename) {
-                //println!("found {} in {}", filename, mpq.filename);
+                // println!("found {} in {}", filename, mpq.filename);
                 let res: MPQArchiveFile = mpq.open_file(filename);
                 return Some(res);
             }
@@ -202,13 +219,12 @@ impl GameData {
     pub fn extract(&self, in_fn: &str, out_fn: &str) {
         for mpq in &self.mpq_archives {
             if mpq.has_file(in_fn) {
-                //println!("found {} in {}", filename, mpq.filename);
+                // println!("found {} in {}", filename, mpq.filename);
                 mpq.extract(in_fn, out_fn);
                 return;
             }
         }
     }
-
 }
 
 
@@ -217,9 +233,7 @@ pub struct GRPCache {
 }
 impl GRPCache {
     pub fn new() -> GRPCache {
-        GRPCache {
-            grp_cache: HashMap::new(),
-        }
+        GRPCache { grp_cache: HashMap::new() }
     }
 
     pub fn load(&mut self, gd: &GameData, grp_id: u32) {
@@ -252,14 +266,12 @@ pub struct LOXCache {
 }
 impl LOXCache {
     pub fn new() -> Self {
-        LOXCache {
-            lox_cache: HashMap::new(),
-        }
+        LOXCache { lox_cache: HashMap::new() }
     }
 
     pub fn load(&mut self, gd: &GameData, lox_id: u32) {
         if !self.lox_cache.contains_key(&lox_id) {
-            let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize)-1];
+            let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize) - 1];
             println!("lox id: {}, filename: {}", lox_id, name);
             let lox = LOX::read(&mut gd.open(&name).unwrap());
             self.lox_cache.insert(lox_id, lox);
