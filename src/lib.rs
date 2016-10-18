@@ -54,7 +54,8 @@ struct_events! (
         key_w: W,
         key_d: D,
         key_e: E,
-        key_c: C
+        key_c: C,
+        key_r: R
     },
     mouse: {
         mouse_left: Left,

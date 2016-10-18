@@ -1,0 +1,4 @@
+* grps
+  - dlgs/tile.grp: border edge images for dialogs
+  - game/blink.grp: minimal "zoomin" signal
+  - glue/palXX/tile.grp: border edge images

@@ -759,7 +759,7 @@ macro_rules! render_function {
     }
 }
 
-render_function!(render_buffer_with_transparency, |col: u8, buffer: &mut [u8], outpos: usize| {
+render_function!(render_buffer_solid, |col: u8, buffer: &mut [u8], outpos: usize| {
     let ob = buffer.get_unchecked_mut(outpos);
     if col > 0 {
         *ob = col;
@@ -862,7 +862,7 @@ impl SCSprite {
         match self.selectable_data {
             Some(ref selectable) => {
                 let grp = grp_cache.grp_ro(selectable.circle_grp_id);
-                render_buffer_with_transparency(&grp.frames[0],
+                render_buffer_solid(&grp.frames[0],
                                                 grp.header.width as u32,
                                                 grp.header.height as u32,
                                                 false,
