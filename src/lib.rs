@@ -99,7 +99,6 @@ pub enum GameEvents {
 }
 
 pub struct GameState {
-    // pub unit_instances: BTreeMap<u32, SCUnit>,
     pub unit_instances: Stash<SCUnit>,
     pub selected_units: Vec<usize>,
 

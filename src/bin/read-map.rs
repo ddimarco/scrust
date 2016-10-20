@@ -5,7 +5,7 @@ extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
 use scrust::terrain::Map;
 use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction,
-                      SCSpriteTrait};
+                      SCSpriteTrait, UnitCommands};
 use scrust::gamedata::GRPCache;
 
 use scrust::LayerTrait;
@@ -63,7 +63,7 @@ impl UnitsLayer {
         }
     }
 
-    fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents> {
+    fn generate_events(&mut self, gc: &GameContext, state: &mut GameState) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
 
         // mouse over unit?
@@ -103,6 +103,20 @@ impl UnitsLayer {
 
         if over_unit_instance.is_some() && gc.events.now.mouse_left {
             events.push(GameEvents::SelectUnit(over_unit_instance.unwrap()));
+        }
+
+
+        // commands for selected unit
+        if !state.selected_units.is_empty() {
+            if !self.cursor_over_unit && gc.events.now.mouse_right {
+                // move command
+                //println!("moving to {}, {}", mouse_pos_map.x(), mouse_pos_map.y());
+                //FIXME
+                for uidx in &state.selected_units {
+                    let mut u = state.unit_instances.get_mut(*uidx).unwrap();
+                    u.get_scimg_mut().commands.push(UnitCommands::Move(mouse_pos_map.x(), mouse_pos_map.y()));
+                }
+            }
         }
 
         events

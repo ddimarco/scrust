@@ -1,5 +1,6 @@
 use std::io::Result;
 use std::io::Read;
+use std::f32;
 
 extern crate byteorder;
 use byteorder::{ReadBytesExt, LittleEndian};
@@ -52,11 +53,28 @@ macro_rules! def_opcodes {
     }
 }
 
+// TODO: move to utils
+pub fn angle2discrete(angle: f32) -> u8 {
+    let pi = f32::consts::PI;
+    // x+24 % 32 ~ x + 90°
+    (((angle+pi)*32. / (2.*pi)).round() + 24.) as u8 % 32
+}
+
+pub fn discrete2angle(discrete_angle: u8) -> f32 {
+    let pi = f32::consts::PI;
+    (((discrete_angle + 8) % 32) as f32 / 32.) * (2.*pi) - pi
+}
+
 pub enum IScriptEntityAction {
     CreateImageUnderlay { image_id: u16, rel_x: i8, rel_y: i8 },
     CreateImageOverlay { image_id: u16, rel_x: i8, rel_y: i8 },
     CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
     CreateSpriteUnderlay { sprite_id: u16, x: u16, y: u16 },
+}
+
+pub enum IScriptCurrentAction {
+    Idle,
+    Moving(i32, i32),
 }
 
 pub struct IScriptState {
@@ -79,6 +97,8 @@ pub struct IScriptState {
     follow_main_graphic: bool,
     visible: bool,
     alive: bool,
+    current_action: IScriptCurrentAction,
+    movement_angle: f32,
 
     pub map_pos_x: u16,
     pub map_pos_y: u16,
@@ -140,8 +160,10 @@ impl IScriptState {
             rel_y: 0,
             frameset: 0,
             direction: 0,
+            movement_angle: 0f32,
             follow_main_graphic: false,
             alive: true,
+            current_action: IScriptCurrentAction::Idle,
             map_pos_x: map_x,
             map_pos_y: map_y,
         }
@@ -345,8 +367,11 @@ impl IScriptState {
             self.rel_x = val as i8;
         },
         OpCode::Move => (dist: u8) {
-        // FIXME
-            println!("move not implemented!");
+            let fdist = dist as f32;
+            let (dx, dy) = (self.movement_angle.cos() * fdist ,
+                            self.movement_angle.sin() * fdist);
+            self.map_pos_x = (self.map_pos_x as i32 + dx.round() as i32) as u16;
+            self.map_pos_y = (self.map_pos_y as i32 + dy.round() as i32) as u16;
         },
 
         // FIXME sounds
@@ -406,6 +431,8 @@ pub struct SCImage {
     iscript_state: IScriptState,
     underlays: Vec<SCImage>,
     overlays: Vec<SCImage>,
+    // FIXME: only for units?
+    pub commands: Vec<UnitCommands>,
 }
 pub trait IScriptableTrait {
     fn get_iscript_state<'a>(&'a self) -> &'a IScriptState;
@@ -448,6 +475,7 @@ impl SCImage {
             underlays: Vec::<SCImage>::new(),
             overlays: Vec::<SCImage>::new(),
             player_id: 0,
+            commands: Vec::<UnitCommands>::new(),
         }
     }
 
@@ -581,6 +609,48 @@ impl SCImage {
                 // just for creating new entities
                 gd: &Rc<GameData>)
                 -> Option<IScriptEntityAction> {
+
+
+        // new command handling
+        match self.commands.pop() {
+            None => {},
+            Some(UnitCommands::Move(mx, my)) => {
+                self.get_iscript_state_mut().set_animation(AnimationType::Walking);
+                // TODO: move current_action into scimage?
+                self.get_iscript_state_mut().current_action = IScriptCurrentAction::Moving(mx, my);
+            },
+            _ => {
+                println!("unknown command!");
+            }
+        }
+        // check status of current action
+        {
+            let iss = self.get_iscript_state_mut();
+            match iss.current_action {
+                IScriptCurrentAction::Moving(mx, my) => {
+                    // TODO: incorporate movement speed, turn duration, etc
+                    let goal_dist = ((mx - iss.map_pos_x as i32) as f32).hypot(
+                        (my - iss.map_pos_y as i32) as f32);
+                    if goal_dist < 4. {
+                        iss.current_action = IScriptCurrentAction::Idle;
+                        iss.set_animation(AnimationType::WalkingToIdle);
+                    } else {
+                        // TODO: proper path planning
+                        let (xdiff, ydiff) = ((mx - iss.map_pos_x as i32) as f32,
+                                              (my - iss.map_pos_y as i32) as f32);
+                        // res: -180 to +180 (in rad)
+                        let angle = ydiff.atan2(xdiff);
+                        let disc_angle = angle2discrete(angle);
+                         // println!("angle: {}, discrete: {}", angle, disc_angle);
+                        iss.direction = disc_angle;
+                        iss.movement_angle = angle;
+                    }
+                },
+                _ => {},
+            }
+        }
+
+
         // FIXME: death animation for marine: shadow tries to display wrong frameset
         for ul in &mut self.underlays {
             let action = ul.iscript_state._interpret_iscript(Some(&self.iscript_state));
@@ -876,6 +946,11 @@ impl SCSprite {
             }
         }
     }
+}
+
+pub enum UnitCommands {
+    Move(i32, i32),
+    Attack(u32),
 }
 
 pub struct SCUnit {
