@@ -4,7 +4,8 @@ use std::env;
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
 use scrust::terrain::Map;
-use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait, IScriptEntityAction,
+use scrust::iscriptstate::IScriptEntityAction;
+use scrust::scunits::{SCUnit, SCSprite, IScriptableTrait, SCImageTrait,
                       SCSpriteTrait, UnitCommands};
 use scrust::gamedata::GRPCache;
 

@@ -22,6 +22,7 @@ pub mod iscript;
 #[macro_use]
 pub mod utils;
 pub mod terrain;
+pub mod iscriptstate;
 pub mod scunits;
 pub mod lox;
 pub mod spk;
