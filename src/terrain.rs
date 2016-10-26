@@ -23,6 +23,7 @@ pub struct MapData {
 pub struct Map {
     pub data: MapData,
     pub terrain_info: TerrainInfo,
+    pub passable_megatiles: Vec<bool>,
 }
 
 // XXX: almost same as in read-units, merge
@@ -485,6 +486,36 @@ impl MapData {
     }
 }
 impl Map {
+
+    fn passable_megatiles(mapdata: &MapData, ti: &TerrainInfo) -> Vec<bool> {
+        let mut res = Vec::<bool>::with_capacity(mapdata.mtxm.len());
+        // check if this megatile is completely passable
+
+        for mtxm_idx in mapdata.mtxm.iter() {
+            let cv5_id = mtxm_idx >> 4;
+            let sub_id = mtxm_idx & 0x000F;
+            let vx4_idx = if cv5_id < 1024u16 {
+                ti.cv5[cv5_id as usize].mega_tiles[sub_id as usize]
+            } else {
+                ti.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]
+            } as usize;
+
+            //
+            let mut all_walkable = true;
+            for row in 0..4 {
+                for col in 0..4 {
+                    let vf4_idx = row * 4 + col;
+
+                    let walkable = ti.vf4[vx4_idx].is_walkable(vf4_idx);
+                    all_walkable = all_walkable && walkable;
+                }
+            }
+            res.push(all_walkable);
+        }
+
+        res
+    }
+
     // XXX scms are just mpq files, so we need to read them from disk
     pub fn read(gd: &GameData, filename: &str) -> Map {
         println!("reading {}", filename);
@@ -509,16 +540,12 @@ impl Map {
         let ti = TerrainInfo::read(gd, mapdata.tileset);
 
         println!("{} units", mapdata.units.len());
-        for u in &mapdata.units {
-            println!(" unit instance {}", u.instance_id);
-            println!(" unit pos {}, {}", u.x, u.y);
-            println!(" unit id {}", u.unit_id);
-            println!(" unit name {}", gd.stat_txt_tbl[u.unit_id as usize].to_owned());
-        }
 
+        let passable_megatiles = Map::passable_megatiles(&mapdata, &ti);
         Map {
             data: mapdata,
             terrain_info: ti,
+            passable_megatiles: passable_megatiles,
         }
     }
 
@@ -537,8 +564,7 @@ impl Map {
 
                 let mut col_counts = vec![0 as usize; 256];
                 let vx4 = &self.terrain_info.vx4[mega_tile_idx as usize];
-                for i in 0..16 {
-                    let vxentry = vx4.data[i];
+                for vxentry in &vx4.data {
                     let vr4_idx = vxentry >> 1;
                     let imgdata = &self.terrain_info.vr4[vr4_idx as usize].bitmap;
                     for j in 0..64 {
@@ -547,10 +573,10 @@ impl Map {
                 }
                 let mut dominant_col = 0;
                 let mut dom_col_count = 0;
-                for i in 0..256 {
-                    if col_counts[i] > dom_col_count {
+                for (i, col_count) in col_counts.iter().enumerate() {
+                    if *col_count > dom_col_count {
                         dominant_col = i as u8;
-                        dom_col_count = col_counts[i];
+                        dom_col_count = *col_count;
                     }
                 }
                 minimap[y * self.data.width as usize + x] = dominant_col;
@@ -573,6 +599,24 @@ impl Map {
         } else {
             ""
         }
+    }
+
+    // XXX
+    pub fn mark_megatile(&self, buffer: &mut [u8], tl_x: i32, tl_y: i32, color: u8) {
+        if (tl_x > 0) && (tl_y > 0) &&
+            (tl_x < 640) && (tl_y < 480) {
+                for row in 0..32 {
+                    for col in 0..32 {
+                        if (tl_y + row as i32) < 0 || (tl_x + col as i32) < 0 ||
+                            (tl_x + col as i32 >= 640 as i32) ||
+                            (tl_y + row as i32 >= 480 as i32) {
+                                continue;
+                            }
+                        let outpos = (tl_y + row) as usize * 640 + (tl_x + col) as usize;
+                        buffer[outpos] = color;
+                    }
+                }
+            }
     }
 
     pub fn render(&self,
@@ -618,41 +662,6 @@ impl Map {
                                               buffer_height as usize);
             }
         }
-
-        // placeholder for map units
-        //
-        // let s = 5;
-        // let right_map_x = map_x + trg_pitch as u16;
-        // let bottom_map_y = map_y + buffer_height as u16;
-        // for u in &self.data.units {
-        // if u.x > map_x && u.x < right_map_x && u.y > map_y && u.y < bottom_map_y {
-        // let cx = (u.x - map_x) as usize;
-        // let cy = (u.y - map_y) as usize;
-        // XXX ugly computation
-        // for y in cmp::max((s as isize)/2 - cy as isize, 0)..s as isize {
-        // let startidx = (cy + y as usize - s/2)*trg_pitch as usize + cx - s/2;
-        // for x in cmp::max(((s as isize)/2 - cx as isize) , 0)..s as isize {
-        // let idx = startidx + x as usize;
-        // if idx < trg_buf.len() {
-        // trg_buf[idx] = 255;
-        // }
-        // }
-        // }
-        // }
-        // }
-        //
-        // for u in &self.data.sprites {
-        // if u.x > map_x && u.x < right_map_x && u.y > map_y && u.y < bottom_map_y {
-        // let cx = (u.x - map_x) as usize;
-        // let cy = (u.y - map_y) as usize;
-        // for y in 0..s {
-        // for x in 0..s {
-        // trg_buf[(cy + y - s/2)*trg_pitch as usize + cx + x - s/2] = 254;
-        // }
-        // }
-        // }
-        // }
-        //
 
     }
 }
@@ -786,6 +795,11 @@ impl VR4 {
 struct VF4 {
     flags: [u16; 16],
 }
+pub enum TileHeight {
+    Low,
+    Mid,
+    High,
+}
 impl VF4 {
     pub fn read(infile: &mut Read) -> Option<VF4> {
         let mut data = [0 as u16; 16];
@@ -803,7 +817,23 @@ impl VF4 {
         }
         Some(VF4 { flags: data })
     }
+
+    pub fn is_walkable(&self, idx: usize) -> bool {
+        (self.flags[idx] & 0x1) > 0
+    }
+    pub fn tile_height(&self, idx: usize) -> TileHeight {
+        let mid_set = (self.flags[idx] & 0x2) > 0;
+        let high_set = (self.flags[idx] & 0x4) > 0;
+        if mid_set {
+            TileHeight::Mid
+        } else if high_set {
+            TileHeight::High
+        } else {
+            TileHeight::Low
+        }
+    }
 }
+
 
 fn make_tileset_filename(tileset: TileSet, ending: &str) -> String {
     format!("tileset/{}{}",
@@ -892,7 +922,7 @@ impl TerrainInfo {
         } else {
             self.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]
         };
-        self.render_mega_tile(mega_tile_idx as usize, buffer, x, y, stride, buffer_height);
+        self.render_mega_tile_debug(mega_tile_idx as usize, buffer, x, y, stride, buffer_height);
     }
 
     fn render_mega_tile(&self,
@@ -910,6 +940,7 @@ impl TerrainInfo {
                 let vxentry = vx4.data[row * 4 + col];
                 let flipped = (vxentry & 1) > 0;
                 let vr4_idx = vxentry >> 1;
+
                 self.render_mini_tile(vr4_idx as usize,
                                       buffer,
                                       x + left_x as i32,
@@ -917,6 +948,95 @@ impl TerrainInfo {
                                       stride,
                                       buffer_height,
                                       flipped);
+            }
+        }
+    }
+
+    fn render_mega_tile_debug(&self,
+                        vx4_idx: usize,
+                        buffer: &mut [u8],
+                        x: i32,
+                        y: i32,
+                        stride: usize,
+                        buffer_height: usize) {
+        let vx4 = &self.vx4[vx4_idx];
+        for row in 0..4 {
+            for col in 0..4 {
+                let top_y = row * 8;
+                let left_x = col * 8;
+                let vxentry = vx4.data[row * 4 + col];
+                let flipped = (vxentry & 1) > 0;
+                let vr4_idx = vxentry >> 1;
+
+                // XXX
+                    // self.render_mini_tile(vr4_idx as usize,
+                    //                       buffer,
+                    //                       x + left_x as i32,
+                    //                       y + top_y as i32,
+                    //                       stride,
+                    //                       buffer_height,
+                    //                       flipped);
+                 self.render_mini_tile_debug(vx4_idx as usize,
+                                       row * 4 + col,
+                                       buffer,
+                                       x + left_x as i32,
+                                       y + top_y as i32,
+                                       stride,
+                                       buffer_height);
+
+                    let black_col = 0;
+                    // draw grid
+                    if row == 0 {
+                        for gridx in 0..8 {
+                            if ((y + top_y as i32) > 0) &&
+                                ((y + top_y as i32) < 480) &&
+                                (x + left_x as i32 + gridx as i32 > 0)
+                             {
+                                 let ysum = (y + top_y as i32) as usize;
+                                 let xsum = x + left_x as i32 + gridx as i32;
+                                buffer[ysum * stride + xsum as usize] = black_col;
+                            }
+                        }
+                    }
+                    if col == 0 {
+                        for gridy in 0i32..8 {
+                            if ((y + top_y as i32 + gridy) > 0) &&
+                                ((y + top_y as i32 + gridy ) < 480) &&
+                                (x + left_x as i32 > 0)
+                            {
+                                let ysum = (y + top_y as i32 + gridy) as usize;
+                                let xsum = x + left_x as i32;
+                                buffer[ysum * stride + xsum as usize] = black_col;
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    fn render_mini_tile_debug(&self,
+                              vx4_idx: usize,
+                              vf4_idx: usize,
+                              buffer: &mut [u8],
+                              x: i32,
+                              y: i32,
+                              stride: usize,
+                              buffer_height: usize) {
+        let walkable = self.vf4[vx4_idx].is_walkable(vf4_idx);
+        for row in 0..8 {
+            for col in 0..8 {
+                if (y + row as i32) < 0 || (x + col as i32) < 0 ||
+                    (x + col as i32 >= stride as i32) ||
+                    (y + row as i32 >= buffer_height as i32) {
+                        continue;
+                    }
+                let outpos = (y + row) as usize * stride + (x + col) as usize;
+                buffer[outpos] =
+                    if walkable {
+                        255
+                    } else {
+                        0
+                    }
             }
         }
     }

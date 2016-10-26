@@ -2,3 +2,39 @@
   - dlgs/tile.grp: border edge images for dialogs
   - game/blink.grp: minimal "zoomin" signal
   - glue/palXX/tile.grp: border edge images
+
+* terrain
+** map
+*** mtxm: megatile ids for the full map
+** tilesets
+*** megatile
+    - buildability
+    - ground_height
+**** cv5: megatile information
+*** minitile
+**** vx4: 4x4 vr4 indices
+     ;; VX4: MegaTile Graphics
+     ;; This file contains references to the MiniTile images and states if they are flipped.
+     ;; Struct size: 32 bytes (16 shorts)
+     ;; Max ref. ID: 65535
+     ;; Offset	Type	Name	Description
+     ;; +0x00	16xSHORT	 Images	The first bit (bit0) is the horizontal flip flag, the remaining 15 bits (bit1-15) are the VR4 index.
+**** vf4: 4x4 flags (similar to vx4)
+     ;; VF4: Minitile Flags
+     ;; This file contains all the minitile flags used in each MegaTile referenced by CV5.
+     ;; Struct size: 32 bytes (16 shorts)
+     ;; Max ref. ID: 65535
+     ;; Offset	Type	Name	Description
+     ;; +0x00	16xSHORT	 Flags	16 shorts with the following flags:
+     ;; 0x0001 = Walkable
+     ;; 0x0002 = Mid
+     ;; 0x0004 = High (both Mid and High set to 0 means low)
+     ;; 0x0008 = Blocks View
+     ;; 0x0010 = Ramp? (Appears in the middle of most ramps and stairs)
+**** vr4: 8x8 bitmap (the actual image)
+     ;; VR4: MiniTile Graphics
+     ;; This file contains the actual cv5-tile graphics (finally!).
+     ;; Struct size: 64 bytes
+     ;; Max ref. ID: 32767
+     ;; Offset	Type	Name	Description
+     ;; +0x00	64xBYTE	 Bitmap	Each byte is an index of the WPE. Pixels are drawn left to right (unless flipped in VX4), top to bottom in an 8x8 square.

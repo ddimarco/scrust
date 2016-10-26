@@ -37,7 +37,7 @@ This took a few hours to implement, got some cool benefits, and this Mac
 uses about 4% of the CPU to play the game.
 
 ** more details
-For those that are curious, here's the code for that...
+   For those that are curious, here's the code for that...
 
 #+BEGIN_SRC C
   // call prepareOpenGLShaders() after setting up your GL context.
