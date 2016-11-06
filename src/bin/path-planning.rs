@@ -16,7 +16,6 @@ use sdl2::rect::{Point, Rect};
 extern crate pathplanning;
 use pathplanning::jps::{jps_a_star, PlanningMapTrait};
 
-
 struct MapView {
     map: Map,
 
