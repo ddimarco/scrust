@@ -7,6 +7,8 @@ use ::pal::Palette;
 use ::gamedata::{TileSet, GameData};
 use ::stormlib::MPQArchive;
 
+use ::pathplanning::jps::PlanningMapTrait;
+
 pub struct MapData {
     pub mpq_archive: MPQArchive,
     pub owners: [u8; 12],
@@ -26,6 +28,17 @@ pub struct Map {
     pub passable_megatiles: Vec<bool>,
 }
 
+impl PlanningMapTrait for Map {
+    fn is_passable(&self, idx: usize) -> bool {
+        self.passable_megatiles[idx]
+    }
+    fn width(&self) -> usize {
+        self.data.width as usize
+    }
+    fn height(&self) -> usize {
+        self.data.height as usize
+    }
+}
 // XXX: almost same as in read-units, merge
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());

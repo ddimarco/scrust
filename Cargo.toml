@@ -24,6 +24,9 @@ num = "*"
 rand = "*"
 stash = "*"
 
+[dependencies.pathplanning]
+path = "src/pathplanning"
+
 [dev-dependencies]
 bencher = "*"
 

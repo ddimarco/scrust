@@ -7,6 +7,8 @@ extern crate sdl2;
 extern crate rand;
 extern crate stash;
 
+extern crate pathplanning;
+
 #[macro_use]
 pub mod events;
 
