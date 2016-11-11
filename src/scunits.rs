@@ -29,6 +29,8 @@ pub enum SCImageRemapping {
     Shadow,
 }
 
+// TODO create UnitType structs (to keep all the per-unit information)
+
 pub struct SCImage {
     pub image_id: u16,
     pub grp_id: u32,
@@ -559,14 +561,38 @@ pub enum UnitCommands {
     Attack(u32),
 }
 
-pub struct SCUnit {
-    pub unit_id: usize,
-    // merging flingy and unit for now
-    flingy_id: usize,
-    sprite: SCSprite,
-    pub kill_count: usize,
+#[derive(Debug)]
+pub enum FlingyMoveControl {
+    FlingyDat,
+    PartiallyMobile,
+    IScriptBin,
 }
-impl IScriptableTrait for SCUnit {
+pub struct SCFlingy {
+    pub flingy_id: u16,
+    pub move_control: FlingyMoveControl,
+    sprite: SCSprite,
+}
+impl SCFlingy {
+    pub fn new(gd: &Rc<GameData>, flingy_id: u16, map_x: u16, map_y: u16) -> Self {
+        let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        let sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
+        let move_control =
+            match gd.flingy_dat.move_control[flingy_id as usize] {
+                0 => FlingyMoveControl::FlingyDat,
+                1 => FlingyMoveControl::PartiallyMobile,
+                2 => FlingyMoveControl::IScriptBin,
+                _ => unimplemented!(),
+            };
+        SCFlingy {
+            flingy_id: flingy_id,
+            move_control: move_control,
+            sprite: sprite,
+        }
+    }
+
+}
+
+impl IScriptableTrait for SCFlingy {
     fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
         self.sprite.get_iscript_state()
     }
@@ -574,15 +600,15 @@ impl IScriptableTrait for SCUnit {
         self.sprite.get_iscript_state_mut()
     }
 }
-impl SCImageTrait for SCUnit {
+impl SCImageTrait for SCFlingy {
     fn get_scimg<'a>(&'a self) -> &'a SCImage {
-        &self.sprite.get_scimg()
+        self.sprite.get_scimg()
     }
     fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage {
         self.sprite.get_scimg_mut()
     }
 }
-impl SCSpriteTrait for SCUnit {
+impl SCSpriteTrait for SCFlingy {
     fn get_scsprite<'a>(&'a self) -> &'a SCSprite {
         &self.sprite
     }
@@ -590,6 +616,60 @@ impl SCSpriteTrait for SCUnit {
         &mut self.sprite
     }
 }
+
+pub trait SCFlingyTrait: SCSpriteTrait {
+    fn get_scflingy<'a>(&'a self) -> &'a SCFlingy;
+    fn get_scflingy_mut<'a>(&'a mut self) -> &'a mut SCFlingy;
+}
+impl SCFlingyTrait for SCFlingy {
+    fn get_scflingy<'a>(&'a self) -> &'a SCFlingy {
+        self
+    }
+    fn get_scflingy_mut<'a>(&'a mut self) -> &'a mut SCFlingy {
+        self
+    }
+}
+pub struct SCUnit {
+    pub unit_id: usize,
+    // merging flingy and unit for now
+    // pub flingy_id: usize,
+    // sprite: SCSprite,
+    flingy: SCFlingy,
+    pub kill_count: usize,
+}
+impl IScriptableTrait for SCUnit {
+    fn get_iscript_state<'a>(&'a self) -> &'a IScriptState {
+        self.flingy.get_iscript_state()
+    }
+    fn get_iscript_state_mut<'a>(&'a mut self) -> &'a mut IScriptState {
+        self.flingy.get_iscript_state_mut()
+    }
+}
+impl SCImageTrait for SCUnit {
+    fn get_scimg<'a>(&'a self) -> &'a SCImage {
+        &self.flingy.get_scimg()
+    }
+    fn get_scimg_mut<'a>(&'a mut self) -> &'a mut SCImage {
+        self.flingy.get_scimg_mut()
+    }
+}
+impl SCSpriteTrait for SCUnit {
+    fn get_scsprite<'a>(&'a self) -> &'a SCSprite {
+        self.flingy.get_scsprite()
+    }
+    fn get_scsprite_mut<'a>(&'a mut self) -> &'a mut SCSprite {
+        self.flingy.get_scsprite_mut()
+    }
+}
+impl SCFlingyTrait for SCUnit {
+    fn get_scflingy<'a>(&'a self) -> &'a SCFlingy {
+        &self.flingy
+    }
+    fn get_scflingy_mut<'a>(&'a mut self) -> &'a mut SCFlingy {
+        &mut self.flingy
+    }
+}
+
 impl SCUnit {
     pub fn new(gd: &Rc<GameData>,
                unit_id: usize,
@@ -598,13 +678,16 @@ impl SCUnit {
                player_id: usize)
                -> SCUnit {
         let flingy_id = gd.units_dat.flingy_id[unit_id];
-        let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-        let mut sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
-        sprite.get_scimg_mut().player_id = player_id;
+        let mut flingy = SCFlingy::new(gd, flingy_id as u16, map_x, map_y);
+        // let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+        // let mut sprite = SCSprite::new(gd, sprite_id, map_x, map_y);
+        // sprite.get_scimg_mut().player_id = player_id;
+        flingy.get_scimg_mut().player_id = player_id;
         SCUnit {
             unit_id: unit_id as usize,
-            flingy_id: flingy_id as usize,
-            sprite: sprite,
+            flingy: flingy,
+            // flingy_id: flingy_id as usize,
+            // sprite: sprite,
             kill_count: 0,
         }
     }

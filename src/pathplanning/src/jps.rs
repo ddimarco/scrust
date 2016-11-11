@@ -85,8 +85,6 @@ impl Map {
          end_idx)
     }
 
-
-
     // pub fn dist(&self, from: usize, to: usize) -> f32 {
     //     idx_manhattan_dist(from, to, self.width)
     // }
@@ -101,19 +99,7 @@ impl Point {
     pub fn new(x: i32, y: i32) -> Self {
         Point { x: x, y: y }
     }
-
-    // fn x(&self) -> i32 {
-    //     self.x
-    // }
-    // fn y(&self) -> i32 {
-    //     self.y
-    // }
 }
-/// /////////////
-// fn megatilexy_to_idx(x: i32, y: i32, map_w: usize) -> usize {
-//     assert!(x >= 0 && y >= 0);
-//     y as usize * map_w + x as usize
-// }
 
 fn idx_manhattan_dist(idx1: usize, idx2: usize, mapwidth: usize) -> f32 {
     let (x1, y1) = (idx1 % mapwidth, idx1 / mapwidth);
@@ -361,9 +347,6 @@ impl<'a> PlanningProblem<'a> {
                 return ;
             }
             let idx = (widthi32 * cy + cx) as usize;
-            // println!("diagscan situation:");
-            // let mppos = vec![(self.start_idx, 's'), (self.end_idx, 'e'), (idx, 'x')];
-            // self.map.print(&mppos);
             if !self.map.is_passable(idx) {
                 // println!("ran into obstacle, aborting scan");
                 return ;

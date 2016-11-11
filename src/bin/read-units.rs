@@ -9,7 +9,7 @@ use scrust::font::FontSize;
 use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::iscript::AnimationType;
-use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait};
+use scrust::scunits::{SCUnit, IScriptableTrait, SCImageTrait, SCSpriteTrait, SCFlingyTrait};
 
 
 struct UnitsView {
@@ -82,6 +82,7 @@ impl View for UnitsView {
                 self.unit = SCUnit::new(&gd, self.unit_id, 0, 0, 0);
             }
         }
+        // println!("move control: {:?}", self.unit.get_scflingy().move_control);
         if context.events.now.key_q == Some(true) {
             self.unit.get_iscript_state_mut().turn_ccwise(1);
         } else if context.events.now.key_e == Some(true) {

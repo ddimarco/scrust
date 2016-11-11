@@ -71,11 +71,41 @@ dat_struct! (
     FlingyDat
     {
         sprite_id      :u16  ;209,
+        // Maximum speed at which the sprite will move. Measured in pixels-per-frame,
+        // but written as "Speed*(320/3)" (rounded up, it's weird, but that's how it
+        // works). Works ONLY if "Move Control" is set to "Flingy.dat Control".
+
+        // This is measured in pixels/tick * (320/3). A tick, if you recall, is
+        // 1/10th of a second. It's generally more helpful to think of the speed
+        // of a unit you want to emulate and look at its Top Speed rather than
+        // try and calculate the pixels/frame. Larger numbers are obviously
+        // faster.
         top_speed      :u32  ;209,
+        // How fast the sprite speeds up or slows down. Added to or subtracted
+        // from current speed until it reaches the Top Speed or 0. Measured in
+        // pixels-per-frame. Works ONLY if "Move Control" is set to "Flingy.dat
+        // Control".
         acceleration   :u16  ;209,
+        // Distance from its destination at which the sprite will begin to
+        // deccelerate from its Top Speed to a complete halt. Measured in
+        // pixels*256.
         halt_distance  :u32  ;209,
+        // The distance the sprite requires to "wipe around" to turn to another
+        // direction. Works ONLY if "Move Control" is set to "Flingy.dat
+        // Control".
+        // Smaller numbers cause a unit to "skid" and make more sweeping turns.
         turn_radius    :u8   ;209,
         unused         :u8   ;209,
+        // Indicates the mechanism that is used to control the movement of the
+        // flingy.dat entry. "Flingy.dat Control" makes use of the Acceleration,
+        // Speed, Turn Style and Turn Radius properties, i.e. the values in this
+        // editor will be used. "Iscript.bin Control" ignores these properties
+        // and follows only the Iscript opcode sequence. "Partially
+        // Mobile/Weapon" is used for various weapons sprites, not completely
+        // understood.
+        // 0: flingy.dat
+        // 1: partially mobile, weapon
+        // 2: iscript.bin
         move_control   :u8   ;209
     }
 );
@@ -83,7 +113,7 @@ dat_struct! (
 dat_struct! (
     UnitsDat
     {
-// called "graphics" earlier
+        // called "graphics" earlier
         flingy_id                       :u8   ;228,
         subunit1                        :u16  ;228,
         subunit2                        :u16  ;228,

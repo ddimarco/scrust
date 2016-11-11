@@ -935,7 +935,8 @@ impl TerrainInfo {
         } else {
             self.doodads[(cv5_id as usize) - 1024].mega_tiles[sub_id as usize]
         };
-        self.render_mega_tile_debug(mega_tile_idx as usize, buffer, x, y, stride, buffer_height);
+        //self.render_mega_tile_debug(mega_tile_idx as usize, buffer, x, y, stride, buffer_height);
+        self.render_mega_tile(mega_tile_idx as usize, buffer, x, y, stride, buffer_height);
     }
 
     fn render_mega_tile(&self,

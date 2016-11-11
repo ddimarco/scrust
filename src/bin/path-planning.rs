@@ -16,6 +16,8 @@ use sdl2::rect::{Point, Rect};
 extern crate pathplanning;
 use pathplanning::jps::{jps_a_star, PlanningMapTrait};
 
+// TODO: path smoothing, merge empty cells (quadtree?), pre-calculate jump points
+
 struct MapView {
     map: Map,
 
@@ -116,7 +118,6 @@ impl View for MapView {
 
         }
 
-
         ViewAction::None
     }
 
@@ -210,7 +211,7 @@ fn main() {
         let mapfn = if args.len() == 2 {
             args[1].clone()
         } else {
-            String::from("/home/dm/.wine/drive_c/StarCraft/Maps/(2)Challenger.scm")
+            String::from("/home/dm/.wine/drive_c/StarCraft/Maps/(6)New Gettysburg.scm")
         };
         Box::new(MapView::new(gc, state, &mapfn))
     });
