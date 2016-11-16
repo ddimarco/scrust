@@ -170,27 +170,27 @@ impl View for MapView {
             // replan
             let s = &self.start_tile.unwrap();
             let e = &self.end_tile.unwrap();
-            {
-                println!("planning problem:");
-                let cons_pmap = vec![(self.map.xy2idx(s.x(), s.y()), 's'),
-                                         (self.map.xy2idx(e.x(), e.y()), 'e')];
-                self.map.print(&cons_pmap);
-            }
+            // {
+            //     println!("planning problem:");
+            //     let cons_pmap = vec![(self.map.xy2idx(s.x(), s.y()), 's'),
+            //                              (self.map.xy2idx(e.x(), e.y()), 'e')];
+            //     self.map.print(&cons_pmap);
+            // }
             let (p, c) = jps_a_star(
                 self.map.xy2idx(s.x(), s.y()),
                 self.map.xy2idx(e.x(), e.y()),
                 &self.map);
 
-            {
-                println!("resulting path:");
-                let mut cons_pmap = vec![(self.map.xy2idx(s.x(), s.y()), 's'),
-                                         (self.map.xy2idx(e.x(), e.y()), 'e')];
-                for c in &p {
-                    let cidx = self.map.xy2idx(c.x, c.y);
-                    cons_pmap.push((cidx, 'x'));
-                }
-                self.map.print(&cons_pmap);
-            }
+            // {
+            //     println!("resulting path:");
+            //     let mut cons_pmap = vec![(self.map.xy2idx(s.x(), s.y()), 's'),
+            //                              (self.map.xy2idx(e.x(), e.y()), 'e')];
+            //     for c in &p {
+            //         let cidx = self.map.xy2idx(c.x, c.y);
+            //         cons_pmap.push((cidx, 'x'));
+            //     }
+            //     self.map.print(&cons_pmap);
+            // }
 
             self.path = p.into_iter().map(|pp: pathplanning::jps::Point| {
                 Point::new(pp.x, pp.y)
