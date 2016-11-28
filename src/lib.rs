@@ -29,6 +29,7 @@ pub mod scunits;
 pub mod lox;
 pub mod spk;
 pub mod ui;
+pub mod render;
 
 use std::path::Path;
 use sdl2::render::Renderer;

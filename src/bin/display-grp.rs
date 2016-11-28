@@ -11,7 +11,7 @@ use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::grp::GRP;
 use scrust::pcx::PCX;
-use scrust::scunits::{render_buffer_solid, render_buffer_with_solid_reindexing};
+use scrust::render::{render_buffer_solid, render_buffer_with_solid_reindexing};
 
 struct GRPView {
     grpfile: String,
