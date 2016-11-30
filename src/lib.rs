@@ -6,6 +6,7 @@ extern crate num;
 extern crate sdl2;
 extern crate rand;
 extern crate stash;
+extern crate specs;
 
 extern crate pathplanning;
 

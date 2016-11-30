@@ -23,6 +23,8 @@ enum_primitive = "*"
 num = "*"
 rand = "*"
 stash = "*"
+specs = "*"
+bitflags = "*"
 
 [dependencies.pathplanning]
 path = "src/pathplanning"

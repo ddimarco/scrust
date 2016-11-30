@@ -8,6 +8,7 @@ macro_rules! read_helper {
     (u8, $file:ident) => ($file.read_u8());
     (u16, $file:ident) => ($file.read_u16::<LittleEndian>());
     (u32, $file:ident) => ($file.read_u32::<LittleEndian>());
+    (i16, $file:ident) => ($file.read_i16::<LittleEndian>());
 }
 
 #[macro_export]

@@ -5,7 +5,7 @@ use std::io::{Read, Seek, SeekFrom};
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
-fn read_string<T: Read>(file: &mut T, length: Option<u16>) -> String {
+pub fn read_string<T: Read>(file: &mut T, length: Option<u16>) -> String {
     let mut res_str = String::new();
 
     let mut i = 0;
