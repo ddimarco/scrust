@@ -144,6 +144,23 @@ bitflags! {
         const DLG_UNKNOWN31 = 0x80000000
     }
 }
+bitflags! {
+    pub flags SMKFlags: u16 {
+        const SMK_FADE_IN = 0x01,
+        const SMK_DARK = 0x02,
+        const SMK_REPEAT_FOREVER = 0x04,
+        const SMK_SHOW_IF_OVER = 0x08,
+        const SMK_UNKNOWN4 = 0x10
+    }
+}
+
+struct SMKElement {
+    overlay: Option<Box<SMKElement>>,
+    filename: String,
+    flags: SMKFlags,
+    overlay_x: u16,
+    overlay_y: u16,
+}
 
 struct Control {
     rect: Rect,
@@ -151,6 +168,7 @@ struct Control {
     flags: DialogFlags,
     dlgstring: Option<String>,
     responsive_area: Rect,
+    smk_overlay: Option<SMKElement>,
 }
 struct Dialog {
     controls: Vec<Control>,
@@ -178,12 +196,50 @@ impl Dialog {
                  dlgstring,
                  ctrltype);
         println!(" {:?}", flags);
+
+
+        let smk_overlay = if lldlg.smk_offset > 0 {
+            file.seek(SeekFrom::Start(lldlg.smk_offset as u64)).ok();
+            let llstruct = SMKLLStruct::read(file);
+            Some(Dialog::ll_smk_to_struct(&llstruct, file))
+        } else {
+            None
+        };
+
         Control {
             rect: rect,
             responsive_area: responsive_rect,
             control_type: ctrltype,
             flags: flags,
             dlgstring: dlgstring,
+            smk_overlay: smk_overlay,
+        }
+    }
+
+    fn ll_smk_to_struct<T: Read + Seek>(llstruct: &SMKLLStruct, file: &mut T) -> SMKElement {
+        let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
+        file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
+        let smkfile = read_0terminated_string(file);
+
+        println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
+                 smkfile,
+                 smkflags,
+                 llstruct.overlay_offset);
+
+        let overlay = if llstruct.overlay_offset > 0 {
+            file.seek(SeekFrom::Start(llstruct.overlay_offset as u64)).ok();
+            let llstruct = SMKLLStruct::read(file);
+            Some(Box::new(Dialog::ll_smk_to_struct(&llstruct, file)))
+        } else {
+            None
+        };
+
+        SMKElement {
+            overlay: overlay,
+            flags: smkflags,
+            filename: smkfile,
+            overlay_x: llstruct.overlay_x_pos,
+            overlay_y: llstruct.overlay_y_pos,
         }
     }
 
@@ -201,20 +257,17 @@ impl Dialog {
         if mainlldlg.smk_offset > 0 {
             println!(" reading controls");
             file.seek(SeekFrom::Start(mainlldlg.smk_offset as u64)).ok();
-            let mut ll_ctrls = Vec::<DialogLLStruct>::new();
             loop {
                 let lldlg = DialogLLStruct::read(file);
+
+                controls.push(Dialog::ll_dlg_to_control(&lldlg, file));
                 let next = lldlg.next_entry;
-                ll_ctrls.push(lldlg);
+                // ll_ctrls.push(lldlg);
                 if next == 0 {
                     break;
                 }
                 file.seek(SeekFrom::Start(next as u64)).ok();
             }
-            println!("got {} ll dlg controls", ll_ctrls.len());
-            controls = ll_ctrls.iter()
-                .map(|lldlg: &DialogLLStruct| Dialog::ll_dlg_to_control(lldlg, file))
-                .collect();
         }
 
         Dialog { controls: controls }
