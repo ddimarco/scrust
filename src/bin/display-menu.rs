@@ -2,7 +2,7 @@ use std::cmp::min;
 use std::io::{Read, Seek, SeekFrom};
 extern crate sdl2;
 use sdl2::rect::Rect;
-use sdl2::render::{Renderer, Texture};
+use sdl2::rect::Point;
 use sdl2::pixels::Color;
 
 extern crate byteorder;
@@ -172,6 +172,7 @@ struct Control {
     dlgstring: Option<String>,
     responsive_area: Rect,
     smk_overlay: Option<SMKElement>,
+    text_offset: Option<Point>,
 }
 impl Control {
     fn draw(&self, gd: &GameData, buffer: &mut [u8], screen_pitch: u32) {
@@ -199,8 +200,6 @@ impl Control {
                     } else if self.flags.contains(DLG_FONT16X) {
                         FontSize::Font16X
                     } else {
-                        // println!("WARNING: unknown fontsize, using size 16");
-                        // unreachable!()
                         FontSize::Font16
                     };
 
@@ -211,32 +210,46 @@ impl Control {
                     txt
                 };
 
-                let halign = if self.control_type == ControlType::Button {
-                    HorizontalAlignment::Center
-                } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
-                    self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER2) {
-                        HorizontalAlignment::Center
-                    } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_RIGHT) {
-                        HorizontalAlignment::Right
-                    } else {
-                        HorizontalAlignment::Left
-                    };
-                let valign =
-                    if self.flags.contains(DLG_VERTICAL_ALIGNMENT_TOP) {
-                        VerticalAlignment::Top
-                    } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_MIDDLE) {
-                        VerticalAlignment::Center
-                    } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_BOTTOM) {
-                        VerticalAlignment::Bottom
-                    } else {
-                        VerticalAlignment::Center
-                    };
-                fnt.render_text_aligned(txt.as_ref(), 0,
-                                   &gd.fontmm_reindex.data, buffer,
-                                   screen_pitch, &self.rect,
-                                   halign,
-                                   valign,
-                                   );
+
+                match self.text_offset {
+                    Some(offset) => {
+                        let mut rect = self.rect;
+                        rect.offset(offset.x(), offset.y());
+                        fnt.render_text_aligned(txt.as_ref(), 0,
+                                                &gd.fontmm_reindex.data, buffer,
+                                                screen_pitch, &rect,
+                                                HorizontalAlignment::Left,
+                                                VerticalAlignment::Top);
+                    },
+                    None => {
+                        let halign = if self.control_type == ControlType::Button {
+                            HorizontalAlignment::Center
+                        } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
+                            self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER2) {
+                                HorizontalAlignment::Center
+                            } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_RIGHT) {
+                                HorizontalAlignment::Right
+                            } else {
+                                HorizontalAlignment::Left
+                            };
+                        let valign =
+                            if self.flags.contains(DLG_VERTICAL_ALIGNMENT_TOP) {
+                                VerticalAlignment::Top
+                            } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_MIDDLE) {
+                                VerticalAlignment::Center
+                            } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_BOTTOM) {
+                                VerticalAlignment::Bottom
+                            } else {
+                                VerticalAlignment::Center
+                            };
+                        fnt.render_text_aligned(txt.as_ref(), 0,
+                                                &gd.fontmm_reindex.data, buffer,
+                                                screen_pitch, &self.rect,
+                                                halign,
+                                                valign,
+                        );
+                    }
+                }
 
             },
             _ => {}
@@ -270,7 +283,6 @@ impl Dialog {
                  ctrltype);
         println!(" {:?}", flags);
 
-
         let smk_overlay = if lldlg.smk_offset > 0 {
             file.seek(SeekFrom::Start(lldlg.smk_offset as u64)).ok();
             let llstruct = SMKLLStruct::read(file);
@@ -279,6 +291,13 @@ impl Dialog {
             None
         };
 
+        let text_offset =
+            if (lldlg.text_offset_x != 0) && (lldlg.text_offset_y != 0) {
+                Some(Point::new(lldlg.text_offset_x as i32, lldlg.text_offset_y as i32))
+            } else {
+                None
+            };
+
         Control {
             rect: rect,
             responsive_area: responsive_rect,
@@ -286,6 +305,7 @@ impl Dialog {
             flags: flags,
             dlgstring: dlgstring,
             smk_overlay: smk_overlay,
+            text_offset: text_offset,
         }
     }
 
@@ -390,7 +410,6 @@ impl View for MenuView {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
-        // let fnt = &context.gd.font(self.font_size);
         let screen_pitch = context.screen.pitch();
         // let reindex = &context.gd.fontmm_reindex.data;
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
@@ -398,8 +417,6 @@ impl View for MenuView {
                 ctrl.draw(&gd, buffer, screen_pitch);
             }
         });
-
-        // context.renderer.set_draw_color(Color::RGB(255, 255, 255));
 
         ViewAction::None
     }
@@ -410,10 +427,11 @@ fn main() {
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
-                                               //"rez/gluexpcmpgn.bin"
-                                               // "rez/glumain.bin"
+                                               // "rez/gluexpcmpgn.bin"
+                                               // "rez/glucmpgn.bin"
+                                               "rez/glumain.bin"
                                                // "rez/gamemenu.bin"
-                                               "rez/glugamemode.bin"
+                                               // "rez/glugamemode.bin"
                         ))
                     });
 
