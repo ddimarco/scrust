@@ -248,12 +248,11 @@ impl RenderText for Font {
                     for xl in letter.xoffset as u32..(letter.xoffset as u32 + letter.width as u32) {
                         let col = letter.data[(((yl - letter.yoffset as u32) * letter.width as u32) +
                                                (xl - letter.xoffset as u32)) as usize];
-
-
-                        let outpos = ((y + yl as usize) * trg_pitch as usize) + (x + xl as usize);
-
-                        let col_mapped = reindexing_table[col as usize + (color_idx * 8)];
-                        trg_buf[outpos] = col_mapped;
+                        if col != 0 {
+                            let outpos = ((y + yl as usize) * trg_pitch as usize) + (x + xl as usize);
+                            let col_mapped = reindexing_table[col as usize + (color_idx * 8)];
+                            trg_buf[outpos] = col_mapped;
+                        }
                     }
                 }
                 let letterwidth = self.letter_width(c);
