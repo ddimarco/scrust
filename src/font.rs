@@ -124,7 +124,34 @@ impl Font {
 extern crate sdl2;
 use self::sdl2::rect::Rect;
 
+pub enum HorizontalAlignment {
+    Left,
+    Center,
+    Right
+}
+pub enum VerticalAlignment {
+    Top,
+    Center,
+    Bottom
+}
+
+pub struct TextLayout {
+    width: u32,
+    height: u32,
+}
+
 pub trait RenderText {
+    fn layout(&self, text: &str) -> TextLayout;
+
+    fn render_text_aligned(&self,
+                           text: &str,
+                           color_idx: usize,
+                           reindexing_table: &[u8],
+                           trg_buf: &mut [u8],
+                           trg_pitch: u32,
+                           trg_rect: &Rect,
+                           halign: HorizontalAlignment,
+                           valign: VerticalAlignment);
     fn render_textbox(&self,
                       text: &str,
                       color_idx: usize,
@@ -132,11 +159,68 @@ pub trait RenderText {
                       trg_buf: &mut [u8],
                       trg_pitch: u32,
                       trg_rect: &Rect);
-}
+    }
 impl RenderText for Font {
+    fn layout(&self, text: &str) -> TextLayout {
+        let mut w = 0;
+        let h = self.line_height();
+        for c in text.chars() {
+            if c == ' ' {
+                w = w + 1 + self.letter_width(' ');
+            }
+            if (c as u8) > 32 {
+                w += 1 + self.letter_width(c);
+            }
+        }
+        TextLayout {
+            width: w,
+            height: h,
+        }
+    }
+
+    fn render_text_aligned(&self,
+                           text: &str,
+                           color_idx: usize,
+                           reindexing_table: &[u8],
+                           trg_buf: &mut [u8],
+                           trg_pitch: u32,
+                           trg_rect: &Rect,
+                           halign: HorizontalAlignment,
+                           valign: VerticalAlignment,
+    ) {
+        let layout = self.layout(text);
+        let x = match halign {
+            HorizontalAlignment::Left => {
+                trg_rect.x()
+            },
+            HorizontalAlignment::Center => {
+                let cx = trg_rect.left() + (trg_rect.width() as i32) / 2;
+                cx - (layout.width as i32) / 2
+            },
+            HorizontalAlignment::Right => {
+                trg_rect.right() - (layout.width as i32)
+            }
+        };
+        let y = match valign {
+            VerticalAlignment::Top => {
+                trg_rect.y()
+            },
+            VerticalAlignment::Center => {
+                let cy = trg_rect.top() + (trg_rect.height() as i32) / 2;
+                cy - (layout.height as i32) / 2
+            },
+            VerticalAlignment::Bottom => {
+                trg_rect.bottom() - (layout.height as i32)
+            }
+        };
+        let r = Rect::new(x, y, layout.width, layout.height);
+        self.render_textbox(text, color_idx, reindexing_table,
+                            trg_buf, trg_pitch, &r);
+    }
+
     fn render_textbox(&self,
                       text: &str,
-                      color_idx: usize,
+                      color_idx_initial: usize,
                       reindexing_table: &[u8],
                       trg_buf: &mut [u8],
                       trg_pitch: u32,
@@ -144,9 +228,21 @@ impl RenderText for Font {
         // for now, assume only single lines
         let y = trg_rect.y() as usize;
         let mut x = trg_rect.x() as usize;
+        let mut color_idx = color_idx_initial;
         // TODO: proper reindexing?
         for c in text.chars() {
-            if c != ' ' {
+            let c_int = c as u8;
+            if c_int < 32 {
+                // color code
+                color_idx =
+                    if c_int == 1 {
+                        color_idx_initial
+                    } else {
+                        (c_int - 2) as usize
+                    };
+            } else if c == ' ' {
+                x = x + 1 + self.letter_width(' ') as usize;
+            } else {
                 let letter = &self.get_letter(c);
                 for yl in (letter.yoffset as u32)..(letter.yoffset as u32 + letter.height as u32) {
                     for xl in letter.xoffset as u32..(letter.xoffset as u32 + letter.width as u32) {
@@ -160,9 +256,9 @@ impl RenderText for Font {
                         trg_buf[outpos] = col_mapped;
                     }
                 }
+                let letterwidth = self.letter_width(c);
+                x = x + 1 + letterwidth as usize;
             }
-            let letterwidth = self.letter_width(c);
-            x = x + 1 + letterwidth as usize;
         }
     }
 }

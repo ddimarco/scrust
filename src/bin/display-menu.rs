@@ -1,6 +1,5 @@
 use std::cmp::min;
 use std::io::{Read, Seek, SeekFrom};
-
 extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::render::{Renderer, Texture};
@@ -13,7 +12,8 @@ use byteorder::{LittleEndian, ReadBytesExt};
 extern crate scrust;
 use scrust::font::FontSize;
 
-use scrust::font::RenderText;
+use scrust::font::{RenderText, HorizontalAlignment, VerticalAlignment};
+use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 
 #[macro_use]
@@ -89,7 +89,10 @@ enum_from_primitive! {
 #[derive(Debug)]
 enum ControlType {
     DialogBox = 0x0,
+    // draw with rounded corners
+    // FIXME: from dlgs/tile.grp?
     DefaultButton = 0x1,
+    // draw with rounded corners
     Button = 0x2,
     OptionButton = 0x3,
     CheckBox = 0x4,
@@ -169,6 +172,76 @@ struct Control {
     dlgstring: Option<String>,
     responsive_area: Rect,
     smk_overlay: Option<SMKElement>,
+}
+impl Control {
+    fn draw(&self, gd: &GameData, buffer: &mut [u8], screen_pitch: u32) {
+        // FIXME: distinguish control types
+
+        if !self.flags.contains(DLG_VISIBLE) {
+            return;
+        }
+        draw_rect(buffer, screen_pitch, &self.rect, 21);
+        draw_rect(buffer, screen_pitch, &self.responsive_area, 10);
+
+        let dlgstring = &self.dlgstring;
+
+        // render text
+        match dlgstring {
+            &Some(ref txt) => {
+                // FIXME: precalc?
+                let font_size =
+                    if self.flags.contains(DLG_FONT16) {
+                        FontSize::Font16
+                    } else if self.flags.contains(DLG_FONT14) {
+                        FontSize::Font14
+                    } else if self.flags.contains(DLG_FONT10) {
+                        FontSize::Font10
+                    } else if self.flags.contains(DLG_FONT16X) {
+                        FontSize::Font16X
+                    } else {
+                        // println!("WARNING: unknown fontsize, using size 16");
+                        // unreachable!()
+                        FontSize::Font16
+                    };
+
+                let fnt = gd.font(font_size);
+                let txt = if self.flags.contains(DLG_HAS_HOTKEY) {
+                    &txt[1..]
+                } else {
+                    txt
+                };
+
+                let halign = if self.control_type == ControlType::Button {
+                    HorizontalAlignment::Center
+                } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
+                    self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER2) {
+                        HorizontalAlignment::Center
+                    } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_RIGHT) {
+                        HorizontalAlignment::Right
+                    } else {
+                        HorizontalAlignment::Left
+                    };
+                let valign =
+                    if self.flags.contains(DLG_VERTICAL_ALIGNMENT_TOP) {
+                        VerticalAlignment::Top
+                    } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_MIDDLE) {
+                        VerticalAlignment::Center
+                    } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_BOTTOM) {
+                        VerticalAlignment::Bottom
+                    } else {
+                        VerticalAlignment::Center
+                    };
+                fnt.render_text_aligned(txt.as_ref(), 0,
+                                   &gd.fontmm_reindex.data, buffer,
+                                   screen_pitch, &self.rect,
+                                   halign,
+                                   valign,
+                                   );
+
+            },
+            _ => {}
+        }
+    }
 }
 struct Dialog {
     controls: Vec<Control>,
@@ -281,10 +354,10 @@ struct MenuView {
     dlg: Dialog,
 }
 impl MenuView {
-    fn new(context: &mut GameContext, menufile: &str) -> Self {
-        let dlg = Dialog::read(&mut context.gd.open(menufile).unwrap());
+    fn new(gd: &GameData, context: &mut GameContext, menufile: &str) -> Self {
+        let dlg = Dialog::read(&mut gd.open(menufile).unwrap());
 
-        let pal = context.gd.fontmm_reindex.palette.to_sdl();
+        let pal = gd.fontmm_reindex.palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         MenuView {
             menufile: menufile.to_owned(),
@@ -313,7 +386,7 @@ fn draw_rect(buffer: &mut [u8], buf_stride: u32, rect: &Rect, col: u8) {
 }
 
 impl View for MenuView {
-    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
+    fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -321,16 +394,8 @@ impl View for MenuView {
         let screen_pitch = context.screen.pitch();
         // let reindex = &context.gd.fontmm_reindex.data;
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            // fnt.render_textbox(self.text.as_ref(),
-            //                    self.color_idx,
-            //                    reindex,
-            //                    buffer,
-            //                    screen_pitch,
-            //                    &self.trg_rect);
             for ctrl in &self.dlg.controls {
-                // context.renderer.draw_rect(ctrl.rect);
-                draw_rect(buffer, screen_pitch, &ctrl.rect, 21);
-                draw_rect(buffer, screen_pitch, &ctrl.responsive_area, 10);
+                ctrl.draw(&gd, buffer, screen_pitch);
             }
         });
 
@@ -343,10 +408,13 @@ impl View for MenuView {
 fn main() {
     ::scrust::spawn("menu rendering",
                     "/home/dm/.wine/drive_c/StarCraft/",
-                    |gc, _| {
-                        Box::new(MenuView::new(gc,
+                    |gd, gc, _| {
+                        Box::new(MenuView::new(gd, gc,
                                                //"rez/gluexpcmpgn.bin"
-                                               "rez/glumain.bin"))
+                                               // "rez/glumain.bin"
+                                               // "rez/gamemenu.bin"
+                                               "rez/glugamemode.bin"
+                        ))
                     });
 
 }

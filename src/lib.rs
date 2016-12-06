@@ -124,7 +124,7 @@ impl GameState {
 
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
-    fn update(&mut self, gc: &mut GameContext, state: &mut GameState);
+    fn update(&mut self, gd: &GameData, gc: &mut GameContext, state: &mut GameState);
     fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
 
     /// return true when processed, false if not
@@ -134,7 +134,7 @@ pub trait LayerTrait {
 
 pub struct GameContext<'window> {
     // gamedata is ref-counted so that refs can be kept by other objects
-    pub gd: Rc<GameData>,
+    // pub gd: Rc<GameData>,
     pub events: Events,
     pub renderer: Renderer<'window>,
     pub screen: Surface<'window>, /* pub game_events: Vec<GameEvents>,
@@ -145,12 +145,12 @@ pub struct GameContext<'window> {
                                    * pub timer: Timer<'window>, */
 }
 impl<'window> GameContext<'window> {
-    fn new(gd: GameData,
+    fn new(//gd: GameData,
            events: Events,
            renderer: Renderer<'window> /* timer: Timer<'window> */)
            -> GameContext<'window> {
         GameContext {
-            gd: Rc::new(gd),
+            // gd: Rc::new(gd),
             events: events,
             renderer: renderer,
             screen: Surface::new(640, 480, PixelFormatEnum::Index8).unwrap(), // timer: timer,
@@ -173,7 +173,7 @@ pub trait View {
     fn update(&mut self, _: &mut GameContext, _: &mut GameState) {}
 
     /// renders the current view into context.screen
-    fn render(&mut self, context: &mut GameContext, state: &GameState, elapsed: f64) -> ViewAction;
+    fn render(&mut self, gd: &GameData, context: &mut GameContext, state: &GameState, elapsed: f64) -> ViewAction;
 
     fn render_layers(&mut self, _: &mut GameContext) {}
 
@@ -200,7 +200,7 @@ pub trait View {
 
 
 pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
-    where F: Fn(&mut GameContext, &mut GameState) -> Box<View>
+    where F: Fn(&GameData, &mut GameContext, &mut GameState) -> Box<View>
 {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -213,13 +213,14 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
 
     let mut timer = sdl_context.timer().unwrap();
 
+    let mut gd = GameData::init(&Path::new(scdata_path));
+
     // FIXME: set a default palette for screen surface
-    let mut context = GameContext::new(GameData::init(&Path::new(scdata_path)),
-                                       Events::new(sdl_context.event_pump().unwrap()),
+    let mut context = GameContext::new(Events::new(sdl_context.event_pump().unwrap()),
                                        window.renderer().accelerated().build().unwrap());
     sdl_context.mouse().show_cursor(false);
     let mut state = GameState::new();
-    let mut current_view = init(&mut context, &mut state);
+    let mut current_view = init(&gd, &mut context, &mut state);
 
     let interval = 1_000 / 60;
     let mut before = timer.ticks();
@@ -257,7 +258,7 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
         current_view.process_layer_events(&mut context, &mut state);
 
         let start = timer.ticks();
-        let render_res = current_view.render(&mut context, &state, elapsed);
+        let render_res = current_view.render(&gd, &mut context, &state, elapsed);
         let end = timer.ticks();
         render_time_sum += end - start;
         render_count += 1;
