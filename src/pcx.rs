@@ -35,7 +35,7 @@ impl PCX {
             bpp: 0,
             width: 0,
             height: 0,
-            clrmap: unsafe { std::mem::uninitialized() },
+            clrmap: [0; 16*3],
             bpl: 0,
         };
 
@@ -54,7 +54,6 @@ impl PCX {
         let _ = file.read_u16::<LittleEndian>().unwrap();
         let _ = file.read_u16::<LittleEndian>().unwrap();
 
-        pcxhead.clrmap = unsafe { std::mem::uninitialized() };
         file.read(&mut pcxhead.clrmap).ok();
 
         let _ = file.read_u8().unwrap();
@@ -65,38 +64,42 @@ impl PCX {
         let _ = file.read_u16::<LittleEndian>().unwrap();
 
         file.seek(SeekFrom::Current(58)).ok();
-        // println!("xmin: {0}, ymin: {1}, xmax: {2}, ymax: {3}",
-        //          xmin, ymin, xmax, ymax);
 
         // read data
         pcxhead.width = xmax - xmin + 1;
         pcxhead.height = ymax - ymin + 1;
         let bufsize = (pcxhead.width as usize) * (pcxhead.height as usize);
-        // let mut pcx = PCX {
-        //     header: pcxhead,
-        //     data: vec![0; bufsize],
-        //     palette: [0; 256*3],
-        // };
         let mut data = vec![0; bufsize];
 
         let mut outpos = 0;
         for _ in 0..pcxhead.height {
             let mut x = 0;
-            while (x < pcxhead.bpl) && (outpos < bufsize as usize) {
+            while x < pcxhead.bpl {
                 let val = file.read_u8().unwrap();
                 if val > 192 {
                     let repeat = val - 192;
                     let color = file.read_u8().unwrap();
                     for _ in 0..repeat {
-                        data[outpos] = color;
-                        outpos += 1;
+                        if x < pcxhead.width {
+                            data[outpos] = color;
+                            outpos += 1;
+                        }
                         x += 1;
                     }
                 } else {
-                    data[outpos] = val;
-                    outpos += 1;
+                    if x < pcxhead.width {
+                        data[outpos] = val;
+                        outpos += 1;
+                    }
                     x += 1;
                 }
+            }
+
+            // fill output buffer line
+            while x < pcxhead.width {
+                data[outpos] = 0;
+                outpos += 1;
+                x += 1;
             }
         }
 
