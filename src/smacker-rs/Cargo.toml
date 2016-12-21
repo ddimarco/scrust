@@ -1,0 +1,18 @@
+[package]
+name = "smacker"
+version = "0.1.0"
+authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
+build = "build.rs"
+exclude = [
+        "src/c/libsmacker-code/.svn/*",
+        "src/c/libsmacker-code/Xcode/*",
+        "src/c/libsmacker-code/*.dev",
+        "src/c/libsmacker-code/*.cbp",
+        "*.smk",
+]
+
+[dependencies]
+libc = "*"
+
+[build-dependencies]
+gcc = "0.3"

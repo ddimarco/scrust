@@ -29,6 +29,9 @@ bitflags = "*"
 [dependencies.pathplanning]
 path = "src/pathplanning"
 
+[dependencies.smacker]
+path = "src/smacker-rs"
+
 [dev-dependencies]
 bencher = "*"
 
