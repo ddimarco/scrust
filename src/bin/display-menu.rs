@@ -290,88 +290,6 @@ bitflags! {
 //     smk_overlay: Option<SMKElement>,
 //     text_offset: Option<Point>,
 // }
-// impl Control {
-//     fn draw(&self, gd: &GameData, buffer: &mut [u8], screen_pitch: u32) {
-//         // FIXME: distinguish control types
-
-//         if !self.flags.contains(DLG_VISIBLE) {
-//             return;
-//         }
-//         draw_rect(buffer, screen_pitch, &self.rect, 21);
-//         draw_rect(buffer, screen_pitch, &self.responsive_area, 10);
-
-//         let dlgstring = &self.dlgstring;
-
-//         // render text
-//         match dlgstring {
-//             &Some(ref txt) => {
-//                 // FIXME: precalc?
-//                 let font_size =
-//                     if self.flags.contains(DLG_FONT16) {
-//                         FontSize::Font16
-//                     } else if self.flags.contains(DLG_FONT14) {
-//                         FontSize::Font14
-//                     } else if self.flags.contains(DLG_FONT10) {
-//                         FontSize::Font10
-//                     } else if self.flags.contains(DLG_FONT16X) {
-//                         FontSize::Font16X
-//                     } else {
-//                         FontSize::Font16
-//                     };
-
-//                 let fnt = gd.font(font_size);
-//                 let txt = if self.flags.contains(DLG_HAS_HOTKEY) {
-//                     &txt[1..]
-//                 } else {
-//                     txt
-//                 };
-
-
-//                 match self.text_offset {
-//                     Some(offset) => {
-//                         let mut rect = self.rect;
-//                         rect.offset(offset.x(), offset.y());
-//                         fnt.render_text_aligned(txt.as_ref(), 0,
-//                                                 &gd.fontmm_reindex.data, buffer,
-//                                                 screen_pitch, &rect,
-//                                                 HorizontalAlignment::Left,
-//                                                 VerticalAlignment::Top);
-//                     },
-//                     None => {
-//                         let halign = if self.control_type == ControlType::Button {
-//                             HorizontalAlignment::Center
-//                         } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
-//                             self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER2) {
-//                                 HorizontalAlignment::Center
-//                             } else if self.flags.contains(DLG_HORIZONTAL_ALIGNMENT_RIGHT) {
-//                                 HorizontalAlignment::Right
-//                             } else {
-//                                 HorizontalAlignment::Left
-//                             };
-//                         let valign =
-//                             if self.flags.contains(DLG_VERTICAL_ALIGNMENT_TOP) {
-//                                 VerticalAlignment::Top
-//                             } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_MIDDLE) {
-//                                 VerticalAlignment::Center
-//                             } else if self.flags.contains(DLG_VERTICAL_ALIGNMENT_BOTTOM) {
-//                                 VerticalAlignment::Bottom
-//                             } else {
-//                                 VerticalAlignment::Center
-//                             };
-//                         fnt.render_text_aligned(txt.as_ref(), 0,
-//                                                 &gd.fontmm_reindex.data, buffer,
-//                                                 screen_pitch, &self.rect,
-//                                                 halign,
-//                                                 valign,
-//                         );
-//                     }
-//                 }
-
-//             },
-//             _ => {}
-//         }
-//     }
-// }
 struct Dialog {
     // controls: Vec<Control>,
     world: World<DialogSystems>,
@@ -536,10 +454,19 @@ impl Dialog {
             None
         };
         match ctrltype {
-            ControlType::Button | ControlType::LightupButton |
-            ControlType::DefaultButton => {
-                let halign =
-                    if flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
+            ControlType::Button | ControlType::DefaultButton => {
+                let halign = HorizontalAlignment::Center;
+                data.label_element.add(&entity,
+                                       LabelElement {
+                                           text: dlgstring,
+                                           font_size: font_size,
+                                           text_offset: text_offset,
+                                           horizontal_alignment: halign,
+                                           vertical_alignment: valign,
+                                       });
+            },
+            ControlType::LightupButton => {
+                let halign = if flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER) ||
                     flags.contains(DLG_HORIZONTAL_ALIGNMENT_CENTER2) {
                         HorizontalAlignment::Center
                     } else if flags.contains(DLG_HORIZONTAL_ALIGNMENT_RIGHT) {
@@ -547,14 +474,6 @@ impl Dialog {
                     } else {
                         HorizontalAlignment::Left
                     };
-
-                // new_entity = new_entity.with(LabelElement {
-                //     labeltext: dlgstring.unwrap(),
-                //     font_size: font_size,
-                //     text_offset: text_offset,
-                //     horizontal_alignment: halign,
-                //     vertical_alignment: valign,
-                // });
                 data.label_element.add(&entity,
                                        LabelElement {
                                            text: dlgstring,
@@ -715,17 +634,29 @@ impl View for MenuView {
                         draw_rect(buffer, screen_pitch, &rect, col);
                     },
                     &DrawCommand::DrawText{ref label_element, rect} => {
-                        let font = gd.font(label_element.font_size);
+                        let fnt = gd.font(label_element.font_size);
                         let halign = label_element.horizontal_alignment.clone();
                         let valign = label_element.vertical_alignment.clone();
-                        font.render_text_aligned(label_element.text.as_ref(), 0,
-                                                reindex, buffer,
-                                                screen_pitch, &rect,
-                                                halign,
-                                                valign);
+                        match label_element.text_offset {
+                            Some(offset) => {
+                                let mut rect = rect;
+                                rect.offset(offset.x(), offset.y());
+                                fnt.render_text_aligned(label_element.text.as_ref(), 0,
+                                                        &gd.fontmm_reindex.data, buffer,
+                                                        screen_pitch, &rect,
+                                                        HorizontalAlignment::Left,
+                                                        VerticalAlignment::Top);
+                            },
+                            None => {
+                                fnt.render_text_aligned(label_element.text.as_ref(), 0,
+                                                        reindex, buffer,
+                                                        screen_pitch, &rect,
+                                                        halign,
+                                                        valign);
+                            }
+                        }
                     },
                     &DrawCommand::DrawPCX{rect, ref imgpath} => {
-                        // let outpos = rect.left() + rect.top() * screen_pitch;
                         let cache = gd.pcx_cache.borrow();
                         let pcx = cache.pcx_ro(imgpath);
                         let pt = rect.center();
@@ -760,8 +691,8 @@ fn main() {
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
                                                 // "rez/gluexpcmpgn.bin"
-                                                "rez/glucmpgn.bin"
-                                               // "rez/glumain.bin"
+                                                // "rez/glucmpgn.bin"
+                                               "rez/glumain.bin"
                                                // "rez/gamemenu.bin"
                                                // "rez/glugamemode.bin"
                         ))
