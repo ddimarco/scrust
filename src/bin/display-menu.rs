@@ -422,9 +422,7 @@ impl Dialog {
                         hotkey: hotkey,
                     });
                 }
-                _ => {
-                    println!("{:?} is no button", ctrltype);
-                }
+                _ => {}
             }
 
 
@@ -511,7 +509,6 @@ impl Dialog {
                 });
             },
             ControlType::Image => {
-                println!("img: {}", dlgstring);
                 gd.pcx_cache.borrow_mut().load(gd, dlgstring.as_str());
                 data.img_element.add(&entity, ImageElement {
                     imgpath: dlgstring,
@@ -658,7 +655,7 @@ impl View for MenuView {
                     },
                     &DrawCommand::DrawPCX{rect, ref imgpath} => {
                         let cache = gd.pcx_cache.borrow();
-                        let pcx = cache.pcx_ro(imgpath);
+                        let pcx = cache.get_ro(imgpath);
                         let pt = rect.center();
                         render_buffer_solid(&pcx.data,
                                             pcx.header.width as u32,

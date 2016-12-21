@@ -229,38 +229,49 @@ impl GameData {
     }
 }
 
+macro_rules! def_cache_struct {
+    ($name:ident, $keytype:ident, $valuetype:ident, $func:expr) =>
+        {
+            pub struct $name {
+                cache: HashMap<$keytype, $valuetype>,
+            }
+            impl $name {
+                pub fn new() -> Self {
+                    $name { cache: HashMap::new() }
+                }
 
-pub struct GRPCache {
-    grp_cache: HashMap<u32, GRP>,
-}
-impl GRPCache {
-    pub fn new() -> GRPCache {
-        GRPCache { grp_cache: HashMap::new() }
-    }
+                pub fn load(&mut self, gd: &GameData, key: $keytype) {
+                    if !self.cache.contains_key(&key) {
+                        self.cache.insert(key, $func(gd, key));
+                    }
+                }
 
-    pub fn load(&mut self, gd: &GameData, grp_id: u32) {
-        if !self.grp_cache.contains_key(&grp_id) {
-            let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
-            println!("grp id: {}, filename: {}", grp_id, name);
+                pub fn get(&mut self, gd: &GameData, key: $keytype) -> & $valuetype {
+                    self.load(gd, key);
+                    self.cache.get(&key).unwrap()
+                }
 
-            let grp = GRP::read(&mut gd.open(&name).unwrap());
-            self.grp_cache.insert(grp_id, grp);
+                pub fn get_ro(&self, key: $keytype) -> & $valuetype {
+                    self.cache.get(&key).unwrap()
+                }
+            }
         }
-    }
-
-    pub fn grp(&mut self, gd: &GameData, grp_id: u32) -> &GRP {
-        self.load(gd, grp_id);
-        self.grp_cache.get(&grp_id).unwrap()
-    }
-
-    pub fn grp_ro(&self, grp_id: u32) -> &GRP {
-        if self.grp_cache.contains_key(&grp_id) {
-            self.grp_cache.get(&grp_id).unwrap()
-        } else {
-            panic!("grp_ro() called and grp {} not in cache!", grp_id);
-        }
-    }
 }
+
+def_cache_struct! (GRPCache, u32, GRP, |gd: &GameData, grp_id: u32| {
+    let name = "unit\\".to_string() + &gd.images_tbl[(grp_id as usize) - 1];
+    println!("grp id: {}, filename: {}", grp_id, name);
+
+    GRP::read(&mut gd.open(&name).unwrap())
+});
+def_cache_struct! (LOXCache, u32, LOX, |gd: &GameData, lox_id: u32| {
+    let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize) - 1];
+    println!("lox id: {}, filename: {}", lox_id, name);
+    LOX::read(&mut gd.open(&name).unwrap())
+});
+// def_cache_struct! (PCXCache, String, PCX, |gd: &GameData, path: &String| {
+//     PCX::read(&mut gd.open(&path).unwrap())
+// });
 
 pub struct PCXCache {
     pcx_cache: HashMap<String, PCX>,
@@ -277,36 +288,12 @@ impl PCXCache {
             self.pcx_cache.insert(pathstr, pcx);
         }
     }
-    pub fn pcx(&mut self, gd: &GameData, path: &str) -> &PCX {
+    pub fn get(&mut self, gd: &GameData, path: &str) -> &PCX {
         self.load(gd, path);
         self.pcx_cache.get(path).unwrap()
     }
 
-    pub fn pcx_ro(&self, path: &str) -> &PCX {
+    pub fn get_ro(&self, path: &str) -> &PCX {
         self.pcx_cache.get(path).unwrap()
-    }
-}
-
-
-pub struct LOXCache {
-    lox_cache: HashMap<u32, LOX>,
-}
-impl LOXCache {
-    pub fn new() -> Self {
-        LOXCache { lox_cache: HashMap::new() }
-    }
-
-    pub fn load(&mut self, gd: &GameData, lox_id: u32) {
-        if !self.lox_cache.contains_key(&lox_id) {
-            let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize) - 1];
-            println!("lox id: {}, filename: {}", lox_id, name);
-            let lox = LOX::read(&mut gd.open(&name).unwrap());
-            self.lox_cache.insert(lox_id, lox);
-        }
-    }
-
-    pub fn lox(&mut self, gd: &GameData, lox_id: u32) -> &LOX {
-        self.load(gd, lox_id);
-        self.lox_cache.get(&lox_id).unwrap()
     }
 }

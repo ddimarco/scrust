@@ -266,7 +266,7 @@ impl IScriptState {
             let overlay_id = self.gd.images_dat.special_overlay[self.image_id as usize];
             let (rx, ry) = {
                 let mut c = self.gd.lox_cache.borrow_mut();
-                let lo = c.lox(&self.gd, overlay_id) ;
+                let lo = c.get(&self.gd, overlay_id) ;
                 lo.frames[0].offsets[overlay_no as usize]
             };
             return Some(IScriptEntityAction::CreateImageOverlay {

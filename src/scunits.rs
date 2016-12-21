@@ -135,7 +135,7 @@ impl SCImage {
         }
 
         let fridx = self.frame_idx();
-        let grp = grp_cache.grp_ro(self.grp_id);
+        let grp = grp_cache.get_ro(self.grp_id);
         // this seems like a hack
         if fridx >= grp.frames.len() && has_parent {
             println!("WARNING: suspicious frame index");
@@ -363,8 +363,8 @@ impl SCSprite {
             {
                 let mut grpcache = gd.grp_cache.borrow_mut();
                 grpcache.load(gd, circle_grp_id);
-                sel_width = grpcache.grp_ro(circle_grp_id).header.width.clone();
-                sel_height = grpcache.grp_ro(circle_grp_id).header.height.clone();
+                sel_width = grpcache.get_ro(circle_grp_id).header.width.clone();
+                sel_height = grpcache.get_ro(circle_grp_id).header.height.clone();
             }
 
             Some(SCSpriteSelectable {
@@ -430,7 +430,7 @@ impl SCSprite {
                                  buffer_pitch: u32) {
         match self.selectable_data {
             Some(ref selectable) => {
-                let grp = grp_cache.grp_ro(selectable.circle_grp_id);
+                let grp = grp_cache.get_ro(selectable.circle_grp_id);
                 render_buffer_solid(&grp.frames[0],
                                                 grp.header.width as u32,
                                                 grp.header.height as u32,
