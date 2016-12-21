@@ -60,6 +60,7 @@ pub struct GameData {
 
     pub grp_cache: RefCell<GRPCache>,
     pub lox_cache: RefCell<LOXCache>,
+    pub pcx_cache: RefCell<PCXCache>,
 
     pub unit_wireframe_grp: GRP,
 }
@@ -180,6 +181,7 @@ impl GameData {
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),
             lox_cache: RefCell::new(LOXCache::new()),
+            pcx_cache: RefCell::new(PCXCache::new()),
 
             unit_wireframe_grp: unit_wireframe_grp,
         }
@@ -257,6 +259,31 @@ impl GRPCache {
         } else {
             panic!("grp_ro() called and grp {} not in cache!", grp_id);
         }
+    }
+}
+
+pub struct PCXCache {
+    pcx_cache: HashMap<String, PCX>,
+}
+impl PCXCache {
+    pub fn new() -> Self {
+        PCXCache { pcx_cache: HashMap::new() }
+    }
+
+    pub fn load(&mut self, gd: &GameData, path: &str) {
+        let pathstr = path.to_owned();
+        if !self.pcx_cache.contains_key(&pathstr) {
+            let pcx = PCX::read(&mut gd.open(path).unwrap());
+            self.pcx_cache.insert(pathstr, pcx);
+        }
+    }
+    pub fn pcx(&mut self, gd: &GameData, path: &str) -> &PCX {
+        self.load(gd, path);
+        self.pcx_cache.get(path).unwrap()
+    }
+
+    pub fn pcx_ro(&self, path: &str) -> &PCX {
+        self.pcx_cache.get(path).unwrap()
     }
 }
 

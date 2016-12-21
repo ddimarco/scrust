@@ -124,11 +124,13 @@ impl Font {
 extern crate sdl2;
 use self::sdl2::rect::Rect;
 
+#[derive(Clone)]
 pub enum HorizontalAlignment {
     Left,
     Center,
     Right
 }
+#[derive(Clone)]
 pub enum VerticalAlignment {
     Top,
     Center,
