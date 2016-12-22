@@ -91,8 +91,7 @@ impl SMK {
                 let c = smk_info_video(h, &mut width, &mut height, &mut y_scale_mode);
                 assert!(c == 0, "could not get smk video infos!");
             }
-
-            SMK {
+            let mut smk = SMK {
                 handle: h,
                 frame: frame as usize,
                 frame_count: frame_count as usize,
@@ -100,7 +99,10 @@ impl SMK {
                 width: width as usize,
                 height: height as usize,
                 y_scale_mode: y_scale_mode,
-            }
+            };
+            smk.go_first_frame();
+
+            smk
         }
     }
 
