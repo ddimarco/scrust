@@ -87,14 +87,6 @@ fn read_0terminated_string(file: &mut Read) -> String {
 
 /// //////////////////////////////////////
 
-pub enum DrawCommand {
-    DrawCircle{x: i32, y: i32, radius: i32},
-    //DrawText{x: i32, y: i32, st: String},
-    DrawText{ label_element: LabelElement, rect: Rect},
-    DrawRectangle{rect: Rect, col: u8},
-    DrawPCX{rect: Rect, imgpath: String},
-    }
-
 #[macro_use]
 extern crate ecs;
 
@@ -126,72 +118,46 @@ pub struct LabelElement {
 pub struct ImageElement {
     imgpath: String,
 }
+pub struct SMKOverlaysElement {
+    // FIXME: multiple overlays
+    smkfile: String,
+    flags: SMKFlags,
+}
 components! {
     struct DialogComponents {
         #[hot] ui_element: UIElement,
         #[hot] button_element: ButtonElement,
         #[hot] label_element: LabelElement,
         #[cold] img_element: ImageElement,
+        #[cold] smk_overlays_element: SMKOverlaysElement,
     }
 }
 
-#[derive(Default)]
-pub struct CmdBuffer {
-    pub draw_buffer: Vec<DrawCommand>,
-}
+// #[derive(Default)]
+// pub struct CmdBuffer {
+//     pub draw_buffer: Vec<DrawCommand>,
+// }
 
-impl ServiceManager for CmdBuffer {}
+// impl ServiceManager for CmdBuffer {}
 
 pub struct DialogRenderSys {}
 impl System for DialogRenderSys {
     type Components = DialogComponents;
-    type Services = CmdBuffer;
+    type Services = ();
 }
-impl EntityProcess for DialogRenderSys {
-    fn process(&mut self, entities: EntityIter<DialogComponents>,
-               dh: &mut DataHelper<DialogComponents, CmdBuffer>) {
-        for e in entities {
-            if !dh.ui_element[e].visible {
-                continue;
-            }
-            // let cmd = DrawCommand::DrawRectangle {
-            //     rect: dh.ui_element[e].rect,
-            //     col: 21,
-            // };
-            // dh.services.draw_buffer.push(cmd);
-            if dh.button_element.has(&e) {
-                // let rr = dh.button_element[e].responsive_area;
-                // dh.services.draw_buffer.push(
-                //     DrawCommand::DrawRectangle {
-                //         rect: rr,
-                //         col: 20,
-                //     });
-            }
-            if dh.label_element.has(&e) {
-                let le = dh.label_element[e].clone();
-                let rect = dh.ui_element[e].rect;
-                dh.services.draw_buffer.push(DrawCommand::DrawText {
-                    label_element: le,
-                    rect: rect});
-            }
-
-            if dh.img_element.has(&e) {
-                let rect = dh.ui_element[e].rect;
-                let pcxpath = dh.img_element[e].imgpath.to_owned();
-                dh.services.draw_buffer.push(DrawCommand::DrawPCX {
-                    rect: rect,
-                    imgpath: pcxpath,
-                });
-            }
-        }
-    }
-}
+// impl EntityProcess for DialogRenderSys {
+//     fn process(&mut self, entities: EntityIter<DialogComponents>,
+//                dh: &mut DataHelper<DialogComponents, CmdBuffer>) {
+//         for e in entities {
+//         }
+//     }
+// }
 
 systems! {
-    struct DialogSystems<DialogComponents, CmdBuffer> {
+    struct DialogSystems<DialogComponents, ()> {
         active: {
-            draw_sys: EntitySystem<DialogRenderSys>
-                = EntitySystem::new(DialogRenderSys{}, aspect!(<DialogComponents> all: [ui_element])),
+            // draw_sys: EntitySystem<DialogRenderSys>
+            //     = EntitySystem::new(DialogRenderSys{}, aspect!(<DialogComponents> all: [ui_element])),
         },
         passive: {
         }
@@ -517,6 +483,28 @@ impl Dialog {
             _ => {}
         }
 
+            // smk overlay(s)
+            if lldlg.smk_offset > 0 {
+                file.seek(SeekFrom::Start(lldlg.smk_offset as u64)).ok();
+                let llstruct = SMKLLStruct::read(file);
+
+                // FIXME recurse
+                let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
+                file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
+                let smkfile = read_0terminated_string(file);
+                println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
+                         smkfile,
+                         smkflags,
+                         llstruct.overlay_offset);
+
+                data.smk_overlays_element.add(&entity, SMKOverlaysElement {
+                    flags: smkflags,
+                    smkfile: smkfile,
+                });
+
+
+            };
+
         });
 
 
@@ -568,7 +556,6 @@ impl Dialog {
         }
 
         Dialog {
-            // controls: controls
             world: world,
         }
     }
@@ -577,7 +564,6 @@ impl Dialog {
 /// //////////////////////////////////////
 
 struct MenuView {
-    // menufile: String,
     dlg: Dialog,
 }
 impl MenuView {
@@ -587,92 +573,93 @@ impl MenuView {
         let pal = gd.fontmm_reindex.palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         MenuView {
-            // menufile: menufile.to_owned(),
             dlg: dlg,
         }
     }
 }
 
-fn draw_rect(buffer: &mut [u8], buf_stride: u32, rect: &Rect, col: u8) {
-    let mut outpos = rect.left() as usize + (rect.top() * buf_stride as i32) as usize;
-    let capped_width = (min(buf_stride as i32, rect.right()) - rect.left()) as usize;
-    for x in 0..capped_width {
-        buffer[outpos + x] = col;
-    }
-    outpos += buf_stride as usize;
-    if rect.height() >= 2 {
-        for _ in 0..rect.height() - 2 {
-            buffer[outpos] = col;
-            buffer[outpos + capped_width] = col;
-            outpos += buf_stride as usize;
-        }
-    }
-    for x in 0..capped_width {
-        buffer[outpos + x] = col;
-    }
-}
+// fn draw_rect(buffer: &mut [u8], buf_stride: u32, rect: &Rect, col: u8) {
+//     let mut outpos = rect.left() as usize + (rect.top() * buf_stride as i32) as usize;
+//     let capped_width = (min(buf_stride as i32, rect.right()) - rect.left()) as usize;
+//     for x in 0..capped_width {
+//         buffer[outpos + x] = col;
+//     }
+//     outpos += buf_stride as usize;
+//     if rect.height() >= 2 {
+//         for _ in 0..rect.height() - 2 {
+//             buffer[outpos] = col;
+//             buffer[outpos + capped_width] = col;
+//             outpos += buf_stride as usize;
+//         }
+//     }
+//     for x in 0..capped_width {
+//         buffer[outpos + x] = col;
+//     }
+// }
 
 impl View for MenuView {
     fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
-        self.dlg.world.update();
+        // self.dlg.world.update();
         let reindex = &gd.fontmm_reindex.data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            for cmd in &self.dlg.world.services.draw_buffer {
-                match cmd {
-                    &DrawCommand::DrawRectangle{rect, col} => {
-                        draw_rect(buffer, screen_pitch, &rect, col);
-                    },
-                    &DrawCommand::DrawText{ref label_element, rect} => {
-                        let fnt = gd.font(label_element.font_size);
-                        let halign = label_element.horizontal_alignment.clone();
-                        let valign = label_element.vertical_alignment.clone();
-                        match label_element.text_offset {
-                            Some(offset) => {
-                                let mut rect = rect;
-                                rect.offset(offset.x(), offset.y());
-                                fnt.render_text_aligned(label_element.text.as_ref(), 0,
-                                                        &gd.fontmm_reindex.data, buffer,
-                                                        screen_pitch, &rect,
-                                                        HorizontalAlignment::Left,
-                                                        VerticalAlignment::Top);
-                            },
-                            None => {
-                                fnt.render_text_aligned(label_element.text.as_ref(), 0,
-                                                        reindex, buffer,
-                                                        screen_pitch, &rect,
-                                                        halign,
-                                                        valign);
-                            }
-                        }
-                    },
-                    &DrawCommand::DrawPCX{rect, ref imgpath} => {
-                        let cache = gd.pcx_cache.borrow();
-                        let pcx = cache.get_ro(imgpath);
-                        let pt = rect.center();
-                        render_buffer_solid(&pcx.data,
-                                            pcx.header.width as u32,
-                                            pcx.header.height as u32,
-                                            false,
-                                            pt.x(),
-                                            pt.y(),
-                                            buffer,
-                                            screen_pitch
-                        );
+
+            let dh = &self.dlg.world.data;
+            for e in self.dlg.world.entities() {
+                if dh.ui_element.has(&e) {
+                    if !dh.ui_element[e].visible {
+                        continue;
                     }
-                    _ => {
+                    // draw_rect(buffer, screen_pitch, &dh.ui_element[e].rect, 21);
+                }
+                if dh.label_element.has(&e) {
+                    let fnt = gd.font(dh.label_element[e].font_size);
+                    let halign = dh.label_element[e].horizontal_alignment.clone();
+                    let valign = dh.label_element[e].vertical_alignment.clone();
+                    match dh.label_element[e].text_offset {
+                        Some(offset) => {
+                            let mut rect = dh.ui_element[e].rect;
+                            rect.offset(offset.x(), offset.y());
+                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 0,
+                                                    &gd.fontmm_reindex.data, buffer,
+                                                    screen_pitch, &rect,
+                                                    HorizontalAlignment::Left,
+                                                    VerticalAlignment::Top);
+                            },
+                        None => {
+                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 0,
+                                                    reindex, buffer,
+                                                    screen_pitch, &dh.ui_element[e].rect,
+                                                    halign,
+                                                    valign);
+                        }
                     }
                 }
-            }
-        });
-        self.dlg.world.services.draw_buffer.clear();
+                if dh.img_element.has(&e) {
+                    let rect = &dh.ui_element[e].rect;
+                    let cache = gd.pcx_cache.borrow();
+                    let pcx = cache.get_ro(&dh.img_element[e].imgpath);
+                    let pt = rect.center();
+                    render_buffer_solid(&pcx.data,
+                                        pcx.header.width as u32,
+                                        pcx.header.height as u32,
+                                        false,
+                                        pt.x(),
+                                        pt.y(),
+                                        buffer,
+                                        screen_pitch
+                    );
+                }
+                if dh.smk_overlays_element.has(&e) {
 
-        // for cmd in &self.dlg.world.services.draw_buffer {
-            // println!("cmd: {:?}", cmd);
-        // }
+                }
+            }
+
+
+        });
 
         ViewAction::None
     }
