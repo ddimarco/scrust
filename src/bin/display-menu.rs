@@ -154,18 +154,18 @@ impl EntityProcess for DialogRenderSys {
             if !dh.ui_element[e].visible {
                 continue;
             }
-            let cmd = DrawCommand::DrawRectangle {
-                rect: dh.ui_element[e].rect,
-                col: 21,
-            };
-            dh.services.draw_buffer.push(cmd);
+            // let cmd = DrawCommand::DrawRectangle {
+            //     rect: dh.ui_element[e].rect,
+            //     col: 21,
+            // };
+            // dh.services.draw_buffer.push(cmd);
             if dh.button_element.has(&e) {
-                let rr = dh.button_element[e].responsive_area;
-                dh.services.draw_buffer.push(
-                    DrawCommand::DrawRectangle {
-                        rect: rr,
-                        col: 20,
-                    });
+                // let rr = dh.button_element[e].responsive_area;
+                // dh.services.draw_buffer.push(
+                //     DrawCommand::DrawRectangle {
+                //         rect: rr,
+                //         col: 20,
+                //     });
             }
             if dh.label_element.has(&e) {
                 let le = dh.label_element[e].clone();
@@ -553,17 +553,13 @@ impl Dialog {
         let mainlldlg = DialogLLStruct::read(file);
         assert!(mainlldlg.next_entry == 0);
 
-        // let mut controls = Vec::<Control>::new();
         if mainlldlg.smk_offset > 0 {
             println!(" reading controls");
             file.seek(SeekFrom::Start(mainlldlg.smk_offset as u64)).ok();
             loop {
                 let lldlg = DialogLLStruct::read(file);
-
-                // controls.push(Dialog::ll_dlg_to_control(&lldlg, file));
                 Dialog::ll_dlg_to_entity(gd, &lldlg, file, &mut world);
                 let next = lldlg.next_entry;
-                // ll_ctrls.push(lldlg);
                 if next == 0 {
                     break;
                 }
@@ -581,7 +577,7 @@ impl Dialog {
 /// //////////////////////////////////////
 
 struct MenuView {
-    menufile: String,
+    // menufile: String,
     dlg: Dialog,
 }
 impl MenuView {
@@ -591,7 +587,7 @@ impl MenuView {
         let pal = gd.fontmm_reindex.palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         MenuView {
-            menufile: menufile.to_owned(),
+            // menufile: menufile.to_owned(),
             dlg: dlg,
         }
     }
@@ -687,8 +683,8 @@ fn main() {
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
-                                                // "rez/gluexpcmpgn.bin"
-                                                // "rez/glucmpgn.bin"
+                                               // "rez/gluexpcmpgn.bin"
+                                               // "rez/glucmpgn.bin"
                                                "rez/glumain.bin"
                                                // "rez/gamemenu.bin"
                                                // "rez/glugamemode.bin"
