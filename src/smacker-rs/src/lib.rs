@@ -6,6 +6,8 @@ use std::io::{Write, Read};
 extern crate libc;
 use libc::{c_char, c_ulong, c_uchar, c_void, c_double};
 
+// FIXME don't copy data + palette on every frame
+
 extern "C" {
     fn smk_open_file(filename: *const c_char, mode: c_uchar) -> *mut c_void;
     fn smk_open_memory(buffer: *const u8, size: c_ulong) -> *mut c_void;
