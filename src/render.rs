@@ -17,6 +17,22 @@
 //     }
 // }
 
+pub fn render_block(inbuffer: &[u8], width: usize, height: usize,
+                    x: i32, y: i32, buffer: &mut[u8], buffer_pitch: usize) {
+    let mut outpos = (y as usize)*buffer_pitch + (x as usize);
+    let mut inpos = 0;
+    for _ in 0..height {
+        for _ in 0..width {
+            if inbuffer[inpos] > 0 {
+                buffer[outpos] = inbuffer[inpos];
+            }
+            outpos += 1;
+            inpos += 1;
+        }
+        outpos += buffer_pitch - width;
+    }
+}
+
 
 // FIXME: a lot of time spent here, speed this up
 macro_rules! render_function {

@@ -17,7 +17,7 @@ use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 
 use scrust::pcx::PCX;
-use scrust::render::render_buffer_solid;
+use scrust::render::{render_buffer_solid, render_block};
 
 #[macro_use]
 extern crate bitflags;
@@ -121,6 +121,7 @@ pub struct ImageElement {
 pub struct SMKOverlaysElement {
     // FIXME: multiple overlays
     smkfile: String,
+    offset: Point,
     flags: SMKFlags,
     current_frame: usize,
     frame_count: usize,
@@ -395,6 +396,9 @@ impl Dialog {
 
                 // FIXME recurse
                 let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
+                let offset = Point::new(llstruct.overlay_x_pos as i32,
+                                        llstruct.overlay_y_pos as i32);
+
                 file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
                 let smkfile = read_0terminated_string(file);
                 println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
@@ -408,14 +412,13 @@ impl Dialog {
                     smkfile: smkfile,
                     current_frame: 0,
                     frame_count: fcount,
+                    offset: offset,
                 });
 
 
             };
 
         });
-
-
 
 
         // let responsive_rect = Rect::new(lldlg.response_area_left as i32 + rect.left(),
@@ -478,6 +481,8 @@ impl MenuView {
     fn new(gd: &GameData, context: &mut GameContext, menufile: &str) -> Self {
         let dlg = Dialog::read(gd, &mut gd.open(menufile).unwrap());
 
+        gd.pcx_cache.borrow_mut().load(gd, "glue/PalMm/Backgnd.pcx");
+
         let pal = gd.fontmm_reindex.palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         MenuView {
@@ -493,10 +498,17 @@ impl View for MenuView {
         }
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
+
+        let pcx_cache = gd.pcx_cache.borrow();
+        let bgd = pcx_cache.get_ro("glue/PalMm/Backgnd.pcx");
+
+
         self.dlg.world.update();
         let reindex = &gd.fontmm_reindex.data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
+            render_block(&bgd.data, bgd.header.width as usize, bgd.header.height as usize,
+                         0, 0, buffer, screen_pitch as usize);
 
             let dh = &self.dlg.world.data;
             for e in self.dlg.world.entities() {
@@ -507,37 +519,25 @@ impl View for MenuView {
                     // draw_rect(buffer, screen_pitch, &dh.ui_element[e].rect, 21);
                 }
                 if dh.img_element.has(&e) {
-                    // FIXME: not correctly aligned
                     let rect = &dh.ui_element[e].rect;
-                    let cache = gd.pcx_cache.borrow();
-                    let pcx = cache.get_ro(&dh.img_element[e].imgpath);
-                    let pt = rect.center();
-                    render_buffer_solid(&pcx.data,
-                                        pcx.header.width as u32,
-                                        pcx.header.height as u32,
-                                        false,
-                                        pt.x(),
-                                        pt.y(),
-                                        buffer,
-                                        screen_pitch
-                    );
+                    // let cache = gd.pcx_cache.borrow();
+                    let pcx = pcx_cache.get_ro(&dh.img_element[e].imgpath);
+                    render_block(&pcx.data,
+                                 pcx.header.width as usize,
+                                 pcx.header.height as usize,
+                                 rect.left(), rect.top(),
+                                 buffer, screen_pitch as usize);
+
                 }
                 if dh.smk_overlays_element.has(&e) {
-                    // FIXME: not correctly aligned
                     let rect = &dh.ui_element[e].rect;
                     let cache = gd.video_cache.borrow();
                     let video = cache.get_ro(&dh.smk_overlays_element[e].smkfile);
                     let frame = &video.frames[dh.smk_overlays_element[e].current_frame];
-                    let pt = rect.center();
-                    render_buffer_solid(frame,
-                                        video.width as u32,
-                                        video.height as u32,
-                                        false,
-                                        pt.x(),
-                                        pt.y(),
-                                        buffer,
-                                        screen_pitch
-                    );
+                    let pt = rect.top_left() + dh.smk_overlays_element[e].offset;
+                    render_block(frame, video.width, video.height,
+                                 pt.x(), pt.y(), buffer, screen_pitch as usize);
+
                 }
                 if dh.label_element.has(&e) {
                     let fnt = gd.font(dh.label_element[e].font_size);
@@ -547,14 +547,14 @@ impl View for MenuView {
                         Some(offset) => {
                             let mut rect = dh.ui_element[e].rect;
                             rect.offset(offset.x(), offset.y());
-                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 0,
+                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 1,
                                                     &gd.fontmm_reindex.data, buffer,
                                                     screen_pitch, &rect,
                                                     HorizontalAlignment::Left,
                                                     VerticalAlignment::Top);
                             },
                         None => {
-                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 0,
+                            fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 1,
                                                     reindex, buffer,
                                                     screen_pitch, &dh.ui_element[e].rect,
                                                     halign,
