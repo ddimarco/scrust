@@ -118,13 +118,16 @@ pub struct LabelElement {
 pub struct ImageElement {
     imgpath: String,
 }
-pub struct SMKOverlaysElement {
-    // FIXME: multiple overlays
+struct SMKOverlay {
     smkfile: String,
     offset: Point,
     flags: SMKFlags,
     current_frame: usize,
     frame_count: usize,
+}
+pub struct SMKOverlaysElement {
+    // a single control can have multiple smk overlays
+    overlays: Vec<SMKOverlay>,
 }
 components! {
     struct DialogComponents {
@@ -145,9 +148,10 @@ impl EntityProcess for VideoSteppingSys {
         fn process(&mut self, entities: EntityIter<DialogComponents>,
                    dh: &mut DataHelper<DialogComponents, ()>) {
             for e in entities {
-                let mut smk_el = &mut dh.smk_overlays_element[e];
-                smk_el.current_frame = (smk_el.current_frame + 1) %
-                    smk_el.frame_count;
+                for smk_el in &mut dh.smk_overlays_element[e].overlays {
+                    smk_el.current_frame = (smk_el.current_frame + 1) %
+                        smk_el.frame_count;
+                }
             }
         }
 }
@@ -211,7 +215,8 @@ bitflags! {
         const DLG_COL0_TRANSPARENT  = 0x00002000,
         const DLG_FONT16X  = 0x00004000,
         const DLG_ALTERNATE_STYLE  = 0x00008000,
-        const DLG_FONT14  = 0x00010000,
+
+    const DLG_FONT14  = 0x00010000,
         const DLG_REMOVE_STYLES  = 0x00020000,
         const DLG_APPLY_TRANSLUCENCY  = 0x00040000,
         const DLG_DEFAULT_BUTTON  = 0x00080000,
@@ -391,31 +396,41 @@ impl Dialog {
 
             // smk overlay(s)
             if lldlg.smk_offset > 0 {
-                file.seek(SeekFrom::Start(lldlg.smk_offset as u64)).ok();
-                let llstruct = SMKLLStruct::read(file);
+                let mut smkoverlays = Vec::<SMKOverlay>::new();
 
-                // FIXME recurse
-                let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
-                let offset = Point::new(llstruct.overlay_x_pos as i32,
-                                        llstruct.overlay_y_pos as i32);
+                // read all smk overlays
+                let mut smk_offset = lldlg.smk_offset;
+                let mut smk_cache = gd.video_cache.borrow_mut();
+                while smk_offset > 0 {
+                    file.seek(SeekFrom::Start(smk_offset as u64)).ok();
+                    let llstruct = SMKLLStruct::read(file);
 
-                file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
-                let smkfile = read_0terminated_string(file);
-                println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
-                         smkfile,
-                         smkflags,
-                         llstruct.overlay_offset);
-                let fcount = gd.video_cache.borrow_mut().get(gd, &smkfile).frames.len();
+                    let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
+                    let offset = Point::new(llstruct.overlay_x_pos as i32,
+                                            llstruct.overlay_y_pos as i32);
+
+                    file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
+                    let smkfile = read_0terminated_string(file);
+                    println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
+                             smkfile,
+                             smkflags,
+                             llstruct.overlay_offset);
+                    let fcount = smk_cache.get(gd, &smkfile).frames.len();
+                    let ol = SMKOverlay {
+                        flags: smkflags,
+                        smkfile: smkfile,
+                        current_frame: 0,
+                        frame_count: fcount,
+                        offset: offset,
+                    };
+                    smkoverlays.push(ol);
+                    smk_offset = llstruct.overlay_offset;
+                }
+                println!("read {} smk overlays", smkoverlays.len());
 
                 data.smk_overlays_element.add(&entity, SMKOverlaysElement {
-                    flags: smkflags,
-                    smkfile: smkfile,
-                    current_frame: 0,
-                    frame_count: fcount,
-                    offset: offset,
+                    overlays: smkoverlays,
                 });
-
-
             };
 
         });
@@ -532,11 +547,17 @@ impl View for MenuView {
                 if dh.smk_overlays_element.has(&e) {
                     let rect = &dh.ui_element[e].rect;
                     let cache = gd.video_cache.borrow();
-                    let video = cache.get_ro(&dh.smk_overlays_element[e].smkfile);
-                    let frame = &video.frames[dh.smk_overlays_element[e].current_frame];
-                    let pt = rect.top_left() + dh.smk_overlays_element[e].offset;
-                    render_block(frame, video.width, video.height,
-                                 pt.x(), pt.y(), buffer, screen_pitch as usize);
+                    for ol in &dh.smk_overlays_element[e].overlays {
+                        if ol.flags.contains(SMK_SHOW_IF_OVER) {
+                            // TODO
+                            continue;
+                        }
+                        let video = cache.get_ro(&ol.smkfile);
+                        let frame = &video.frames[ol.current_frame];
+                        let pt = rect.top_left() + ol.offset;
+                        render_block(frame, video.width, video.height,
+                                     pt.x(), pt.y(), buffer, screen_pitch as usize);
+                    }
 
                 }
                 if dh.label_element.has(&e) {
