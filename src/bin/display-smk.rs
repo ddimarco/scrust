@@ -5,26 +5,30 @@ extern crate scrust;
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::render::{render_buffer_solid};
-use scrust::pal::Palette;
+use scrust::Video;
 
 extern crate smacker;
-use smacker::{SMK, FrameIterationStatus};
+use smacker::SMK;
 
 // TODO: convert smks into video structure?
 struct SMKView {
-    smk: SMK,
+    // smk: SMK,
+    video: Video,
+    frame: usize,
 }
 impl SMKView {
     fn new(gd: &GameData, context: &mut GameContext, smk_filename: &str) -> Self {
         let mut file = gd.open(smk_filename).unwrap();
         let fsize = file.get_filesize();
-        let smk = SMK::read(&mut file, fsize);
-        let frame = smk.get_frame();
+        let mut smk = SMK::read(&mut file, fsize);
+
+        let video = Video::from_smk(&mut smk);
         // assuming palette stays constant
-        let pal = Palette::from_buffer(&frame.palette);
-        context.screen.set_palette(&pal.to_sdl()).expect("could not set palette!");
+        context.screen.set_palette(&video.pal.to_sdl()).expect("could not set palette!");
         SMKView {
-            smk: smk,
+            // smk: smk,
+            video: video,
+            frame: 0,
         }
     }
 }
@@ -37,20 +41,14 @@ impl View for SMKView {
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
 
-        let frame = self.smk.get_frame();
-        let data = &frame.data;
+        let data = &self.video.frames[self.frame];
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            render_buffer_solid(&data, frame.width as u32, frame.height as u32,
+            render_buffer_solid(&data, self.video.width as u32, self.video.height as u32,
                                 false,
                                 320, 240, buffer, screen_pitch);
         });
-        match self.smk.go_next_frame() {
-            FrameIterationStatus::Done => {
-                self.smk.go_first_frame();
-            },
-            _ => {}
-        }
+        self.frame = (self.frame + 1) % self.video.frames.len();
 
         ViewAction::None
     }

@@ -15,6 +15,9 @@ use ::lox::LOX;
 
 use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
 
+use Video;
+use smacker::SMK;
+
 #[derive(Copy, Clone, Debug)]
 pub enum TileSet {
     Badlands = 0,
@@ -61,6 +64,7 @@ pub struct GameData {
     pub grp_cache: RefCell<GRPCache>,
     pub lox_cache: RefCell<LOXCache>,
     pub pcx_cache: RefCell<PCXCache>,
+    pub video_cache: RefCell<VideoCache>,
 
     pub unit_wireframe_grp: GRP,
 }
@@ -182,6 +186,7 @@ impl GameData {
             grp_cache: RefCell::new(GRPCache::new()),
             lox_cache: RefCell::new(LOXCache::new()),
             pcx_cache: RefCell::new(PCXCache::new()),
+            video_cache: RefCell::new(VideoCache::new()),
 
             unit_wireframe_grp: unit_wireframe_grp,
         }
@@ -272,6 +277,36 @@ def_cache_struct! (LOXCache, u32, LOX, |gd: &GameData, lox_id: u32| {
 // def_cache_struct! (PCXCache, String, PCX, |gd: &GameData, path: &String| {
 //     PCX::read(&mut gd.open(&path).unwrap())
 // });
+
+pub struct VideoCache {
+    cache: HashMap<String, Video>,
+}
+impl VideoCache {
+    pub fn new() -> Self {
+        VideoCache { cache: HashMap::new() }
+    }
+
+    pub fn load(&mut self, gd: &GameData, path: &str) {
+        let pathstr = path.to_owned();
+        if !self.cache.contains_key(&pathstr) {
+            // let pcx = PCX::read(&mut gd.open(path).unwrap());
+            let mut file = gd.open(path).unwrap();
+            let fsize = file.get_filesize();
+            let mut smk = SMK::read(&mut file, fsize);
+
+            let video = Video::from_smk(&mut smk);
+            self.cache.insert(pathstr, video);
+        }
+    }
+    pub fn get(&mut self, gd: &GameData, path: &str) -> &Video {
+        self.load(gd, path);
+        self.cache.get(path).unwrap()
+    }
+
+    pub fn get_ro(&self, path: &str) -> &Video {
+        self.cache.get(path).unwrap()
+    }
+}
 
 pub struct PCXCache {
     pcx_cache: HashMap<String, PCX>,

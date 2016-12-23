@@ -122,6 +122,8 @@ pub struct SMKOverlaysElement {
     // FIXME: multiple overlays
     smkfile: String,
     flags: SMKFlags,
+    current_frame: usize,
+    frame_count: usize,
 }
 components! {
     struct DialogComponents {
@@ -133,31 +135,28 @@ components! {
     }
 }
 
-// #[derive(Default)]
-// pub struct CmdBuffer {
-//     pub draw_buffer: Vec<DrawCommand>,
-// }
-
-// impl ServiceManager for CmdBuffer {}
-
-pub struct DialogRenderSys {}
-impl System for DialogRenderSys {
+pub struct VideoSteppingSys {}
+impl System for VideoSteppingSys {
     type Components = DialogComponents;
     type Services = ();
 }
-// impl EntityProcess for DialogRenderSys {
-//     fn process(&mut self, entities: EntityIter<DialogComponents>,
-//                dh: &mut DataHelper<DialogComponents, CmdBuffer>) {
-//         for e in entities {
-//         }
-//     }
-// }
+impl EntityProcess for VideoSteppingSys {
+        fn process(&mut self, entities: EntityIter<DialogComponents>,
+                   dh: &mut DataHelper<DialogComponents, ()>) {
+            for e in entities {
+                let mut smk_el = &mut dh.smk_overlays_element[e];
+                smk_el.current_frame = (smk_el.current_frame + 1) %
+                    smk_el.frame_count;
+            }
+        }
+}
 
 systems! {
     struct DialogSystems<DialogComponents, ()> {
         active: {
-            // draw_sys: EntitySystem<DialogRenderSys>
-            //     = EntitySystem::new(DialogRenderSys{}, aspect!(<DialogComponents> all: [ui_element])),
+            video_stepping_sys: EntitySystem<VideoSteppingSys>
+                = EntitySystem::new(VideoSteppingSys{},
+                                    aspect!(<DialogComponents> all: [ui_element, smk_overlays_element])),
         },
         passive: {
         }
@@ -239,104 +238,10 @@ bitflags! {
     }
 }
 
-// struct SMKElement {
-//     overlay: Option<Box<SMKElement>>,
-//     filename: String,
-//     flags: SMKFlags,
-//     overlay_x: u16,
-//     overlay_y: u16,
-// }
-
-// struct Control {
-//     rect: Rect,
-//     control_type: ControlType,
-//     flags: DialogFlags,
-//     dlgstring: Option<String>,
-//     responsive_area: Rect,
-//     smk_overlay: Option<SMKElement>,
-//     text_offset: Option<Point>,
-// }
 struct Dialog {
-    // controls: Vec<Control>,
     world: World<DialogSystems>,
 }
 impl Dialog {
-    // fn ll_dlg_to_control<T: Read + Seek>(lldlg: &DialogLLStruct, file: &mut T) -> Control {
-    //     let rect = Rect::new(lldlg.left_pos as i32,
-    //                          lldlg.top_pos as i32,
-    //                          lldlg.width as u32,
-    //                          lldlg.height as u32);
-    //     let responsive_rect = Rect::new(lldlg.response_area_left as i32 + rect.left(),
-    //                                     lldlg.response_area_top as i32 + rect.top(),
-    //                                     lldlg.response_area_width as u32,
-    //                                     lldlg.response_area_height as u32);
-    //     let dlgstring = if lldlg.string_offset > 0 {
-    //         file.seek(SeekFrom::Start(lldlg.string_offset as u64)).ok();
-    //         Some(read_0terminated_string(file))
-    //     } else {
-    //         None
-    //     };
-    //     let ctrltype = ControlType::from_u32(lldlg.control_type).unwrap();
-    //     let flags = DialogFlags::from_bits(lldlg.flags).unwrap();
-    //     println!("id: {}, string: {:?}, controltype: {:?}",
-    //              lldlg.control_id,
-    //              dlgstring,
-    //              ctrltype);
-    //     println!(" {:?}", flags);
-
-    //     let smk_overlay = if lldlg.smk_offset > 0 {
-    //         file.seek(SeekFrom::Start(lldlg.smk_offset as u64)).ok();
-    //         let llstruct = SMKLLStruct::read(file);
-    //         Some(Dialog::ll_smk_to_struct(&llstruct, file))
-    //     } else {
-    //         None
-    //     };
-
-    //     let text_offset =
-    //         if (lldlg.text_offset_x != 0) && (lldlg.text_offset_y != 0) {
-    //             Some(Point::new(lldlg.text_offset_x as i32, lldlg.text_offset_y as i32))
-    //         } else {
-    //             None
-    //         };
-
-    //     Control {
-    //         rect: rect,
-    //         responsive_area: responsive_rect,
-    //         control_type: ctrltype,
-    //         flags: flags,
-    //         dlgstring: dlgstring,
-    //         smk_overlay: smk_overlay,
-    //         text_offset: text_offset,
-    //     }
-    // }
-
-    // fn ll_smk_to_struct<T: Read + Seek>(llstruct: &SMKLLStruct, file: &mut T) -> SMKElement {
-    //     let smkflags = SMKFlags::from_bits(llstruct.flags).unwrap();
-    //     file.seek(SeekFrom::Start(llstruct.filename as u64)).ok();
-    //     let smkfile = read_0terminated_string(file);
-
-    //     println!(" smk overlay: {}, flags: {:?}, next overlay: {}",
-    //              smkfile,
-    //              smkflags,
-    //              llstruct.overlay_offset);
-
-    //     let overlay = if llstruct.overlay_offset > 0 {
-    //         file.seek(SeekFrom::Start(llstruct.overlay_offset as u64)).ok();
-    //         let llstruct = SMKLLStruct::read(file);
-    //         Some(Box::new(Dialog::ll_smk_to_struct(&llstruct, file)))
-    //     } else {
-    //         None
-    //     };
-
-    //     SMKElement {
-    //         overlay: overlay,
-    //         flags: smkflags,
-    //         filename: smkfile,
-    //         overlay_x: llstruct.overlay_x_pos,
-    //         overlay_y: llstruct.overlay_y_pos,
-    //     }
-    // }
-
     fn ll_dlg_to_entity<T: Read + Seek>(gd: &GameData, lldlg: &DialogLLStruct, file: &mut T,
                                         world: &mut World<DialogSystems>) {
         let rect = Rect::new(lldlg.left_pos as i32,
@@ -496,10 +401,13 @@ impl Dialog {
                          smkfile,
                          smkflags,
                          llstruct.overlay_offset);
+                let fcount = gd.video_cache.borrow_mut().get(gd, &smkfile).frames.len();
 
                 data.smk_overlays_element.add(&entity, SMKOverlaysElement {
                     flags: smkflags,
                     smkfile: smkfile,
+                    current_frame: 0,
+                    frame_count: fcount,
                 });
 
 
@@ -578,31 +486,14 @@ impl MenuView {
     }
 }
 
-// fn draw_rect(buffer: &mut [u8], buf_stride: u32, rect: &Rect, col: u8) {
-//     let mut outpos = rect.left() as usize + (rect.top() * buf_stride as i32) as usize;
-//     let capped_width = (min(buf_stride as i32, rect.right()) - rect.left()) as usize;
-//     for x in 0..capped_width {
-//         buffer[outpos + x] = col;
-//     }
-//     outpos += buf_stride as usize;
-//     if rect.height() >= 2 {
-//         for _ in 0..rect.height() - 2 {
-//             buffer[outpos] = col;
-//             buffer[outpos + capped_width] = col;
-//             outpos += buf_stride as usize;
-//         }
-//     }
-//     for x in 0..capped_width {
-//         buffer[outpos + x] = col;
-//     }
-// }
-
 impl View for MenuView {
     fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
-        // self.dlg.world.update();
+        // clear the screen
+        context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
+        self.dlg.world.update();
         let reindex = &gd.fontmm_reindex.data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
@@ -614,6 +505,39 @@ impl View for MenuView {
                         continue;
                     }
                     // draw_rect(buffer, screen_pitch, &dh.ui_element[e].rect, 21);
+                }
+                if dh.img_element.has(&e) {
+                    // FIXME: not correctly aligned
+                    let rect = &dh.ui_element[e].rect;
+                    let cache = gd.pcx_cache.borrow();
+                    let pcx = cache.get_ro(&dh.img_element[e].imgpath);
+                    let pt = rect.center();
+                    render_buffer_solid(&pcx.data,
+                                        pcx.header.width as u32,
+                                        pcx.header.height as u32,
+                                        false,
+                                        pt.x(),
+                                        pt.y(),
+                                        buffer,
+                                        screen_pitch
+                    );
+                }
+                if dh.smk_overlays_element.has(&e) {
+                    // FIXME: not correctly aligned
+                    let rect = &dh.ui_element[e].rect;
+                    let cache = gd.video_cache.borrow();
+                    let video = cache.get_ro(&dh.smk_overlays_element[e].smkfile);
+                    let frame = &video.frames[dh.smk_overlays_element[e].current_frame];
+                    let pt = rect.center();
+                    render_buffer_solid(frame,
+                                        video.width as u32,
+                                        video.height as u32,
+                                        false,
+                                        pt.x(),
+                                        pt.y(),
+                                        buffer,
+                                        screen_pitch
+                    );
                 }
                 if dh.label_element.has(&e) {
                     let fnt = gd.font(dh.label_element[e].font_size);
@@ -637,24 +561,6 @@ impl View for MenuView {
                                                     valign);
                         }
                     }
-                }
-                if dh.img_element.has(&e) {
-                    let rect = &dh.ui_element[e].rect;
-                    let cache = gd.pcx_cache.borrow();
-                    let pcx = cache.get_ro(&dh.img_element[e].imgpath);
-                    let pt = rect.center();
-                    render_buffer_solid(&pcx.data,
-                                        pcx.header.width as u32,
-                                        pcx.header.height as u32,
-                                        false,
-                                        pt.x(),
-                                        pt.y(),
-                                        buffer,
-                                        screen_pitch
-                    );
-                }
-                if dh.smk_overlays_element.has(&e) {
-
                 }
             }
 

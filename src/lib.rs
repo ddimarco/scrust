@@ -8,6 +8,8 @@ extern crate rand;
 extern crate stash;
 
 extern crate pathplanning;
+extern crate smacker;
+use smacker::SMK;
 
 #[macro_use]
 pub mod events;
@@ -37,8 +39,7 @@ use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
 use scunits::SCUnit;
-
-use std::rc::Rc;
+use pal::Palette;
 
 use stash::Stash;
 
@@ -69,6 +70,35 @@ struct_events! (
         quit: Quit { .. }
     }
 );
+
+// FIXME: use same structure for GRPs?
+pub struct Video {
+    pub pal: Palette,
+    pub frames: Vec<Vec<u8>>,
+    pub width: usize,
+    pub height: usize,
+}
+impl Video {
+    pub fn from_smk(smk: &mut SMK) -> Self {
+        let mut frames = Vec::<Vec<u8>>::with_capacity(smk.frame_count);
+        smk.go_first_frame();
+
+        let pal = Palette::from_buffer(&smk.copy_palette());
+
+        for _ in 0..smk.frame_count {
+            let framedata = smk.copy_frame();
+            frames.push(framedata);
+            smk.go_next_frame();
+        }
+
+        Video {
+            width: smk.width,
+            height: smk.height,
+            pal: pal,
+            frames: frames,
+        }
+    }
+}
 
 #[derive(Copy,Clone,PartialEq,Debug)]
 pub enum MousePointerType {

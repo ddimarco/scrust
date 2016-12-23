@@ -1,3 +1,22 @@
+// fn draw_rect(buffer: &mut [u8], buf_stride: u32, rect: &Rect, col: u8) {
+//     let mut outpos = rect.left() as usize + (rect.top() * buf_stride as i32) as usize;
+//     let capped_width = (min(buf_stride as i32, rect.right()) - rect.left()) as usize;
+//     for x in 0..capped_width {
+//         buffer[outpos + x] = col;
+//     }
+//     outpos += buf_stride as usize;
+//     if rect.height() >= 2 {
+//         for _ in 0..rect.height() - 2 {
+//             buffer[outpos] = col;
+//             buffer[outpos + capped_width] = col;
+//             outpos += buf_stride as usize;
+//         }
+//     }
+//     for x in 0..capped_width {
+//         buffer[outpos + x] = col;
+//     }
+// }
+
 
 // FIXME: a lot of time spent here, speed this up
 macro_rules! render_function {
