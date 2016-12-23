@@ -1,10 +1,7 @@
 extern crate sdl2;
-use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 
 extern crate scrust;
-use scrust::font::FontSize;
-
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::render::{render_buffer_solid};
@@ -62,5 +59,5 @@ impl View for SMKView {
 fn main() {
     ::scrust::spawn("smk viewer",
                     "/home/dm/.wine/drive_c/StarCraft/",
-                    |gd, gc, _| Box::new(SMKView::new(gd, gc, "glue/mainmenu/Single.smk")));
+                    |gd, gc, _| Box::new(SMKView::new(gd, gc, "glue/mainmenu/Editor.smk")));
 }
