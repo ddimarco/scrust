@@ -2,6 +2,7 @@ extern crate sdl2;
 use sdl2::rect::{Rect, Point};
 use sdl2::render::{Renderer, Texture};
 use sdl2::pixels::Color;
+use sdl2::keyboard::Keycode;
 
 use ::grp::GRP;
 use ::pal::{Palette, palimg_to_texture};
@@ -449,16 +450,16 @@ impl LayerTrait for UiLayer {
 
         // keyboard events
         {
-            let scroll_horizontal = if gc.events.key_right {
+            let scroll_horizontal = if gc.events.now.is_key_pressed(&Keycode::Right) {
                 1
-            } else if gc.events.key_left {
+            } else if gc.events.now.is_key_pressed(&Keycode::Left) {
                 -1
             } else {
                 0
             };
-            let scroll_vertical = if gc.events.key_down {
+            let scroll_vertical = if gc.events.now.is_key_pressed(&Keycode::Down) {
                 1
-            } else if gc.events.key_up {
+            } else if gc.events.now.is_key_pressed(&Keycode::Up) {
                 -1
             } else {
                 0

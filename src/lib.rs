@@ -42,26 +42,27 @@ use scunits::SCUnit;
 use pal::Palette;
 
 use stash::Stash;
+use std::collections::HashSet;
 
 struct_events! (
-    keyboard: {
-        key_escape: Escape,
-        key_up: Up,
-        key_down: Down,
-        key_left: Left,
-        key_right: Right,
-        key_space: Space,
-        key_return: Return,
-        key_n: N,
-        key_p: P,
-        key_a: A,
-        key_q: Q,
-        key_w: W,
-        key_d: D,
-        key_e: E,
-        key_c: C,
-        key_r: R
-    },
+    // keyboard: {
+    //     key_escape: Escape,
+    //     key_up: Up,
+    //     key_down: Down,
+    //     key_left: Left,
+    //     key_right: Right,
+    //     key_space: Space,
+    //     key_return: Return,
+    //     key_n: N,
+    //     key_p: P,
+    //     key_a: A,
+    //     key_q: Q,
+    //     key_w: W,
+    //     key_d: D,
+    //     key_e: E,
+    //     key_c: C,
+    //     key_r: R
+    // },
     mouse: {
         mouse_left: Left,
         mouse_right: Right

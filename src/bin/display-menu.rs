@@ -1,4 +1,3 @@
-use std::cmp::min;
 use std::io::{Read, Seek, SeekFrom};
 extern crate sdl2;
 use sdl2::rect::Rect;
@@ -186,15 +185,26 @@ impl EntityProcess for InputSys {
         let mp = &self.mouse_pos;
         self.selected_entry = None;
         for e in entities {
+            // mouse focus
             let focused = {
                 let rrect = &dh.button_element[e].responsive_area;
                 rrect.contains(*mp)
             };
             dh.button_element[e].in_focus = focused;
+            // mouse click
             if self.events.mouse_left && focused {
                 self.selected_entry = Some(dh.ui_element[e].bwid);
             }
-            // TODO: implement hotkey handling
+
+            // hotkey handling
+            match dh.button_element[e].hotkey {
+                Some(c) => {
+                    if self.events.is_key_pressed(&sdl2::keyboard::Keycode::from_i32(c as i32).unwrap()) {
+                        self.selected_entry = Some(dh.ui_element[e].bwid);
+                    }
+                },
+                None => {}
+            }
         }
     }
 }
@@ -561,12 +571,13 @@ impl MenuView {
     }
 }
 
+use sdl2::keyboard::Keycode;
 impl View for MenuView {
     fn render_layers(&mut self, context: &mut GameContext) {
         self.mouse_pointer.render(&mut context.renderer);
     }
     fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
-        if context.events.now.quit || context.events.now.key_escape == Some(true) {
+        if context.events.now.quit || context.events.now.is_key_pressed(&Keycode::Escape) {
             return ViewAction::Quit;
         }
 
@@ -575,7 +586,7 @@ impl View for MenuView {
             self.mouse_pointer.update_pos(mouse_x, mouse_y);
             self.dlg.world.systems.input_sys.mouse_pos = Point::new(mouse_x, mouse_y);
         }
-        self.dlg.world.systems.input_sys.events = context.events.now;
+        self.dlg.world.systems.input_sys.events = context.events.now.clone();
         //self.mouse_pointer.update();
         process!(self.dlg.world, input_sys);
         match self.dlg.world.systems.input_sys.selected_entry {
@@ -675,11 +686,15 @@ fn main() {
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
-                                               // "mm",
-                                               "cs",
-                                               "rez/gluexpcmpgn.bin"
+                                               "mm",
+                                               // "rp",
+                                               //"cs",
+                                               //"rez/gluexpcmpgn.bin"
                                                // "rez/glucmpgn.bin"
-                                               // "rez/glumain.bin"
+                                               "rez/glumain.bin"
+                                               // "rez/titledlg.bin"
+                                               // "rez/glurdyp.bin"
+                                               // "rez/video.bin"
                                                // "rez/gamemenu.bin"
                                                // "rez/glugamemode.bin"
                         ))
