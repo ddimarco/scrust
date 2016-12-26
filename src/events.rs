@@ -58,14 +58,15 @@ macro_rules! struct_events {
 
                 for event in self.pump.poll_iter() {
                     use sdl2::event::Event::*;
-                    use sdl2::event::WindowEventId::Resized;
+                    // use sdl2::event::WindowEventId::Resized;
                     use sdl2::keyboard::Keycode::*;
-                    use sdl2::mouse::Mouse;
+                    use sdl2::mouse::MouseButton;
+                    // println!("pumpevent: {:?}", event);
 
                     match event {
-                        Window { win_event_id: Resized, ..} => {
-                            self.now.resize = Some(renderer.output_size().unwrap());
-                        },
+                        // Window { win_event_id: Resized, ..} => {
+                            // self.now.resize = Some(renderer.output_size().unwrap());
+                        // },
                         KeyDown { keycode, .. } => match keycode {
                             $(
                                 Some($k_sdl) => {
@@ -96,7 +97,7 @@ macro_rules! struct_events {
 
                         MouseButtonDown { mouse_btn, .. } => match mouse_btn {
                             $(
-                                Mouse::$m_sdl => {
+                                MouseButton::$m_sdl => {
                                    self.now.$m_alias = true;
                                 }
                             ), *
@@ -105,7 +106,7 @@ macro_rules! struct_events {
 
                         MouseButtonUp { mouse_btn, .. } => match mouse_btn {
                             $(
-                                Mouse::$m_sdl => {
+                                MouseButton::$m_sdl => {
                                     self.now.$m_alias = false;
                                 }
                             ), *
