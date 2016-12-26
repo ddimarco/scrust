@@ -592,8 +592,6 @@ impl View for MenuView {
         let bgd = pcx_cache.get_ro(&self.bgd_pcx);
 
         self.dlg.world.update();
-        // FIXME: get proper reindexing table
-        // let reindex = &gd.fontmm_reindex.data;
         let reindex = &gd.font_reindexing_store.get_menu_reindex(&self.short_name).data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
@@ -601,13 +599,10 @@ impl View for MenuView {
                          0, 0, buffer, screen_pitch as usize);
 
             let dh = &self.dlg.world.data;
-            // FIXME: order is important here!
+            // NOTE order is random in this loop!
             for e in self.dlg.world.entities() {
-                if dh.ui_element.has(&e) {
-                    if !dh.ui_element[e].visible {
-                        continue;
-                    }
-                    // draw_rect(buffer, screen_pitch, &dh.ui_element[e].rect, 21);
+                if !dh.ui_element[e].visible {
+                    continue;
                 }
                 if dh.img_element.has(&e) {
                     let rect = &dh.ui_element[e].rect;
@@ -637,9 +632,11 @@ impl View for MenuView {
                         render_block(frame, video.width, video.height,
                                      pt.x(), pt.y(), buffer, screen_pitch as usize);
                     }
-
                 }
-                if dh.label_element.has(&e) {
+            }
+            // render labels (need to be on top of everything else)
+            for e in self.dlg.world.entities() {
+                if dh.ui_element[e].visible && dh.label_element.has(&e) {
                     let fnt = gd.font(dh.label_element[e].font_size);
                     let halign = dh.label_element[e].horizontal_alignment.clone();
                     let valign = dh.label_element[e].vertical_alignment.clone();
@@ -680,8 +677,8 @@ fn main() {
                         Box::new(MenuView::new(gd, gc,
                                                // "mm",
                                                "cs",
-                                               // "rez/gluexpcmpgn.bin"
-                                               "rez/glucmpgn.bin"
+                                               "rez/gluexpcmpgn.bin"
+                                               // "rez/glucmpgn.bin"
                                                // "rez/glumain.bin"
                                                // "rez/gamemenu.bin"
                                                // "rez/glugamemode.bin"
