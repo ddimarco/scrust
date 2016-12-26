@@ -199,7 +199,7 @@ pub enum ViewAction {
 }
 
 pub trait View {
-    fn update(&mut self, _: &mut GameContext, _: &mut GameState) {}
+    fn update(&mut self, _: &GameData, _: &mut GameContext, _: &mut GameState) {}
 
     /// renders the current view into context.screen
     fn render(&mut self, gd: &GameData, context: &mut GameContext, state: &GameState, elapsed: f64) -> ViewAction;
@@ -281,7 +281,7 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
         }
 
         context.events.pump(&mut context.renderer);
-        current_view.update(&mut context, &mut state);
+        current_view.update(&gd, &mut context, &mut state);
 
         current_view.generate_layer_events(&mut context, &mut state);
         current_view.process_layer_events(&mut context, &mut state);

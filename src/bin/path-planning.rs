@@ -3,6 +3,7 @@ use std::env;
 #[macro_use]
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents};
+use scrust::gamedata::GameData;
 use scrust::terrain::Map;
 use scrust::font::{FontSize, RenderText};
 
@@ -31,12 +32,12 @@ struct MapView {
 const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
 impl MapView {
-    fn new(context: &mut GameContext, _: &mut GameState, mapfn: &str) -> Self {
-        let map = Map::read(&context.gd, mapfn);
+    fn new(gd: &GameData, context: &mut GameContext, _: &mut GameState, mapfn: &str) -> Self {
+        let map = Map::read(gd, mapfn);
         println!("map name: {}", map.name());
         println!("map desc: {}", map.description());
         context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
-        let ui_layer = UiLayer::new(context, &map);
+        let ui_layer = UiLayer::new(gd, context, &map);
 
         MapView {
             map: map,
@@ -49,17 +50,17 @@ impl MapView {
     }
 }
 impl View for MapView {
-    fn update(&mut self, context: &mut GameContext, state: &mut GameState) {
-        self.ui_layer.update(context, state);
+    fn update(&mut self, gd: &GameData, context: &mut GameContext, state: &mut GameState) {
+        self.ui_layer.update(gd, context, state);
     }
-    fn render(&mut self, context: &mut GameContext, state: &GameState, _: f64) -> ViewAction {
+    fn render(&mut self, gd: &GameData, context: &mut GameContext, state: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
         let planning_str_rect = Rect::new(50, 300, 300, 50);
-        let gd = &context.gd;
         let fnt = gd.font(FontSize::Font16);
-        let fnt_reindex = &gd.font_reindex.data;
+        // let fnt_reindex = &gd.font_reindex.data;
+        let fnt_reindex = &gd.font_reindexing_store.get_game_reindex().data;
 
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
@@ -206,14 +207,14 @@ impl View for MapView {
 fn main() {
     ::scrust::spawn("path planning",
                     "/home/dm/.wine/drive_c/StarCraft/",
-                    |gc, state| {
+                    |gd, gc, state| {
         let args: Vec<String> = env::args().collect();
         let mapfn = if args.len() == 2 {
             args[1].clone()
         } else {
             String::from("/home/dm/.wine/drive_c/StarCraft/Maps/(6)New Gettysburg.scm")
         };
-        Box::new(MapView::new(gc, state, &mapfn))
+        Box::new(MapView::new(gd, gc, state, &mapfn))
     });
 
 }
