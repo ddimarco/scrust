@@ -35,7 +35,7 @@ impl SMKView {
 
 impl View for SMKView {
     fn render(&mut self, _: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
-        if context.events.now.quit || context.events.now.key_escape == Some(true) {
+        if context.events.now.quit || context.events.now.is_key_pressed(&sdl2::keyboard::Keycode::Escape) {
             return ViewAction::Quit;
         }
         // clear the screen

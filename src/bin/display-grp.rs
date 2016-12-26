@@ -36,16 +36,17 @@ impl GRPView {
         }
     }
 }
+use sdl2::keyboard::Keycode;
 impl View for GRPView {
     fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
-        if context.events.now.quit || context.events.now.key_escape == Some(true) {
+        if context.events.now.quit || context.events.now.is_key_pressed(&Keycode::Escape) {
             return ViewAction::Quit;
         }
 
-        if context.events.now.key_space == Some(true) {
+        if context.events.now.is_key_pressed(&Keycode::Space) {
             self.frame = (self.frame + 1) % self.grp.header.frame_count;
         }
-        if context.events.now.key_r == Some(true) {
+        if context.events.now.is_key_pressed(&Keycode::R) {
             self.reindex = !self.reindex;
         }
 
