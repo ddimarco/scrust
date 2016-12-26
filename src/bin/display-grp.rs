@@ -9,6 +9,7 @@ use scrust::font::FontSize;
 
 use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
+use scrust::gamedata::GameData;
 use scrust::grp::GRP;
 use scrust::pcx::PCX;
 use scrust::render::{render_buffer_solid, render_buffer_with_solid_reindexing};
@@ -21,11 +22,11 @@ struct GRPView {
     reindexing_table: Vec<u8>,
 }
 impl GRPView {
-    fn new(context: &mut GameContext, grpfile: &str, use_reindex: bool, reindexfile: &str) -> Self {
-        let pal = context.gd.install_pal.to_sdl();
+    fn new(gd: &GameData, context: &mut GameContext, grpfile: &str, use_reindex: bool, reindexfile: &str) -> Self {
+        let pal = gd.install_pal.to_sdl();
         context.screen.set_palette(&pal).ok();
-        let grp = GRP::read(&mut context.gd.open(grpfile).unwrap());
-        let reindex = PCX::read(&mut context.gd.open(reindexfile).unwrap());
+        let grp = GRP::read(&mut gd.open(grpfile).unwrap());
+        let reindex = PCX::read(&mut gd.open(reindexfile).unwrap());
         GRPView {
             grpfile: grpfile.to_owned(),
             grp: grp,
@@ -36,7 +37,7 @@ impl GRPView {
     }
 }
 impl View for GRPView {
-    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
+    fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
@@ -51,9 +52,10 @@ impl View for GRPView {
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
 
         let title_rect = Rect::new(50, 10, 100, 100);
-        let fnt = &context.gd.font(FontSize::Font14);
+        let fnt = &gd.font(FontSize::Font14);
         let screen_pitch = context.screen.pitch();
-        let reindex = &context.gd.font_reindex.data;
+        //let reindex = &gd.font_reindex.data;
+        let reindex = &gd.font_reindexing_store.get_game_reindex().data;
         let title = format!("frame {}/{} of {}",
                             self.frame,
                             self.grp.header.frame_count,
@@ -111,6 +113,6 @@ fn main() {
 
     ::scrust::spawn("grp viewer",
                     "/home/dm/.wine/drive_c/StarCraft/",
-                    |gc, _| Box::new(GRPView::new(gc, grpfile, use_reindex, reindexfile)));
+                    |gd, gc, _| Box::new(GRPView::new(gd, gc, grpfile, use_reindex, reindexfile)));
 
 }
