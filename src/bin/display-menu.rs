@@ -16,8 +16,9 @@ use scrust::font::{RenderText, HorizontalAlignment, VerticalAlignment};
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 
-use scrust::pcx::PCX;
-use scrust::render::{render_buffer_solid, render_block};
+use scrust::render::{render_block};
+
+use scrust::ui::MousePointer;
 
 #[macro_use]
 extern crate bitflags;
@@ -94,7 +95,6 @@ use ecs::World;
 use ecs::DataHelper;
 use ecs::system::{EntityProcess, EntitySystem, System};
 use ecs::{EntityIter};
-use ecs::ServiceManager;
 use ecs::BuildData;
 
 pub struct UIElement {
@@ -106,6 +106,7 @@ pub struct UIElement {
 pub struct ButtonElement {
     responsive_area: Rect,
     hotkey: Option<char>,
+    in_focus: bool,
 }
 #[derive(Clone)]
 pub struct LabelElement {
@@ -156,6 +157,48 @@ impl EntityProcess for VideoSteppingSys {
         }
 }
 
+use scrust::ImmediateEvents;
+
+pub struct InputSys {
+    mouse_pos: Point,
+    events: ImmediateEvents,
+    // output field: bwid of chosen element
+    selected_entry: Option<u32>,
+}
+impl Default for InputSys {
+    fn default() -> Self {
+        InputSys {
+            mouse_pos: Point::new(0, 0),
+            events: ImmediateEvents::new(),
+            selected_entry: None,
+        }
+    }
+}
+
+impl System for InputSys {
+    type Components = DialogComponents;
+    type Services = ();
+}
+
+impl EntityProcess for InputSys {
+    fn process(&mut self, entities: EntityIter<DialogComponents>,
+               dh: &mut DataHelper<DialogComponents, ()>) {
+        let mp = &self.mouse_pos;
+        self.selected_entry = None;
+        for e in entities {
+            let focused = {
+                let rrect = &dh.button_element[e].responsive_area;
+                rrect.contains(*mp)
+            };
+            dh.button_element[e].in_focus = focused;
+            if self.events.mouse_left && focused {
+                self.selected_entry = Some(dh.ui_element[e].bwid);
+            }
+            // TODO: implement hotkey handling
+        }
+    }
+}
+
 systems! {
     struct DialogSystems<DialogComponents, ()> {
         active: {
@@ -164,6 +207,9 @@ systems! {
                                     aspect!(<DialogComponents> all: [ui_element, smk_overlays_element])),
         },
         passive: {
+            input_sys: EntitySystem<InputSys>
+                = EntitySystem::new(InputSys::default(),
+                                    aspect!(<DialogComponents> all: [button_element])),
         }
     }
 }
@@ -297,6 +343,7 @@ impl Dialog {
                     data.button_element.add(&entity, ButtonElement {
                         responsive_area: responsive_rect,
                         hotkey: hotkey,
+                        in_focus: false,
                     });
                 }
                 _ => {}
@@ -491,34 +538,60 @@ impl Dialog {
 
 struct MenuView {
     dlg: Dialog,
+    mouse_pointer: MousePointer,
+
+    bgd_pcx: String,
 }
 impl MenuView {
-    fn new(gd: &GameData, context: &mut GameContext, menufile: &str) -> Self {
+    fn new(gd: &GameData, context: &mut GameContext, short_name: &str, menufile: &str) -> Self {
         let dlg = Dialog::read(gd, &mut gd.open(menufile).unwrap());
 
-        gd.pcx_cache.borrow_mut().load(gd, "glue/PalMm/Backgnd.pcx");
-
-        let pal = gd.fontmm_reindex.palette.to_sdl();
-        context.screen.set_palette(&pal).ok();
+        let sn = short_name.to_owned();
+        let bgd_pcx = format!("glue/pal{}/backgnd.pcx", sn);
+        let mut cache = gd.pcx_cache.borrow_mut();
+        let pal = cache.get(gd, &bgd_pcx);
+        context.screen.set_palette(&pal.palette.to_sdl()).ok();
+        let mp = MousePointer::new(gd, context);
         MenuView {
             dlg: dlg,
+            mouse_pointer: mp,
+            bgd_pcx: bgd_pcx,
         }
     }
 }
 
 impl View for MenuView {
+    fn render_layers(&mut self, context: &mut GameContext) {
+        self.mouse_pointer.render(&mut context.renderer);
+    }
     fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
+
+        // update input
+        if let Some((mouse_x, mouse_y)) = context.events.now.mouse_move {
+            self.mouse_pointer.update_pos(mouse_x, mouse_y);
+            self.dlg.world.systems.input_sys.mouse_pos = Point::new(mouse_x, mouse_y);
+        }
+        self.dlg.world.systems.input_sys.events = context.events.now;
+        //self.mouse_pointer.update();
+        process!(self.dlg.world, input_sys);
+        match self.dlg.world.systems.input_sys.selected_entry {
+            Some(bwid) => {
+                println!("selected {}!", bwid);
+            },
+            _ => {},
+        }
+
         // clear the screen
         context.screen.fill_rect(None, Color::RGB(0, 0, 0)).ok();
 
         let pcx_cache = gd.pcx_cache.borrow();
-        let bgd = pcx_cache.get_ro("glue/PalMm/Backgnd.pcx");
-
+        let bgd = pcx_cache.get_ro(&self.bgd_pcx);
 
         self.dlg.world.update();
+        // FIXME: get proper reindexing table
         let reindex = &gd.fontmm_reindex.data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
@@ -535,7 +608,6 @@ impl View for MenuView {
                 }
                 if dh.img_element.has(&e) {
                     let rect = &dh.ui_element[e].rect;
-                    // let cache = gd.pcx_cache.borrow();
                     let pcx = pcx_cache.get_ro(&dh.img_element[e].imgpath);
                     render_block(&pcx.data,
                                  pcx.header.width as usize,
@@ -546,10 +618,14 @@ impl View for MenuView {
                 }
                 if dh.smk_overlays_element.has(&e) {
                     let rect = &dh.ui_element[e].rect;
+                    let focused = if dh.button_element.has(&e) {
+                        dh.button_element[e].in_focus
+                    } else {
+                        false
+                    };
                     let cache = gd.video_cache.borrow();
                     for ol in &dh.smk_overlays_element[e].overlays {
-                        if ol.flags.contains(SMK_SHOW_IF_OVER) {
-                            // TODO
+                        if ol.flags.contains(SMK_SHOW_IF_OVER) && !focused {
                             continue;
                         }
                         let video = cache.get_ro(&ol.smkfile);
@@ -569,7 +645,8 @@ impl View for MenuView {
                             let mut rect = dh.ui_element[e].rect;
                             rect.offset(offset.x(), offset.y());
                             fnt.render_text_aligned(dh.label_element[e].text.as_ref(), 1,
-                                                    &gd.fontmm_reindex.data, buffer,
+                                                    reindex,
+                                                    buffer,
                                                     screen_pitch, &rect,
                                                     HorizontalAlignment::Left,
                                                     VerticalAlignment::Top);
@@ -588,6 +665,7 @@ impl View for MenuView {
 
         });
 
+
         ViewAction::None
     }
 }
@@ -597,6 +675,7 @@ fn main() {
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
+                                               "mm",
                                                // "rez/gluexpcmpgn.bin"
                                                // "rez/glucmpgn.bin"
                                                "rez/glumain.bin"

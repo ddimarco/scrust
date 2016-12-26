@@ -10,6 +10,7 @@ macro_rules! struct_events {
     => {
         use sdl2::EventPump;
 
+        #[derive(Clone, Copy)]
         pub struct ImmediateEvents {
             $( pub $k_alias: Option<bool> ,)*
             $( pub $m_alias: bool,)*
