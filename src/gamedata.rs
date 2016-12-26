@@ -40,6 +40,9 @@ impl FontReindexingStore {
             "mm",
             "cs",
             "nl",
+            "rz",
+            "rt",
+            "rp",
             // TODO
         ];
 
@@ -60,6 +63,9 @@ impl FontReindexingStore {
             "mm" => {0},
             "cs" => {1},
             "nl" => {2},
+            "rz" => {3},
+            "rt" => {4},
+            "rp" => {5},
 
             _ => { unreachable!(); },
         }
