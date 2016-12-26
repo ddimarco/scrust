@@ -539,7 +539,7 @@ impl Dialog {
 struct MenuView {
     dlg: Dialog,
     mouse_pointer: MousePointer,
-
+    short_name: String,
     bgd_pcx: String,
 }
 impl MenuView {
@@ -556,6 +556,7 @@ impl MenuView {
             dlg: dlg,
             mouse_pointer: mp,
             bgd_pcx: bgd_pcx,
+            short_name: sn,
         }
     }
 }
@@ -592,13 +593,15 @@ impl View for MenuView {
 
         self.dlg.world.update();
         // FIXME: get proper reindexing table
-        let reindex = &gd.fontmm_reindex.data;
+        // let reindex = &gd.fontmm_reindex.data;
+        let reindex = &gd.font_reindexing_store.get_menu_reindex(&self.short_name).data;
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
             render_block(&bgd.data, bgd.header.width as usize, bgd.header.height as usize,
                          0, 0, buffer, screen_pitch as usize);
 
             let dh = &self.dlg.world.data;
+            // FIXME: order is important here!
             for e in self.dlg.world.entities() {
                 if dh.ui_element.has(&e) {
                     if !dh.ui_element[e].visible {
@@ -675,10 +678,11 @@ fn main() {
                     "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
-                                               "mm",
+                                               // "mm",
+                                               "cs",
                                                // "rez/gluexpcmpgn.bin"
-                                               // "rez/glucmpgn.bin"
-                                               "rez/glumain.bin"
+                                               "rez/glucmpgn.bin"
+                                               // "rez/glumain.bin"
                                                // "rez/gamemenu.bin"
                                                // "rez/glugamemode.bin"
                         ))

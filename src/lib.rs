@@ -242,7 +242,7 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
 
     let mut timer = sdl_context.timer().unwrap();
 
-    let mut gd = GameData::init(&Path::new(scdata_path));
+    let gd = GameData::init(&Path::new(scdata_path));
 
     // FIXME: set a default palette for screen surface
     let mut context = GameContext::new(Events::new(sdl_context.event_pump().unwrap()),

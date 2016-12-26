@@ -30,12 +30,56 @@ pub enum TileSet {
     Twilight = 7,
 }
 
+pub struct FontReindexingStore {
+    game_pcx: PCX,
+    menu_pcxs: Vec<PCX>,
+}
+impl FontReindexingStore {
+    pub fn load<F>(load_func: F) -> Self where F: Fn(&str) -> MPQArchiveFile {
+        let menu_shortcuts = [
+            "mm",
+            "cs",
+            "nl",
+            // TODO
+        ];
+
+        let menu_pcxs = menu_shortcuts.into_iter()
+            .map(|sc|
+                 PCX::read(&mut load_func(&format!("glue/pal{}/tfont.pcx", sc)))
+        ).collect();
+
+        let game_pcx = PCX::read(&mut load_func("game/tfontgam.pcx"));
+        FontReindexingStore {
+            menu_pcxs: menu_pcxs,
+            game_pcx: game_pcx,
+        }
+    }
+
+    fn menuname2idx(short_name: &str) -> usize {
+        match short_name {
+            "mm" => {0},
+            "cs" => {1},
+            "nl" => {2},
+
+            _ => { unreachable!(); },
+        }
+    }
+
+    pub fn get_menu_reindex(&self, short_name: &str) -> &PCX {
+        &self.menu_pcxs[FontReindexingStore::menuname2idx(short_name)]
+    }
+    pub fn get_game_reindex(&self) -> &PCX {
+        &self.game_pcx
+    }
+}
+
 pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
 
     fonts: Vec<Font>,
-    pub font_reindex: PCX,
-    pub fontmm_reindex: PCX,
+    // pub font_reindex: PCX,
+    // pub fontmm_reindex: PCX,
+    pub font_reindexing_store: FontReindexingStore,
     pub images_tbl: Vec<String>,
     pub stat_txt_tbl: Vec<String>,
 
@@ -82,10 +126,10 @@ impl GameData {
         }
 
         let fonts = GameData::load_fonts(&archives);
-        let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx")
-            .unwrap());
-        let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx")
-            .unwrap());
+        // let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx")
+        //     .unwrap());
+        // let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx")
+        //     .unwrap());
         let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
         let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
 
@@ -155,11 +199,16 @@ impl GameData {
         let unit_wireframe_grp =
             GRP::read(&mut GameData::open_(&archives, "unit/wirefram/wirefram.grp").unwrap());
 
+        let fnt_reindex_store = FontReindexingStore::load(|filename| {
+            GameData::open_(&archives, filename).unwrap()
+        });
+
         GameData {
             mpq_archives: archives,
             fonts: fonts,
-            font_reindex: font_reindex,
-            fontmm_reindex: fontmm_reindex,
+            // font_reindex: font_reindex,
+            // fontmm_reindex: fontmm_reindex,
+            font_reindexing_store: fnt_reindex_store,
             null_reindexing: null_reindexing,
 
             install_pal: install_pal,

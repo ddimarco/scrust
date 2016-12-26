@@ -216,7 +216,8 @@ impl SelectionPanel {
                                      230,
                                      90,
                                      &buffer,
-                                     &gd.font_reindex.palette);
+                                     &gd.font_reindexing_store.get_game_reindex().palette
+        );
         SelectionPanel {
             selected_units: Vec::<usize>::new(),
 
@@ -252,7 +253,7 @@ impl SelectionPanel {
         // FIXME only 1 unit selected for now
         let fnt = gd.font(FontSize::Font10);
         let pitch = 230;
-        let reindex = &gd.font_reindex.data;
+        let reindex = &gd.font_reindexing_store.get_game_reindex().data;
 
         for i in 0..self.buffer.len() {
             self.buffer[i] = 0;
@@ -282,7 +283,8 @@ impl SelectionPanel {
                                       230,
                                       90,
                                       &self.buffer,
-                                      &gd.font_reindex.palette);
+                                      &gd.font_reindexing_store.get_game_reindex().palette
+        );
     }
 
     pub fn render(&self, renderer: &mut Renderer) {
