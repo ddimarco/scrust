@@ -6,6 +6,7 @@ use scrust::font::FontSize;
 
 use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
+use scrust::gamedata::GameData;
 
 struct FontView {
     text: String,
@@ -14,12 +15,13 @@ struct FontView {
     trg_rect: Rect,
 }
 impl FontView {
-    fn new(context: &mut GameContext,
+    fn new(gd: &GameData,
+           context: &mut GameContext,
            text: &str,
            font_size: FontSize,
            color_idx: usize)
            -> FontView {
-        let pal = context.gd.fontmm_reindex.palette.to_sdl();
+        let pal = gd.font_reindexing_store.get_menu_reindex("mm").palette.to_sdl();
         context.screen.set_palette(&pal).ok();
         FontView {
             text: text.to_owned(),
@@ -30,14 +32,15 @@ impl FontView {
     }
 }
 impl View for FontView {
-    fn render(&mut self, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
+    fn render(&mut self, gd: &GameData, context: &mut GameContext, _: &GameState, _: f64) -> ViewAction {
         if context.events.now.quit || context.events.now.key_escape == Some(true) {
             return ViewAction::Quit;
         }
 
-        let fnt = &context.gd.font(self.font_size);
+        let fnt = &gd.font(self.font_size);
         let screen_pitch = context.screen.pitch();
-        let reindex = &context.gd.fontmm_reindex.data;
+        //let reindex = &gd.fontmm_reindex.data;
+        let reindex = &gd.font_reindexing_store.get_menu_reindex("mm").data;
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
             fnt.render_textbox(self.text.as_ref(),
                                self.color_idx,
@@ -55,6 +58,6 @@ impl View for FontView {
 fn main() {
     ::scrust::spawn("font rendering",
                     "/home/dm/.wine/drive_c/StarCraft/",
-                    |gc, _| Box::new(FontView::new(gc, "Na wie isses?", FontSize::Font16, 0)));
+                    |gd, gc, _| Box::new(FontView::new(gd, gc, "Na wie isses?", FontSize::Font16, 0)));
 
 }
