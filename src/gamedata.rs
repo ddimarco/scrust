@@ -132,10 +132,6 @@ impl GameData {
         }
 
         let fonts = GameData::load_fonts(&archives);
-        // let font_reindex = PCX::read(&mut GameData::open_(&archives, "game\\tfontgam.pcx")
-        //     .unwrap());
-        // let fontmm_reindex = PCX::read(&mut GameData::open_(&archives, "glue\\palmm\\tfont.pcx")
-        //     .unwrap());
         let images_tbl = read_tbl(&mut GameData::open_(&archives, "arr\\images.tbl").unwrap());
         let stat_txt_tbl = read_tbl(&mut GameData::open_(&archives, "rez/stat_txt.tbl").unwrap());
 
@@ -212,8 +208,6 @@ impl GameData {
         GameData {
             mpq_archives: archives,
             fonts: fonts,
-            // font_reindex: font_reindex,
-            // fontmm_reindex: fontmm_reindex,
             font_reindexing_store: fnt_reindex_store,
             null_reindexing: null_reindexing,
 

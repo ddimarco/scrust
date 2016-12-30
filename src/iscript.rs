@@ -5,6 +5,7 @@ use byteorder::{ReadBytesExt, LittleEndian};
 
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct IScript {
     pub id_offsets_map: HashMap<u32, Vec<u16>>,
     pub data: Vec<u8>,
