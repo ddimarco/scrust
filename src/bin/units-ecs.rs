@@ -10,7 +10,8 @@ use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::iscript::{IScript, AnimationType, OpCode};
 
 use scrust::render::{render_buffer_with_transparency_reindexing,
-                     render_buffer_with_solid_reindexing};
+                     render_buffer_with_solid_reindexing,
+                     render_buffer_solid};
 
 extern crate byteorder;
 use byteorder::LittleEndian;
@@ -665,6 +666,55 @@ pub struct SelectableComponent {
     pub sel_width: u16,
     pub sel_height: u16,
 }
+impl SelectableComponent {
+    pub fn draw_selection_circle(&self,
+                                 grp_cache: &GRPCache,
+                                 cx: i32,
+                                 cy: i32,
+                                 buffer: &mut [u8],
+                                 buffer_pitch: u32) {
+        let grp = grp_cache.get_ro(self.circle_grp_id);
+        render_buffer_solid(&grp.frames[0],
+                            grp.header.width as u32,
+                            grp.header.height as u32,
+                            false,
+                            cx,
+                            cy + self.circle_offset as i32,
+                            buffer,
+                            buffer_pitch);
+    }
+
+
+    // FIXME: clipping
+    pub fn draw_healthbar(&self, cx: u32, cy: u32, buffer: &mut [u8], buffer_pitch: u32) {
+        let boxes = self.health_bar as u32 / 3;
+        let box_width = 3;
+        if self.health_bar == 0 {
+            println!("healthbar == 0, not drawing");
+            return;
+        }
+        let width = 2 + (box_width * boxes) + (boxes - 1);
+        let height = 8;
+
+        let mut outpos = ((cy + self.circle_offset as u32) - height / 2) *
+            buffer_pitch + (cx - width / 2);
+        for y in 0..height {
+            for x in 0..width {
+                let outer_border = y == 0 || y == height - 1 || x == 0 || x == (width - 1);
+                let inner_border = x % (box_width + 1) == 0;
+                if inner_border || outer_border {
+                    // black
+                    buffer[outpos as usize] = 0;
+                } else {
+                    // green
+                    buffer[outpos as usize] = 185;
+                }
+                outpos += 1;
+            }
+            outpos += buffer_pitch - width;
+        }
+    }
+}
 #[derive(Debug)]
 pub enum FlingyMoveControl {
     FlingyDat,
@@ -935,6 +985,16 @@ impl View for UnitsECSView {
                     continue;
                 }
 
+                // draw selection circle if available
+                if dh.selectable.has(&e) {
+                    // dh.selectable[e].draw_healthbar(200, 230,
+                    //                                 buffer,
+                    //                                 buffer_pitch);
+                    dh.selectable[e].draw_selection_circle(&*grp_cache,
+                                                           200, 200,
+                                                           buffer,
+                                                           buffer_pitch);
+                }
                 self.draw_entity(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
