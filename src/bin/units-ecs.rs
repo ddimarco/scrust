@@ -1,3 +1,5 @@
+use std::mem;
+
 extern crate sdl2;
 use sdl2::pixels::Color;
 
@@ -7,10 +9,11 @@ use scrust::{GameContext, GameState, View, ViewAction};
 
 use scrust::iscript::{IScript, AnimationType, OpCode};
 
-use scrust::render::{render_buffer_with_transparency_reindexing, render_buffer_with_solid_reindexing};
+use scrust::render::{render_buffer_with_transparency_reindexing,
+                     render_buffer_with_solid_reindexing};
 
 extern crate byteorder;
-use byteorder::{LittleEndian};
+use byteorder::LittleEndian;
 use byteorder::ByteOrder;
 
 extern crate rand;
@@ -28,6 +31,8 @@ use ecs::system::{EntityProcess, EntitySystem, System};
 use ecs::EntityIter;
 use ecs::ServiceManager;
 use ecs::Entity;
+use ecs::ModifyData;
+use ecs::EntityData;
 
 /// Public*****************************************
 
@@ -75,8 +80,18 @@ macro_rules! def_opcodes {
 
 #[derive(Debug)]
 pub enum IScriptEntityAction {
-    CreateImageUnderlay { parent: Entity, image_id: u16, rel_x: i8, rel_y: i8 },
-    CreateImageOverlay { parent: Entity, image_id: u16, rel_x: i8, rel_y: i8 },
+    CreateImageUnderlay {
+        parent: Entity,
+        image_id: u16,
+        rel_x: i8,
+        rel_y: i8,
+    },
+    CreateImageOverlay {
+        parent: Entity,
+        image_id: u16,
+        rel_x: i8,
+        rel_y: i8,
+    },
     CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
     CreateSpriteUnderlay { sprite_id: u16, x: u16, y: u16 },
 }
@@ -238,7 +253,8 @@ impl IScriptSteppingSys {
     fn interpret_iscript(&self,
                          cpy: &IScript,
                          e: ecs::EntityData<UnitComponents>,
-                         dh: &mut DataHelper<UnitComponents, UnitServices>) -> Option<IScriptEntityAction> {
+                         dh: &mut DataHelper<UnitComponents, UnitServices>)
+                         -> Option<IScriptEntityAction> {
 
         if !dh.iscript_state[e].alive {
             return None;
@@ -251,16 +267,18 @@ impl IScriptSteppingSys {
 
         if dh.iscript_state[e].follow_main_graphic {
             match dh.iscript_state[e].parent_entity {
-                None => {},
+                None => {}
                 Some(parent_entity) => {
                     let dir_frame = {
-                        dh.with_entity_data(&parent_entity, |ent, data| {
-                            (data.iscript_state[ent].direction, data.iscript_state[ent].frameset)
-                        })
-                    }.expect("couldn't get parent direction & frameset!");
+                            dh.with_entity_data(&parent_entity, |ent, data| {
+                                (data.iscript_state[ent].direction,
+                                 data.iscript_state[ent].frameset)
+                            })
+                        }
+                        .expect("couldn't get parent direction & frameset!");
                     dh.iscript_state[e].direction = dir_frame.0;
                     dh.iscript_state[e].frameset = dir_frame.1;
-                },
+                }
             }
         }
 
@@ -500,7 +518,7 @@ impl EntityProcess for IScriptSteppingSys {
 
             let create_action = self.interpret_iscript(&cpy, e, dh);
             match create_action {
-                None => {},
+                None => {}
                 Some(action) => {
                     self.iscript_entity_actions.push(action);
                 }
@@ -523,9 +541,6 @@ pub struct SCImageComponent {
     pub player_id: usize,
     // FIXME: only for units?
     // pub commands: Vec<UnitCommands>,
-    // FIXME we probably only need 1 overlay & 1 underlay?
-    // underlays: Vec<Entity>,
-    // overlays: Vec<Entity>,
     can_turn: bool,
     remapping: SCImageRemapping,
 }
@@ -558,8 +573,6 @@ impl SCImageComponent {
         SCImageComponent {
             image_id: image_id,
             grp_id: grp_id,
-            // underlays: Vec::<Entity>::new(),
-            // overlays: Vec::<Entity>::new(),
             player_id: 0, // commands: Vec::<UnitCommands>::new(),
             can_turn: can_turn,
             remapping: remapping,
@@ -585,8 +598,16 @@ impl SCImageComponent {
         }
     }
 
-    fn draw(&self, inbuf: &[u8], w: u32, h: u32, flipped: bool,
-            cx: i32, cy: i32, outbuf: &mut [u8], outbuf_pitch: u32, reindex: &[u8]) {
+    fn draw(&self,
+            inbuf: &[u8],
+            w: u32,
+            h: u32,
+            flipped: bool,
+            cx: i32,
+            cy: i32,
+            outbuf: &mut [u8],
+            outbuf_pitch: u32,
+            reindex: &[u8]) {
         match self.remapping {
             SCImageRemapping::OFire | SCImageRemapping::BFire | SCImageRemapping::GFire |
             SCImageRemapping::BExpl | SCImageRemapping::Shadow => {
@@ -694,20 +715,112 @@ systems! {
 
 /// *****************************************
 
-struct UnitsECSView {
-    world: World<UnitSystems>,
-}
-
-fn create_scimage(world: &mut World<UnitSystems>, gd: &GameData, image_id: usize,
-                  map_x: u16, map_y: u16, parent: Option<Entity>) -> Entity {
+fn create_scimage(world: &mut World<UnitSystems>,
+                  gd: &GameData,
+                  image_id: usize,
+                  map_x: u16,
+                  map_y: u16,
+                  parent: Option<Entity>)
+                  -> Entity {
     let iscript_id = gd.images_dat.iscript_id[image_id];
 
     world.create_entity(EntityInit {
-        iscript_state: Some(IScriptStateElement::new(&gd.iscript, iscript_id,
-                                                     map_x, map_y, parent)),
+        iscript_state: Some(IScriptStateElement::new(&gd.iscript,
+                                                     iscript_id,
+                                                     map_x,
+                                                     map_y,
+                                                     parent)),
         scimage: Some(SCImageComponent::new(gd, image_id as u16)),
         ..Default::default()
     })
+}
+
+fn create_scsprite(world: &mut World<UnitSystems>,
+                   gd: &GameData,
+                   sprite_id: usize,
+                   map_x: u16,
+                   map_y: u16) -> Entity {
+    let image_id = gd.sprites_dat.image_id[sprite_id];
+    let entity = create_scimage(world, gd, image_id as usize, map_x, map_y, None);
+
+    world.modify_entity(entity,
+                        |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
+        data.scsprite.insert(&e, SCSpriteComponent { sprite_id: sprite_id as u16 });
+
+        // not all sprites are selectable
+        if sprite_id >= 130 {
+            let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
+            let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
+
+            let (sel_width, sel_height) = {
+                let mut grp_cache = gd.grp_cache.borrow_mut();
+                let grp = grp_cache.get(gd, circle_grp_id);
+                (grp.header.width, grp.header.height)
+            };
+
+            data.selectable
+                .insert(&e,
+                        SelectableComponent {
+                            health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
+                            circle_offset:
+                                gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
+                            circle_grp_id: circle_grp_id,
+                            sel_width: sel_width,
+                            sel_height: sel_height,
+                        });
+        }
+    });
+    entity
+}
+
+fn create_scflingy(world: &mut World<UnitSystems>,
+                   gd: &GameData,
+                   flingy_id: usize,
+                   map_x: u16,
+                   map_y: u16) -> Entity {
+    let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
+    let move_control =
+        match gd.flingy_dat.move_control[flingy_id as usize] {
+            0 => FlingyMoveControl::FlingyDat,
+            1 => FlingyMoveControl::PartiallyMobile,
+            2 => FlingyMoveControl::IScriptBin,
+            _ => unimplemented!(),
+        };
+    let entity = create_scsprite(world, gd, sprite_id as usize, map_x, map_y);
+
+    world.modify_entity(entity, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
+        data.scflingy.insert(&e,
+                             SCFlingyComponent {
+                                 flingy_id: flingy_id as u16,
+                                 move_control: move_control,
+                             });
+                        });
+
+    entity
+}
+
+fn create_scunit(world: &mut World<UnitSystems>,
+                 gd: &GameData,
+                 unit_id: usize,
+                 map_x: u16,
+                 map_y: u16) -> Entity {
+    let flingy_id = gd.units_dat.flingy_id[unit_id as usize];
+
+    let entity = create_scflingy(world, gd, flingy_id as usize, map_x, map_y);
+    world.modify_entity(entity, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
+        data.scunit.insert(&e,  SCUnitComponent {
+            unit_id: unit_id as u16,
+            kill_count: 0,
+        });
+    });
+
+    entity
+}
+
+struct UnitsECSView {
+    world: World<UnitSystems>,
+
+    main_unit: Entity,
 }
 impl UnitsECSView {
     fn new(gd: &GameData, context: &mut GameContext) -> UnitsECSView {
@@ -717,16 +830,22 @@ impl UnitsECSView {
         let mut world = World::<UnitSystems>::new();
         world.data.services.load_iscript(gd);
 
-        let image_id = 0;
-        let _ = create_scimage(&mut world, gd, image_id, 0, 0, None);
+        let unit_id = 0;
+        let main_unit = create_scunit(&mut world, gd, unit_id, 0, 0);
 
-        UnitsECSView { world: world }
+        UnitsECSView {
+            world: world,
+            main_unit: main_unit,
+        }
     }
 
-    fn draw_entity(&self, e: EntityData<UnitComponents>,
+    fn draw_entity(&self,
+                   e: EntityData<UnitComponents>,
                    dh: &DataHelper<UnitComponents, UnitServices>,
                    gd: &GameData,
-                   buffer: &mut [u8], buffer_pitch: u32, grp_cache: &GRPCache) {
+                   buffer: &mut [u8],
+                   buffer_pitch: u32,
+                   grp_cache: &GRPCache) {
         // every entity is an scimage
         let scimg_comp = &dh.scimage[e];
         let grp = grp_cache.get_ro(scimg_comp.grp_id);
@@ -741,16 +860,13 @@ impl UnitsECSView {
                         grp.header.width as u32,
                         grp.header.height as u32,
                         draw_flipped,
-                        x_center, y_center,
+                        x_center,
+                        y_center,
                         buffer,
                         buffer_pitch,
-                        scimg_comp.reindexing_table(gd)
-        );
+                        scimg_comp.reindexing_table(gd));
     }
 }
-use std::mem;
-use ecs::ModifyData;
-use ecs::EntityData;
 impl View for UnitsECSView {
     fn render(&mut self,
               gd: &GameData,
@@ -766,30 +882,36 @@ impl View for UnitsECSView {
 
         // interpret iscript for units
         self.world.update();
+
         // generate new images, units
-        let actions = mem::replace(&mut self.world.systems.iscript_stepping_sys.iscript_entity_actions,
-                                   Vec::<IScriptEntityAction>::new());
+        let actions =
+            mem::replace(&mut self.world.systems.iscript_stepping_sys.iscript_entity_actions,
+                         Vec::<IScriptEntityAction>::new());
         for action in actions {
             match action {
-                IScriptEntityAction::CreateImageUnderlay{parent, image_id, rel_x, rel_y} => {
-                    let ent = create_scimage(&mut self.world, gd, image_id as usize,
-                                             0, 0, Some(parent));
-                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
+                IScriptEntityAction::CreateImageUnderlay { parent, image_id, rel_x, rel_y } => {
+                    let ent =
+                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
+                                              data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
                         data.iscript_state[e].rel_y = rel_y;
-                        data.underlay.insert(&e, UnderlayComponent{});
+                        data.underlay.insert(&e, UnderlayComponent {});
                     });
-                },
-                IScriptEntityAction::CreateImageOverlay{parent, image_id, rel_x, rel_y} => {
-                    let ent = create_scimage(&mut self.world, gd, image_id as usize,
-                                             0, 0, Some(parent));
-                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
+                }
+                IScriptEntityAction::CreateImageOverlay { parent, image_id, rel_x, rel_y } => {
+                    let ent =
+                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
+                                              data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
                         data.iscript_state[e].rel_y = rel_y;
-                        data.overlay.insert(&e, OverlayComponent{});
+                        data.overlay.insert(&e, OverlayComponent {});
                     });
-                },
-                _ => {println!("ignoring {:?} iscript create action", action);},
+                }
+                _ => {
+                    println!("ignoring {:?} iscript create action", action);
+                }
             }
         }
 
@@ -829,7 +951,6 @@ impl View for UnitsECSView {
 
         ViewAction::None
     }
-
 }
 
 fn main() {
