@@ -79,6 +79,7 @@ impl FontReindexingStore {
     }
 }
 
+use std::rc::Rc;
 pub struct GameData {
     mpq_archives: Vec<MPQArchive>,
 
@@ -112,7 +113,7 @@ pub struct GameData {
     pub iscript: IScript,
 
     pub grp_cache: RefCell<GRPCache>,
-    pub lox_cache: RefCell<LOXCache>,
+    pub lox_cache: Rc<RefCell<LOXCache>>,
     pub pcx_cache: RefCell<PCXCache>,
     pub video_cache: RefCell<VideoCache>,
 
@@ -204,8 +205,9 @@ impl GameData {
         let fnt_reindex_store = FontReindexingStore::load(|filename| {
             GameData::open_(&archives, filename).unwrap()
         });
+        let lox_cache = Rc::new(RefCell::new(LOXCache::new()));
 
-        GameData {
+        let gd = GameData {
             mpq_archives: archives,
             fonts: fonts,
             font_reindexing_store: fnt_reindex_store,
@@ -233,12 +235,25 @@ impl GameData {
 
             // FIXME: move out of here, get rid of refcell?
             grp_cache: RefCell::new(GRPCache::new()),
-            lox_cache: RefCell::new(LOXCache::new()),
+            lox_cache: lox_cache,
             pcx_cache: RefCell::new(PCXCache::new()),
             video_cache: RefCell::new(VideoCache::new()),
 
             unit_wireframe_grp: unit_wireframe_grp,
+        };
+
+        {
+            // load all overlays
+            let mut lc = gd.lox_cache.borrow_mut();
+            for (idx, e) in gd.images_tbl.iter().enumerate() {
+                let l = e.len();
+                if &e[l-3..l-1] == "lo" {
+                    lc.load(&gd, (idx +1) as u32);
+                }
+            }
         }
+
+        gd
     }
     fn load_fonts(archives: &[MPQArchive]) -> Vec<Font> {
         let mut fonts = Vec::<Font>::with_capacity(4);

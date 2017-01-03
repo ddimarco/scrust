@@ -15,6 +15,7 @@ macro_rules! dat_struct {
             $( $name:ident: $tpe:ident; $count:expr),*
         }
     ) => {
+        #[derive(Clone)]
         pub struct $struct_name {
             $(
                 pub $name: Vec<$tpe>,

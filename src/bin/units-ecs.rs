@@ -217,30 +217,44 @@ impl IScriptStateElement {
 /// unit service definition
 #[derive(Default)]
 pub struct UnitServices {
-    iscript: Option<IScript>,
 }
 impl UnitServices {
-    pub fn load_iscript(&mut self, gd: &GameData) {
-        let iscript = IScript::read(&mut gd.open("scripts/iscript.bin").unwrap());
-        self.iscript = Some(iscript);
-    }
 }
 impl ServiceManager for UnitServices {}
 
 // component definitions
 
+use ecs::IndexedEntity;
+use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
 
+use scrust::gamedata::LOXCache;
+use scrust::unitsdata::ImagesDat;
 pub struct IScriptSteppingSys {
     // ugly HACK, bc we cannot borrow refs to service.xyz and dh.yyy in process()
-    iscript_copy: Option<IScript>,
+    iscript_copy: IScript,
+    images_dat: ImagesDat,
+    lox_cache: Rc<RefCell<LOXCache>>,
 
     iscript_entity_actions: Vec<IScriptEntityAction>,
+
+    interested: HashMap<Entity, IndexedEntity<UnitComponents>>,
 }
 impl System for IScriptSteppingSys {
     type Components = UnitComponents;
     type Services = UnitServices;
+
+    fn activated(&mut self, entity: &EntityData<Self::Components>, _: &Self::Components, _: &mut Self::Services) {
+        self.interested.insert(***entity, (**entity).__clone());
+    }
+    fn deactivated(&mut self, entity: &EntityData<Self::Components>, _: &Self::Components, _: &mut Self::Services)
+    {
+        self.interested.remove(entity);
+    }
 }
 impl IScriptSteppingSys {
+
     fn interpret_iscript(&self,
                          cpy: &IScript,
                          e: ecs::EntityData<UnitComponents>,
@@ -347,18 +361,19 @@ impl IScriptSteppingSys {
         OpCode::CreateGasOverlays => (overlay_no: u8) {
             let smoke_img_id = 430 + overlay_no as u16;
             // FIXME
-            // let overlay_id = gd.images_dat.special_overlay[self.image_id as usize];
-            // let (rx, ry) = {
-            //     let mut c = gd.lox_cache.borrow_mut();
-            //     let lo = c.get(&gd, overlay_id) ;
-            //     lo.frames[0].offsets[overlay_no as usize]
-            // };
-        //     return Some(IScriptEntityAction::CreateImageOverlay {
-        //         image_id: smoke_img_id,
-        // // FIXME signed or unsigned?
-        //         rel_x: rx,
-        //         rel_y: ry,
-        //     });
+            let overlay_id = self.images_dat.special_overlay[dh.scimage[e].image_id as usize];
+            let (rx, ry) = {
+                let mut c = self.lox_cache.borrow();
+                let lo = c.get_ro(overlay_id) ;
+                lo.frames[0].offsets[overlay_no as usize]
+            };
+            return Some(IScriptEntityAction::CreateImageOverlay {
+                parent: **e,
+                image_id: smoke_img_id,
+        // FIXME signed or unsigned?
+                rel_x: rx,
+                rel_y: ry,
+            });
         },
 
         OpCode::PlayFram => (frame: u16) {
@@ -534,19 +549,13 @@ impl IScriptSteppingSys {
         None
     }
 }
-impl EntityProcess for IScriptSteppingSys {
+use ecs::Process;
+impl Process for IScriptSteppingSys {
     fn process(&mut self,
-               entities: EntityIter<UnitComponents>,
                dh: &mut DataHelper<UnitComponents, UnitServices>) {
-        if self.iscript_copy.is_none() {
-            let is = &dh.services.iscript;
-            let cpy = is.clone();
-            self.iscript_copy = cpy;
-        }
-
-        // FIXME
-        let cpy = self.iscript_copy.as_ref().expect("IScript not loaded!");
-        for e in entities {
+        let cpy = &self.iscript_copy;
+        let iter = EntityIter::Map(self.interested.values());
+        for e in iter {
             // TODO: unnecessary here?
             // there should be a better way to check if an entity exists
             if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
@@ -764,6 +773,7 @@ pub struct SCUnitComponent {
 pub struct UnderlayComponent {}
 pub struct OverlayComponent {}
 
+use ecs::system::LazySystem;
 components! {
     #[builder(EntityInit)]
     struct UnitComponents {
@@ -781,12 +791,8 @@ components! {
 systems! {
     struct UnitSystems<UnitComponents, UnitServices> {
         active: {
-            iscript_stepping_sys: EntitySystem<IScriptSteppingSys>
-                = EntitySystem::new(IScriptSteppingSys {
-                    iscript_copy: None,
-                    iscript_entity_actions: Vec::<IScriptEntityAction>::new(),
-                },
-                                    aspect!(<UnitComponents> all: [iscript_state])),
+            iscript_stepping_sys: LazySystem<IScriptSteppingSys>
+                = LazySystem::<IScriptSteppingSys>::new(),
         },
         passive: {
         }
@@ -913,7 +919,15 @@ impl UnitsECSView {
         context.screen.set_palette(&pal).ok();
 
         let mut world = World::<UnitSystems>::new();
-        world.data.services.load_iscript(gd);
+
+        world.systems.iscript_stepping_sys.init(IScriptSteppingSys {
+            iscript_copy: gd.iscript.clone(),
+            images_dat: gd.images_dat.clone(),
+            lox_cache: gd.lox_cache.clone(),
+            iscript_entity_actions: Vec::<IScriptEntityAction>::new(),
+            interested: HashMap::new(),
+        });
+
 
         let args: Vec<String> = env::args().collect();
         let unit_id = if args.len() == 2 {
@@ -1031,7 +1045,7 @@ impl View for UnitsECSView {
 
         // generate new images, units
         let actions =
-            mem::replace(&mut self.world.systems.iscript_stepping_sys.iscript_entity_actions,
+            mem::replace(&mut self.world.systems.iscript_stepping_sys.inner.as_mut().unwrap().iscript_entity_actions,
                          Vec::<IScriptEntityAction>::new());
         for action in actions {
             match action {
