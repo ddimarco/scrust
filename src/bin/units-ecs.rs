@@ -119,7 +119,6 @@ pub struct IScriptStateElement {
     pub rel_y: i8,
     pub direction: u8,
     pub frameset: u16,
-    // pub follow_main_graphic: bool,
     pub visible: bool,
     pub alive: bool,
     pub current_state: IScriptCurrentUnitState,
@@ -158,7 +157,6 @@ impl IScriptStateElement {
             frameset: 0,
             direction: 0,
             movement_angle: 0f32,
-            // follow_main_graphic: false,
             alive: true,
             current_state: IScriptCurrentUnitState::Idle,
             map_pos_x: map_x,
@@ -193,22 +191,6 @@ impl IScriptStateElement {
         assert!(new_dir >= 0);
         self.set_direction(new_dir as u8);
     }
-
-    // pub fn current_animation(&self) -> AnimationType {
-    //     let mut nearest_label = AnimationType::Init;
-    //     let mut nearest_dist = 10000;
-    //     for lbl_idx in 0..self.iscript_anim_offsets().len() {
-    //         let lbl_pos = self.iscript_anim_offsets()[lbl_idx];
-    //         if self.pos >= lbl_pos {
-    //             let dist = self.pos - lbl_pos;
-    //             if dist < nearest_dist {
-    //                 nearest_label = AnimationType::from_usize(lbl_idx).unwrap();
-    //                 nearest_dist = dist;
-    //             }
-    //         }
-    //     }
-    //     nearest_label
-    // }
 
     pub fn anim_count(&self, iscript: &IScript) -> usize {
         self.iscript_anim_offsets(iscript).len()
@@ -425,10 +407,10 @@ impl IScriptSteppingSys {
                 })
             }
             .expect("couldn't get parent direction & frameset!");
-            println!("self dir: {}, frame: {}; primary dir: {}, frame: {}; param frame: {}",
-                     dh.iscript_state[e].direction, dh.iscript_state[e].frameset,
-                     dir_frame.0, dir_frame.1,
-                     frameset);
+            // println!("self dir: {}, frame: {}; primary dir: {}, frame: {}; param frame: {}",
+            //          dh.iscript_state[e].direction, dh.iscript_state[e].frameset,
+            //          dir_frame.0, dir_frame.1,
+            //          frameset);
             // FIXME: this can't be right
             dh.iscript_state[e].direction = dir_frame.0;
             dh.iscript_state[e].frameset = dir_frame.1;
@@ -610,7 +592,6 @@ pub struct SCImageComponent {
 }
 impl SCImageComponent {
     pub fn new(gd: &GameData, image_id: u16) -> Self {
-        // let iscript_id = gd.images_dat.iscript_id[image_id as usize];
         let grp_id = gd.images_dat.grp_id[image_id as usize];
         {
             gd.grp_cache.borrow_mut().load(gd, grp_id);
@@ -637,7 +618,7 @@ impl SCImageComponent {
         SCImageComponent {
             image_id: image_id,
             grp_id: grp_id,
-            player_id: 0, // commands: Vec::<UnitCommands>::new(),
+            player_id: 0,
             can_turn: can_turn,
             remapping: remapping,
         }
@@ -751,7 +732,6 @@ impl SelectableComponent {
         let boxes = self.health_bar as u32 / 3;
         let box_width = 3;
         if self.health_bar == 0 {
-            println!("healthbar == 0, not drawing");
             return;
         }
         let width = 2 + (box_width * boxes) + (boxes - 1);
