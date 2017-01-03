@@ -119,7 +119,7 @@ pub struct IScriptStateElement {
     pub rel_y: i8,
     pub direction: u8,
     pub frameset: u16,
-    pub follow_main_graphic: bool,
+    // pub follow_main_graphic: bool,
     pub visible: bool,
     pub alive: bool,
     pub current_state: IScriptCurrentUnitState,
@@ -158,7 +158,7 @@ impl IScriptStateElement {
             frameset: 0,
             direction: 0,
             movement_angle: 0f32,
-            follow_main_graphic: false,
+            // follow_main_graphic: false,
             alive: true,
             current_state: IScriptCurrentUnitState::Idle,
             map_pos_x: map_x,
@@ -268,37 +268,11 @@ impl IScriptSteppingSys {
         if !dh.iscript_state[e].alive || dh.iscript_state[e].paused {
             return None;
         }
-        // FIXME: is waiting actually counted in frames?
+        // FIXME: waiting is actually counted in ticks, not in frames
         if dh.iscript_state[e].waiting_ticks_left > 0 {
             dh.iscript_state[e].waiting_ticks_left -= 1;
             return None;
         }
-
-        // FIXME: is this right? seems required for flying "walking" overlay
-        // if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
-        //     dh.iscript_state[e].direction =
-        //         dh.with_entity_data(&parent_entity, |ent, data| {
-        //             data.iscript_state[ent].direction
-        //         }).expect("couldn't read parent direction");
-        // }
-
-        if dh.iscript_state[e].follow_main_graphic {
-            match dh.iscript_state[e].parent_entity {
-                None => {}
-                Some(parent_entity) => {
-                    let dir_frame = {
-                            dh.with_entity_data(&parent_entity, |ent, data| {
-                                (data.iscript_state[ent].direction,
-                                 data.iscript_state[ent].frameset)
-                            })
-                        }
-                        .expect("couldn't get parent direction & frameset!");
-                    dh.iscript_state[e].direction = dir_frame.0;
-                    dh.iscript_state[e].frameset = dir_frame.1;
-                }
-            }
-        }
-
 
         let opcode = OpCode::from_u8(dh.iscript_state[e].read_u8(cpy))
             .expect("couldn't read opcode!");
@@ -416,23 +390,48 @@ impl IScriptSteppingSys {
         },
         OpCode::EngFrame => (frame: u8) {
             //  Sets current image's frameset to <frame> and copies the primary image's direction. (Basically followmaingraphic, but without copying the parent image's frameset)
-
             // for engine glow overlays
-        // FIXME is this right: same as playfram?
+            let parent_entity = dh.iscript_state[e].parent_entity.expect("engframe: no parent entity!");
+            let parent_dir = dh.with_entity_data(&parent_entity, |ent, data| {
+                data.iscript_state[ent].direction
+            });
+            dh.iscript_state[e].direction = parent_dir.unwrap();
             dh.iscript_state[e].frameset = frame as u16;
+
         },
         OpCode::FollowMainGraphic => () {
             // Copies frame, flipstate, and direction of primary image in the sprite. Reapplies palette?
-            // assert!(parent.is_some());
-            dh.iscript_state[e].follow_main_graphic = true;
+            let parent_entity = dh.iscript_state[e].parent_entity.expect("followmaingraphic: no parent entity!");
+
+            let dir_frame = {
+                dh.with_entity_data(&parent_entity, |ent, data| {
+                    (data.iscript_state[ent].direction,
+                     data.iscript_state[ent].frameset)
+                })
+            }
+            .expect("couldn't get parent direction & frameset!");
+            dh.iscript_state[e].direction = dir_frame.0;
+            dh.iscript_state[e].frameset = dir_frame.1;
         },
         OpCode::EngSet => (frameset: u8) {
             // Copes primary image's direction, and sets the frame to the primary image's GRP's frame count * framemult + primary image's frameset.
            // Plays a particular frame set, often used in engine glow animations.
-        // same as FollowMainGraphic?
             // assert!(parent.is_some());
+            let parent_entity = dh.iscript_state[e].parent_entity.expect("engset: no parent entity!");
+            let dir_frame = {
+                dh.with_entity_data(&parent_entity, |ent, data| {
+                    (data.iscript_state[ent].direction,
+                     data.iscript_state[ent].frameset)
+                })
+            }
+            .expect("couldn't get parent direction & frameset!");
+            println!("self dir: {}, frame: {}; primary dir: {}, frame: {}; param frame: {}",
+                     dh.iscript_state[e].direction, dh.iscript_state[e].frameset,
+                     dir_frame.0, dir_frame.1,
+                     frameset);
             // FIXME: this can't be right
-            dh.iscript_state[e].follow_main_graphic = true;
+            dh.iscript_state[e].direction = dir_frame.0;
+            dh.iscript_state[e].frameset = dir_frame.1;
             // dh.iscript_state[e].frameset = frameset as u16;
         },
 
@@ -937,6 +936,8 @@ struct UnitsECSView {
     unit_id: usize,
     unit_name_str: String,
 }
+
+use std::env;
 impl UnitsECSView {
     fn new(gd: &GameData, context: &mut GameContext) -> UnitsECSView {
         let pal = gd.install_pal.to_sdl();
@@ -945,7 +946,13 @@ impl UnitsECSView {
         let mut world = World::<UnitSystems>::new();
         world.data.services.load_iscript(gd);
 
-        let unit_id = 0;
+        let args: Vec<String> = env::args().collect();
+        let unit_id = if args.len() == 2 {
+            args[1].parse::<usize>().expect("command line argument should be an integer")
+        } else {
+            0
+        };
+
         let main_unit = create_scunit(&mut world, gd, unit_id, 0, 0);
         let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
 
