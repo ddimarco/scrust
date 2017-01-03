@@ -2,6 +2,8 @@ use std::mem;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
+use sdl2::keyboard::Keycode;
+use sdl2::rect::Rect;
 
 extern crate scrust;
 use scrust::gamedata::{GameData, GRPCache};
@@ -12,6 +14,8 @@ use scrust::iscript::{IScript, AnimationType, OpCode};
 use scrust::render::{render_buffer_with_transparency_reindexing,
                      render_buffer_with_solid_reindexing,
                      render_buffer_solid};
+use scrust::font::FontSize;
+use scrust::font::RenderText;
 
 extern crate byteorder;
 use byteorder::LittleEndian;
@@ -94,7 +98,8 @@ pub enum IScriptEntityAction {
         rel_y: i8,
     },
     CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
-    CreateSpriteUnderlay { sprite_id: u16, x: u16, y: u16 },
+    CreateSpriteUnderlay { parent: Option<Entity>, sprite_id: u16, x: u16, y: u16, use_parent_dir: bool },
+    RemoveEntity {entity: Entity},
 }
 /// *****************************************
 
@@ -123,6 +128,8 @@ pub struct IScriptStateElement {
     pub map_pos_x: u16,
     pub map_pos_y: u16,
     parent_entity: Option<Entity>,
+    /// stops iscript interpretation (for opcode IgnoreRest)
+    paused: bool
 }
 impl IScriptStateElement {
     pub fn new(iscript: &IScript,
@@ -143,7 +150,6 @@ impl IScriptStateElement {
         };
         IScriptStateElement {
             iscript_id: iscript_id,
-            // image_id: image_id,
             pos: start_pos,
             waiting_ticks_left: 0,
             visible: true,
@@ -158,6 +164,7 @@ impl IScriptStateElement {
             map_pos_x: map_x,
             map_pos_y: map_y,
             parent_entity: parent_entity,
+            paused: false,
         }
     }
 
@@ -166,12 +173,13 @@ impl IScriptStateElement {
         iscript.id_offsets_map.get(&self.iscript_id).unwrap()
     }
 
-    // pub fn set_animation(&mut self, anim: AnimationType) {
-    //     self.pos = self.iscript_anim_offsets()[anim as usize];
-    // }
-    // pub fn is_animation_valid(&self, anim: AnimationType) -> bool {
-    //     self.iscript_anim_offsets()[anim as usize] > 0
-    // }
+    pub fn set_animation(&mut self, iscript: &IScript, anim: AnimationType) {
+        self.waiting_ticks_left = 0;
+        self.pos = self.iscript_anim_offsets(iscript)[anim as usize];
+    }
+    pub fn is_animation_valid(&self, iscript: &IScript, anim: AnimationType) -> bool {
+        self.iscript_anim_offsets(iscript)[anim as usize] > 0
+    }
 
     pub fn set_direction(&mut self, dir: u8) {
         self.direction = dir % 32;
@@ -257,7 +265,7 @@ impl IScriptSteppingSys {
                          dh: &mut DataHelper<UnitComponents, UnitServices>)
                          -> Option<IScriptEntityAction> {
 
-        if !dh.iscript_state[e].alive {
+        if !dh.iscript_state[e].alive || dh.iscript_state[e].paused {
             return None;
         }
         // FIXME: is waiting actually counted in frames?
@@ -265,6 +273,14 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].waiting_ticks_left -= 1;
             return None;
         }
+
+        // FIXME: is this right? seems required for flying "walking" overlay
+        // if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
+        //     dh.iscript_state[e].direction =
+        //         dh.with_entity_data(&parent_entity, |ent, data| {
+        //             data.iscript_state[ent].direction
+        //         }).expect("couldn't read parent direction");
+        // }
 
         if dh.iscript_state[e].follow_main_graphic {
             match dh.iscript_state[e].parent_entity {
@@ -301,7 +317,19 @@ impl IScriptSteppingSys {
                         rel_y: rel_y as i8,
                     });
                 },
+            OpCode::ImgUlNextId => (rel_x: u8, rel_y: u8) {
+                // Displays an active image overlay at the shadow animation
+                // level at a specified offset position. The image overlay that
+                // will be displayed is the one that is after the current image
+                // overlay in images.dat.
+                return Some(IScriptEntityAction::CreateImageUnderlay {
+                    parent: **e,
+                    image_id: dh.scimage[e].image_id+1,
+                    rel_x: rel_x as i8,
+                    rel_y: rel_y as i8,
+                });
 
+            },
         OpCode::ImgOl => (image_id: u16, rel_x: u8, rel_y: u8) {
         // e.g. explosions on death
             return Some(IScriptEntityAction::CreateImageOverlay {
@@ -313,8 +341,6 @@ impl IScriptSteppingSys {
         },
         OpCode::SprOl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
         // independent overlay, e.g. scanner sweep
-        // FIXME
-            println!("--- sprol not implemented yet ---");
             return Some(IScriptEntityAction::CreateSpriteOverlay {
                 sprite_id: sprite_id,
                 x: (rel_x as u16) + (dh.iscript_state[e].rel_x as u16) +
@@ -325,24 +351,43 @@ impl IScriptSteppingSys {
         },
         OpCode::LowSprUl => (sprite_id: u16, rel_x: u8, rel_y: u8) {
         // independent underlay, e.g. gore
-        // FIXME
-            println!("--- lowsprul not implemented yet ---");
-            // actions.push(IScriptEntityAction::CreateSpriteUnderlay {
-            //     sprite_id: sprite_id,
-            //     x: (rel_x as u16) + (dh.iscript_state[e].rel_x as u16) +
-            //         dh.iscript_state[e].map_pos_x,
-            //     y: (rel_y as u16) + (dh.iscript_state[e].rel_y as u16) +
-            //         dh.iscript_state[e].map_pos_y,
-            // });
             return Some(IScriptEntityAction::CreateSpriteUnderlay {
+                parent: None,
                 sprite_id: sprite_id,
                 x: (rel_x as u16) + (dh.iscript_state[e].rel_x as u16) +
                     dh.iscript_state[e].map_pos_x,
                 y: (rel_y as u16) + (dh.iscript_state[e].rel_y as u16) +
                     dh.iscript_state[e].map_pos_y,
+                use_parent_dir: false,
             });
         },
-
+            OpCode::SprUlUseLo => (sprite_id: u16, rel_x: u8, rel_y: u8) {
+                // The new sprite inherits the direction of the current sprite.
+                return Some(IScriptEntityAction::CreateSpriteUnderlay {
+                    parent: Some(**e),
+                    sprite_id: sprite_id,
+                    x: (rel_x as u16) + (dh.iscript_state[e].rel_x as u16) +
+                        dh.iscript_state[e].map_pos_x,
+                    y: (rel_y as u16) + (dh.iscript_state[e].rel_y as u16) +
+                        dh.iscript_state[e].map_pos_y,
+                    use_parent_dir: true,
+                });
+            },
+            OpCode::SprOlUseLo => (sprite_id: u16, overlay_no: u8) {
+                // Spawns a sprite one animation level above the current image
+                // overlay, using a specified LO* file for the offset position
+                // information. The new sprite inherits the direction of the
+                // current sprite.
+                // FIXME
+            },
+            OpCode::ImgOlUseLo => (sprite_id: u16, rel_x: u8, rel_y: u8) {
+                // Displays an active image overlay at an animation level higher
+                // than the current image overlay, using a LO* file to determine
+                // the offset position.
+                // FIXME
+            },
+            // OpCode::AttackMelee => dynamic_parameters(no_sounds: u8, snd1: u16, ...) {
+            // },
         OpCode::CreateGasOverlays => (overlay_no: u8) {
             let smoke_img_id = 430 + overlay_no as u16;
             // FIXME
@@ -365,21 +410,30 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].frameset = frame;
         },
         OpCode::PlayFramTile => (frame: u16) {
+            // plays frame# + tileset. If (frame# + tileset) is >= number of frames in the GRP, it does nothing.
             println!("--- playframtile not implemented yet ---");
         // FIXME
         },
         OpCode::EngFrame => (frame: u8) {
+            //  Sets current image's frameset to <frame> and copies the primary image's direction. (Basically followmaingraphic, but without copying the parent image's frameset)
+
+            // for engine glow overlays
         // FIXME is this right: same as playfram?
             dh.iscript_state[e].frameset = frame as u16;
         },
         OpCode::FollowMainGraphic => () {
+            // Copies frame, flipstate, and direction of primary image in the sprite. Reapplies palette?
             // assert!(parent.is_some());
             dh.iscript_state[e].follow_main_graphic = true;
         },
-        OpCode::EngSet => () {
-        // same as FollowMainGraphic
+        OpCode::EngSet => (frameset: u8) {
+            // Copes primary image's direction, and sets the frame to the primary image's GRP's frame count * framemult + primary image's frameset.
+           // Plays a particular frame set, often used in engine glow animations.
+        // same as FollowMainGraphic?
             // assert!(parent.is_some());
+            // FIXME: this can't be right
             dh.iscript_state[e].follow_main_graphic = true;
+            // dh.iscript_state[e].frameset = frameset as u16;
         },
 
         OpCode::Wait => (ticks: u8) {
@@ -390,6 +444,7 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].waiting_ticks_left += r as usize;
         },
         OpCode::SigOrder => (signal: u8) {
+            // Masks thingy's orderSignal with <signal>, usually a bit or flag. (This was already documented elsewhere)
         // FIXME
             println!("--- not implemented yet ---");
         },
@@ -401,6 +456,11 @@ impl IScriptSteppingSys {
             if r < val {
                 dh.iscript_state[e].pos = target;
             }
+        },
+        OpCode::Call => (offset: u16) {
+            // Calls a code block.
+            // FIXME
+            println!("--- not implemented yet ---");
         },
         OpCode::TurnRand => (units: u8) {
             if ::rand::thread_rng().gen_range(0, 100) < 50 {
@@ -440,6 +500,16 @@ impl IScriptSteppingSys {
         OpCode::PlaySnd => (sound_id: u16) {
         },
 
+        OpCode::SetFlipState => (flipstate: u8) {
+            // FIXME
+            println!("setflipstate: {}", flipstate);
+        },
+        OpCode::PwrupCondJmp => (offset: u16) {
+            // Jumps to a code block if the current unit is a powerup and it is currently picked up.
+            // FIXME
+            println!("pwrupcondjmp: {}", offset);
+        },
+
         OpCode::NoBrkCodeStart => () {
         // FIXME
         },
@@ -469,7 +539,7 @@ impl IScriptSteppingSys {
         },
         OpCode::IgnoreRest => () {
         // this causes the script to stop until the next animation is called.
-        // FIXME
+            dh.iscript_state[e].paused = true;
         },
         OpCode::SetFlSpeed => (speed: u16) {
         // FIXME
@@ -496,26 +566,20 @@ impl EntityProcess for IScriptSteppingSys {
         // FIXME
         let cpy = self.iscript_copy.as_ref().expect("IScript not loaded!");
         for e in entities {
-            // let action = dh.iscript_state[e]._interpret_iscript(cpy, None);
-            // println!(" entity {:?}", (**e).id() );
-
-            // println!("entity: {:?}", **e);
-
-            // let index = e.index();
-            // let id = e.id();
-            // println!("index: {}, id: {}", index, id);
-
-            // let indexed = dh.entities.indexed(e);
-            // let entity = **e;
-            // println!("{:?}", entity);
-            // dh.with_entity_data(&entity, |ent, data| {
-            //    println!("relx: {}", data.iscript_state[ent].rel_x);
-            // });
-            // let ie = dh.entities.indexed(entity);
-            // println!("ie: {:?}", ie.iscript_state.rel_x);
-
-            // let ent = Entity(id);
-            // let reconstructed_entity = IndexedEntity(index, ent, PhantomData);
+            // TODO: unnecessary here?
+            // there should be a better way to check if an entity exists
+            match dh.iscript_state[e].parent_entity {
+                None => {},
+                Some(parent_entity) => {
+                    match dh.with_entity_data(&parent_entity, |_, _| {}) {
+                        None => {
+                            dh.remove_entity(**e);
+                            continue;
+                        },
+                        _ => {},
+                    }
+                }
+            }
 
             let create_action = self.interpret_iscript(&cpy, e, dh);
             match create_action {
@@ -658,9 +722,7 @@ pub struct SCSpriteComponent {
 pub struct SelectableComponent {
     /// from sprites.dat: length of health bar in pixels
     health_bar: u8,
-    // circle_img: u8,
     circle_offset: u8,
-    // FIXME: inefficient
     circle_grp_id: u32,
 
     pub sel_width: u16,
@@ -789,9 +851,10 @@ fn create_scsprite(world: &mut World<UnitSystems>,
                    gd: &GameData,
                    sprite_id: usize,
                    map_x: u16,
-                   map_y: u16) -> Entity {
+                   map_y: u16,
+                   parent: Option<Entity>) -> Entity {
     let image_id = gd.sprites_dat.image_id[sprite_id];
-    let entity = create_scimage(world, gd, image_id as usize, map_x, map_y, None);
+    let entity = create_scimage(world, gd, image_id as usize, map_x, map_y, parent);
 
     world.modify_entity(entity,
                         |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
@@ -836,7 +899,7 @@ fn create_scflingy(world: &mut World<UnitSystems>,
             2 => FlingyMoveControl::IScriptBin,
             _ => unimplemented!(),
         };
-    let entity = create_scsprite(world, gd, sprite_id as usize, map_x, map_y);
+    let entity = create_scsprite(world, gd, sprite_id as usize, map_x, map_y, None);
 
     world.modify_entity(entity, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
         data.scflingy.insert(&e,
@@ -869,8 +932,10 @@ fn create_scunit(world: &mut World<UnitSystems>,
 
 struct UnitsECSView {
     world: World<UnitSystems>,
-
     main_unit: Entity,
+
+    unit_id: usize,
+    unit_name_str: String,
 }
 impl UnitsECSView {
     fn new(gd: &GameData, context: &mut GameContext) -> UnitsECSView {
@@ -882,14 +947,17 @@ impl UnitsECSView {
 
         let unit_id = 0;
         let main_unit = create_scunit(&mut world, gd, unit_id, 0, 0);
+        let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
 
         UnitsECSView {
             world: world,
             main_unit: main_unit,
+            unit_id: unit_id,
+            unit_name_str: unit_name_str,
         }
     }
 
-    fn draw_entity(&self,
+    fn draw_scimage(&self,
                    e: EntityData<UnitComponents>,
                    dh: &DataHelper<UnitComponents, UnitServices>,
                    gd: &GameData,
@@ -900,6 +968,11 @@ impl UnitsECSView {
         let scimg_comp = &dh.scimage[e];
         let grp = grp_cache.get_ro(scimg_comp.grp_id);
         let fridx = scimg_comp.frame_idx(&dh.iscript_state[e]);
+        // this seems like a hack
+        if fridx >= grp.frames.len() {
+            println!("WARNING: suspicious frame index");
+            return;
+        }
         let draw_flipped = scimg_comp.draw_flipped(&dh.iscript_state[e]);
 
         let (cx, cy) = (200, 200);
@@ -930,8 +1003,55 @@ impl View for UnitsECSView {
         }
         context.screen.fill_rect(None, Color::RGB(0, 0, 120)).ok();
 
+        if context.events.now.is_key_pressed(&Keycode::N) {
+            if self.unit_id < 227 {
+                self.unit_id += 1;
+
+                self.unit_name_str = format!("{}: {}",
+                                             self.unit_id,
+                                             gd.stat_txt_tbl[self.unit_id].to_owned());
+                self.world.remove_entity(self.main_unit);
+                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
+            }
+
+        } else if context.events.now.is_key_pressed(&Keycode::P) {
+            if self.unit_id > 0 {
+                self.unit_id -= 1;
+
+                self.unit_name_str = format!("{}: {}",
+                                             self.unit_id,
+                                             gd.stat_txt_tbl[self.unit_id].to_owned());
+                self.world.remove_entity(self.main_unit);
+                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
+            }
+        }
+
+        if context.events.now.is_key_pressed(&Keycode::Q) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].turn_ccwise(1);
+            });
+        } else if context.events.now.is_key_pressed(&Keycode::E) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].turn_cwise(1);
+            });
+        }
+
+        if context.events.now.is_key_pressed(&Keycode::W) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].set_animation(&gd.iscript,
+                                                      AnimationType::Walking);
+            });
+        } else if context.events.now.is_key_pressed(&Keycode::A) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].set_animation(&gd.iscript,
+                                                      AnimationType::GndAttkInit);
+            });
+        }
+
+
         // interpret iscript for units
         self.world.update();
+        self.world.flush_queue();
 
         // generate new images, units
         let actions =
@@ -939,6 +1059,9 @@ impl View for UnitsECSView {
                          Vec::<IScriptEntityAction>::new());
         for action in actions {
             match action {
+                IScriptEntityAction::RemoveEntity {entity} => {
+                    self.world.remove_entity(entity);
+                },
                 IScriptEntityAction::CreateImageUnderlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
                         create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
@@ -948,6 +1071,7 @@ impl View for UnitsECSView {
                         data.iscript_state[e].rel_y = rel_y;
                         data.underlay.insert(&e, UnderlayComponent {});
                     });
+
                 }
                 IScriptEntityAction::CreateImageOverlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
@@ -958,16 +1082,52 @@ impl View for UnitsECSView {
                         data.iscript_state[e].rel_y = rel_y;
                         data.overlay.insert(&e, OverlayComponent {});
                     });
-                }
-                _ => {
-                    println!("ignoring {:?} iscript create action", action);
-                }
+                },
+                IScriptEntityAction::CreateSpriteOverlay { sprite_id, x, y } => {
+                    let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, None);
+                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
+                                             data: &mut UnitComponents| {
+                         data.overlay.insert(&e, OverlayComponent {});
+                    });
+                },
+                IScriptEntityAction::CreateSpriteUnderlay { parent, sprite_id, x, y, use_parent_dir } => {
+                    let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent);
+                    let parent_dir = if use_parent_dir {
+                        self.world.with_entity_data(&parent.unwrap(), |ent, data| {
+                            data.iscript_state[ent].direction
+                        })
+                    } else {
+                        None
+                    };
+                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
+                                             data: &mut UnitComponents| {
+                         data.underlay.insert(&e, UnderlayComponent {});
+                         if let Some(initial_dir) = parent_dir {
+                             data.iscript_state[e].direction = initial_dir;
+                         }
+                                             });
+                },
+                // _ => {
+                //     println!("ignoring {:?} iscript create action", action);
+                // }
             }
         }
 
         let grp_cache = gd.grp_cache.borrow();
+
+        let fnt = gd.font(FontSize::Font16);
+        let fnt_reindex = &gd.font_reindexing_store.get_game_reindex().data;
+        let unitname_rect = Rect::new(10, 10, 300, 50);
+
         let buffer_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
+            fnt.render_textbox(self.unit_name_str.as_ref(),
+                               1,
+                               fnt_reindex,
+                               buffer,
+                               buffer_pitch,
+                               &unitname_rect);
+
             let dh = &self.world.data;
 
             // TODO: better filter
@@ -975,7 +1135,7 @@ impl View for UnitsECSView {
                 if !dh.iscript_state[e].alive || !dh.underlay.has(&e) {
                     continue;
                 }
-                self.draw_entity(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
             // NOTE order is random in this loop!
@@ -995,7 +1155,7 @@ impl View for UnitsECSView {
                                                            buffer,
                                                            buffer_pitch);
                 }
-                self.draw_entity(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
             // TODO: better filter
@@ -1003,7 +1163,7 @@ impl View for UnitsECSView {
                 if !dh.iscript_state[e].alive || !dh.overlay.has(&e) {
                     continue;
                 }
-                self.draw_entity(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
         });
 

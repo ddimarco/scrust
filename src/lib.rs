@@ -5,7 +5,7 @@ extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
 extern crate rand;
-extern crate stash;
+// extern crate stash;
 
 extern crate pathplanning;
 extern crate smacker;
@@ -26,8 +26,8 @@ pub mod iscript;
 #[macro_use]
 pub mod utils;
 pub mod terrain;
-pub mod iscriptstate;
-pub mod scunits;
+// pub mod iscriptstate;
+// pub mod scunits;
 pub mod lox;
 pub mod spk;
 pub mod ui;
@@ -38,10 +38,10 @@ use sdl2::render::Renderer;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
-use scunits::SCUnit;
+// use scunits::SCUnit;
 use pal::Palette;
 
-use stash::Stash;
+// use stash::Stash;
 use std::collections::HashSet;
 
 struct_events! (
@@ -116,7 +116,7 @@ pub enum GameEvents {
 }
 
 pub struct GameState {
-    pub unit_instances: Stash<SCUnit>,
+    // pub unit_instances: Stash<SCUnit>,
     pub selected_units: Vec<usize>,
 
     pub game_events: Vec<GameEvents>,
@@ -125,7 +125,7 @@ pub struct GameState {
 impl GameState {
     fn new() -> Self {
         GameState {
-            unit_instances: Stash::<SCUnit>::new(),
+            // unit_instances: Stash::<SCUnit>::new(),
             selected_units: Vec::<usize>::new(),
             game_events: Vec::<GameEvents>::new(),
             map_pos: Point::new(0, 0),

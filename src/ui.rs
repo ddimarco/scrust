@@ -9,12 +9,12 @@ use ::pal::{Palette, palimg_to_texture};
 use ::pcx::PCX;
 use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 use ::terrain::Map;
-use ::scunits::SCUnit;
+// use ::scunits::SCUnit;
 use ::font::{FontSize, RenderText};
 
 use ::gamedata::GameData;
 
-use ::stash::Stash;
+// use ::stash::Stash;
 
 use std::cmp::{min, max};
 
@@ -246,7 +246,8 @@ impl SelectionPanel {
                   gd: &GameData,
                   ctx: &mut GameContext,
                   sel_units: &Vec<usize>,
-                  unit_instances: &Stash<SCUnit>) {
+                  // unit_instances: &Stash<SCUnit>
+    ) {
         if !self.need_update(sel_units) {
             return;
         }
@@ -260,24 +261,24 @@ impl SelectionPanel {
             self.buffer[i] = 0;
         }
 
-        let selunit = unit_instances.get(sel_units[0]).unwrap();
-        let unitname = gd.stat_txt_tbl[selunit.unit_id].to_owned();
-        fnt.render_textbox(&unitname,
-                           0,
-                           reindex,
-                           &mut self.buffer,
-                           pitch,
-                           &self.unit_name_rect);
+        // let selunit = unit_instances.get(sel_units[0]).unwrap();
+        // let unitname = gd.stat_txt_tbl[selunit.unit_id].to_owned();
+        // fnt.render_textbox(&unitname,
+        //                    0,
+        //                    reindex,
+        //                    &mut self.buffer,
+        //                    pitch,
+        //                    &self.unit_name_rect);
 
         // draw unit wireframe
-        let wf_data = &gd.unit_wireframe_grp.frames[selunit.unit_id];
-        let w = gd.unit_wireframe_grp.header.width as usize;
-        let h = gd.unit_wireframe_grp.header.height as usize;
-        for y in 0..h {
-            for x in 0..w {
-                self.buffer[y * 230 + x] = wf_data[y * w + x];
-            }
-        }
+        // let wf_data = &gd.unit_wireframe_grp.frames[selunit.unit_id];
+        // let w = gd.unit_wireframe_grp.header.width as usize;
+        // let h = gd.unit_wireframe_grp.header.height as usize;
+        // for y in 0..h {
+        //     for x in 0..w {
+        //         self.buffer[y * 230 + x] = wf_data[y * w + x];
+        //     }
+        // }
 
 
         self.text = palimg_to_texture(&mut ctx.renderer,
@@ -363,7 +364,8 @@ impl LayerTrait for UiLayer {
             self.mp.update();
         }
 
-        self.selection_panel.update(gd, gc, &state.selected_units, &state.unit_instances);
+        self.selection_panel.update(gd, gc, &state.selected_units// , &state.unit_instances
+        );
     }
     fn process_event(&mut self, event: &GameEvents) -> bool {
         match *event {
