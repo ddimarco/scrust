@@ -1111,8 +1111,7 @@ impl View for UnitsECSView {
                          data.underlay.insert(&e, UnderlayComponent {});
                          if let Some(initial_dir) = parent_dir {
                              data.iscript_state[e].direction = initial_dir;
-                         }
-                                             });
+                         }});
                 },
                 // _ => {
                 //     println!("ignoring {:?} iscript create action", action);
@@ -1137,20 +1136,21 @@ impl View for UnitsECSView {
 
             let dh = &self.world.data;
 
-            // TODO: better filter
-            for e in self.world.entities() {
-                if !dh.iscript_state[e].alive || !dh.underlay.has(&e) {
+            for e in self.world.entities().filter(aspect!(<UnitComponents> all: [underlay]), &self.world)
+            {
+                if !dh.iscript_state[e].alive {
                     continue;
                 }
                 self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
             // NOTE order is random in this loop!
-            for e in self.world.entities() {
+            for e in self.world.entities().filter(aspect!(<UnitComponents> none: [underlay, overlay]), &self.world) {
                 // TODO we should remove dead entities instead
-                if !dh.iscript_state[e].alive || dh.underlay.has(&e) || dh.overlay.has(&e) {
+                if !dh.iscript_state[e].alive  {
                     continue;
                 }
+                assert!(!dh.underlay.has(&e) && !dh.overlay.has(&e));
 
                 // draw selection circle if available
                 if dh.selectable.has(&e) {
@@ -1165,15 +1165,13 @@ impl View for UnitsECSView {
                 self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
-            // TODO: better filter
-            for e in self.world.entities() {
-                if !dh.iscript_state[e].alive || !dh.overlay.has(&e) {
+            for e in self.world.entities().filter(aspect!(<UnitComponents> all: [overlay]), &self.world) {
+                if !dh.iscript_state[e].alive {
                     continue;
                 }
                 self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
         });
-
 
 
         ViewAction::None
