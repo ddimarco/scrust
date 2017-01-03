@@ -111,7 +111,7 @@ pub enum IScriptCurrentUnitState {
 pub struct IScriptStateElement {
     pub iscript_id: u32,
     /// current position in iscript
-    pub pos: u16,
+    pub pos: usize,
 
     pub waiting_ticks_left: usize,
     // FIXME: signed or unsigned?
@@ -149,7 +149,7 @@ impl IScriptStateElement {
         };
         IScriptStateElement {
             iscript_id: iscript_id,
-            pos: start_pos,
+            pos: start_pos as usize,
             waiting_ticks_left: 0,
             visible: true,
             rel_x: 0,
@@ -173,7 +173,7 @@ impl IScriptStateElement {
 
     pub fn set_animation(&mut self, iscript: &IScript, anim: AnimationType) {
         self.waiting_ticks_left = 0;
-        self.pos = self.iscript_anim_offsets(iscript)[anim as usize];
+        self.pos = self.iscript_anim_offsets(iscript)[anim as usize] as usize;
     }
     pub fn is_animation_valid(&self, iscript: &IScript, anim: AnimationType) -> bool {
         self.iscript_anim_offsets(iscript)[anim as usize] > 0
@@ -430,12 +430,12 @@ impl IScriptSteppingSys {
             println!("--- not implemented yet ---");
         },
         OpCode::Goto => (target: u16) {
-            dh.iscript_state[e].pos = target;
+            dh.iscript_state[e].pos = target as usize;
         },
         OpCode::RandCondJmp => (val: u8, target: u16) {
             let r = ::rand::random::<u8>();
             if r < val {
-                dh.iscript_state[e].pos = target;
+                dh.iscript_state[e].pos = target as usize;
             }
         },
         OpCode::Call => (offset: u16) {
@@ -549,25 +549,16 @@ impl EntityProcess for IScriptSteppingSys {
         for e in entities {
             // TODO: unnecessary here?
             // there should be a better way to check if an entity exists
-            match dh.iscript_state[e].parent_entity {
-                None => {},
-                Some(parent_entity) => {
-                    match dh.with_entity_data(&parent_entity, |_, _| {}) {
-                        None => {
-                            dh.remove_entity(**e);
-                            continue;
-                        },
-                        _ => {},
-                    }
+            if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
+                if dh.with_entity_data(&parent_entity, |_, _| {}).is_none() {
+                    dh.remove_entity(**e);
+                    continue;
                 }
             }
 
             let create_action = self.interpret_iscript(&cpy, e, dh);
-            match create_action {
-                None => {}
-                Some(action) => {
-                    self.iscript_entity_actions.push(action);
-                }
+            if let Some(action) = create_action {
+                self.iscript_entity_actions.push(action);
             }
         }
     }
@@ -585,8 +576,6 @@ pub struct SCImageComponent {
     pub image_id: u16,
     pub grp_id: u32,
     pub player_id: usize,
-    // FIXME: only for units?
-    // pub commands: Vec<UnitCommands>,
     can_turn: bool,
     remapping: SCImageRemapping,
 }
@@ -804,7 +793,7 @@ systems! {
     }
 }
 
-/// *****************************************
+// ****************************************************************************
 
 fn create_scimage(world: &mut World<UnitSystems>,
                   gd: &GameData,
