@@ -112,6 +112,8 @@ pub struct IScriptStateElement {
     pub iscript_id: u32,
     /// current position in iscript
     pub pos: usize,
+    /// positions stack to jump back after a call
+    call_stack: Vec<usize>,
 
     pub waiting_ticks_left: usize,
     // FIXME: signed or unsigned?
@@ -150,6 +152,7 @@ impl IScriptStateElement {
         IScriptStateElement {
             iscript_id: iscript_id,
             pos: start_pos as usize,
+            call_stack: Vec::new(),
             waiting_ticks_left: 0,
             visible: true,
             rel_x: 0,
@@ -455,8 +458,13 @@ impl IScriptSteppingSys {
         },
         OpCode::Call => (offset: u16) {
             // Calls a code block.
-            // FIXME
-            println!("--- not implemented yet ---");
+            let pos = dh.iscript_state[e].pos;
+            dh.iscript_state[e].call_stack.push(pos);
+            dh.iscript_state[e].pos = offset as usize;
+        },
+        OpCode::Return => () {
+            let pos = dh.iscript_state[e].call_stack.pop().expect("return encountered, but empty call stack!");
+            dh.iscript_state[e].pos = pos;
         },
         OpCode::TurnRand => (units: u8) {
             if ::rand::thread_rng().gen_range(0, 100) < 50 {
@@ -507,13 +515,17 @@ impl IScriptSteppingSys {
         },
 
         OpCode::NoBrkCodeStart => () {
+            // Holds the processing of player orders until a nobrkcodeend is encountered.
+
         // FIXME
         },
         OpCode::NoBrkCodeEnd => () {
+            // Allows the processing of player orders after a nobrkcodestart instruction.
         // FIXME
         },
         OpCode::TmpRmGraphicStart => () {
         // Sets the current image overlay state to hidden
+            // only used for nukes
             // println!("tmprmgraphicstart, has parent: {}", parent.is_some());
             dh.iscript_state[e].visible = false;
         },
