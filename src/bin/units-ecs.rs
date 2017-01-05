@@ -32,7 +32,7 @@ extern crate ecs;
 
 use ecs::World;
 use ecs::DataHelper;
-use ecs::system::{EntityProcess, EntitySystem, System};
+use ecs::system::{System};
 use ecs::EntityIter;
 use ecs::ServiceManager;
 use ecs::Entity;
@@ -129,6 +129,7 @@ pub struct IScriptStateElement {
     pub map_pos_x: u16,
     pub map_pos_y: u16,
     parent_entity: Option<Entity>,
+    children: Vec<Entity>,
     /// stops iscript interpretation (for opcode IgnoreRest)
     paused: bool
 }
@@ -165,6 +166,7 @@ impl IScriptStateElement {
             map_pos_x: map_x,
             map_pos_y: map_y,
             parent_entity: parent_entity,
+            children: Vec::new(),
             paused: false,
         }
     }
@@ -175,6 +177,7 @@ impl IScriptStateElement {
     }
 
     pub fn set_animation(&mut self, iscript: &IScript, anim: AnimationType) {
+        // FIXME: need to also change the animation for its children
         self.waiting_ticks_left = 0;
         self.pos = self.iscript_anim_offsets(iscript)[anim as usize] as usize;
     }
@@ -209,11 +212,11 @@ impl IScriptStateElement {
         self.pos += 2;
         val
     }
-    fn read_u32(&mut self, iscript: &IScript) -> u32 {
-        let val = LittleEndian::read_u32(&iscript.data[(self.pos as usize)..]);
-        self.pos += 4;
-        val
-    }
+    // fn read_u32(&mut self, iscript: &IScript) -> u32 {
+    //     let val = LittleEndian::read_u32(&iscript.data[(self.pos as usize)..]);
+    //     self.pos += 4;
+    //     val
+    // }
 }
 /// *****************************************
 
@@ -352,12 +355,14 @@ impl IScriptSteppingSys {
                 // information. The new sprite inherits the direction of the
                 // current sprite.
                 // FIXME
+                println!("sproluselo not implemented yet");
             },
             OpCode::ImgOlUseLo => (sprite_id: u16, rel_x: u8, rel_y: u8) {
                 // Displays an active image overlay at an animation level higher
                 // than the current image overlay, using a LO* file to determine
                 // the offset position.
                 // FIXME
+                println!("imgoluselo not implemented yet");
             },
             // OpCode::AttackMelee => dynamic_parameters(no_sounds: u8, snd1: u16, ...) {
             // },
@@ -366,21 +371,20 @@ impl IScriptSteppingSys {
             // FIXME
             let overlay_id = self.images_dat.special_overlay[dh.scimage[e].image_id as usize];
             let (rx, ry) = {
-                let mut c = self.lox_cache.borrow();
+                let c = self.lox_cache.borrow();
                 let lo = c.get_ro(overlay_id) ;
                 lo.frames[0].offsets[overlay_no as usize]
             };
             return Some(IScriptEntityAction::CreateImageOverlay {
                 parent: **e,
                 image_id: smoke_img_id,
-        // FIXME signed or unsigned?
+                // FIXME signed or unsigned?
                 rel_x: rx,
                 rel_y: ry,
             });
         },
 
         OpCode::PlayFram => (frame: u16) {
-        // println!("playfram: {}", frame);
             dh.iscript_state[e].frameset = frame;
         },
         OpCode::PlayFramTile => (frame: u16) {
@@ -391,47 +395,49 @@ impl IScriptSteppingSys {
         OpCode::EngFrame => (frame: u8) {
             //  Sets current image's frameset to <frame> and copies the primary image's direction. (Basically followmaingraphic, but without copying the parent image's frameset)
             // for engine glow overlays
-            let parent_entity = dh.iscript_state[e].parent_entity.expect("engframe: no parent entity!");
-            let parent_dir = dh.with_entity_data(&parent_entity, |ent, data| {
-                data.iscript_state[ent].direction
-            });
-            dh.iscript_state[e].direction = parent_dir.unwrap();
-            dh.iscript_state[e].frameset = frame as u16;
+            let parent_entity = dh.iscript_state[e].parent_entity.expect("followmaingraphic: no parent entity!");
+            match dh.with_entity_data(&parent_entity, |ent, data| {
+                data.iscript_state[ent].direction})
+            {
+                None => { return Some(IScriptEntityAction::RemoveEntity{entity: **e})},
+                Some(dir_frame) => {
+                    dh.iscript_state[e].direction = dir_frame;
+                    dh.iscript_state[e].frameset = frame as u16;
+                }
+            }
+
 
         },
         OpCode::FollowMainGraphic => () {
             // Copies frame, flipstate, and direction of primary image in the sprite. Reapplies palette?
             let parent_entity = dh.iscript_state[e].parent_entity.expect("followmaingraphic: no parent entity!");
 
-            let dir_frame = {
-                dh.with_entity_data(&parent_entity, |ent, data| {
-                    (data.iscript_state[ent].direction,
-                     data.iscript_state[ent].frameset)
-                })
-            }
-            .expect("couldn't get parent direction & frameset!");
-            dh.iscript_state[e].direction = dir_frame.0;
-            dh.iscript_state[e].frameset = dir_frame.1;
+            match dh.with_entity_data(&parent_entity, |ent, data| {
+                (data.iscript_state[ent].direction,
+                 data.iscript_state[ent].frameset)})
+            {
+                    None => { return Some(IScriptEntityAction::RemoveEntity{entity: **e})},
+                    Some(dir_frame) => {
+                        dh.iscript_state[e].direction = dir_frame.0;
+                        dh.iscript_state[e].frameset = dir_frame.1;
+                    }
+                }
         },
         OpCode::EngSet => (frameset: u8) {
             // Copes primary image's direction, and sets the frame to the primary image's GRP's frame count * framemult + primary image's frameset.
            // Plays a particular frame set, often used in engine glow animations.
             // assert!(parent.is_some());
             let parent_entity = dh.iscript_state[e].parent_entity.expect("engset: no parent entity!");
-            let dir_frame = {
-                dh.with_entity_data(&parent_entity, |ent, data| {
-                    (data.iscript_state[ent].direction,
-                     data.iscript_state[ent].frameset)
-                })
+            match dh.with_entity_data(&parent_entity, |ent, data| {
+                (data.iscript_state[ent].direction,
+                 data.iscript_state[ent].frameset)})
+            {
+                None => { return Some(IScriptEntityAction::RemoveEntity{entity: **e})},
+                Some(dir_frame) => {
+                    dh.iscript_state[e].direction = dir_frame.0;
+                    dh.iscript_state[e].frameset = dir_frame.1;
+                }
             }
-            .expect("couldn't get parent direction & frameset!");
-            // println!("self dir: {}, frame: {}; primary dir: {}, frame: {}; param frame: {}",
-            //          dh.iscript_state[e].direction, dh.iscript_state[e].frameset,
-            //          dir_frame.0, dir_frame.1,
-            //          frameset);
-            // FIXME: this can't be right
-            dh.iscript_state[e].direction = dir_frame.0;
-            dh.iscript_state[e].frameset = dir_frame.1;
             // dh.iscript_state[e].frameset = frameset as u16;
         },
 
@@ -445,7 +451,7 @@ impl IScriptSteppingSys {
         OpCode::SigOrder => (signal: u8) {
             // Masks thingy's orderSignal with <signal>, usually a bit or flag. (This was already documented elsewhere)
         // FIXME
-            println!("--- not implemented yet ---");
+            println!("--- sigorder not implemented yet ---");
         },
         OpCode::Goto => (target: u16) {
             dh.iscript_state[e].pos = target as usize;
@@ -555,6 +561,7 @@ impl IScriptSteppingSys {
 
         OpCode::End => () {
             dh.iscript_state[e].alive = false;
+            return Some(IScriptEntityAction::RemoveEntity{entity: **e});
         }
         );
 
@@ -570,12 +577,12 @@ impl Process for IScriptSteppingSys {
         for e in iter {
             // TODO: unnecessary here?
             // there should be a better way to check if an entity exists
-            if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
-                if dh.with_entity_data(&parent_entity, |_, _| {}).is_none() {
-                    dh.remove_entity(**e);
-                    continue;
-                }
-            }
+            // if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
+            //     if dh.with_entity_data(&parent_entity, |_, _| {}).is_none() {
+            //         dh.remove_entity(**e);
+            //         continue;
+            //     }
+            // }
 
             let create_action = self.interpret_iscript(&cpy, e, dh);
             if let Some(action) = create_action {
@@ -940,7 +947,6 @@ impl UnitsECSView {
             interested: HashMap::new(),
         });
 
-
         let args: Vec<String> = env::args().collect();
         let unit_id = if args.len() == 2 {
             args[1].parse::<usize>().expect("command line argument should be an integer")
@@ -992,6 +998,25 @@ impl UnitsECSView {
                         scimg_comp.reindexing_table(gd));
     }
 }
+
+/// set animation state for an entity an all its children
+/// necessary, so they also get destroyed properly
+// FIXME: with this we can probably get rid of the parent check - self-remove
+// hacks in interpret_iscript
+fn set_animation_rec(world: &mut World<UnitSystems>,
+                     iscript: &IScript,
+                     entity: Entity,
+                     anim: AnimationType) {
+    for e in world.with_entity_data(&entity, |ent, data| {
+        data.iscript_state[ent].set_animation(&iscript, anim.clone());
+        data.iscript_state[ent].children.clone()
+    }).unwrap_or(Vec::new()) {
+        world.with_entity_data(&e, |ent, data| {
+            data.iscript_state[ent].set_animation(&iscript, anim.clone());
+        });
+    }
+}
+
 impl View for UnitsECSView {
     fn render(&mut self,
               gd: &GameData,
@@ -1012,7 +1037,11 @@ impl View for UnitsECSView {
                 self.unit_name_str = format!("{}: {}",
                                              self.unit_id,
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
-                self.world.remove_entity(self.main_unit);
+
+                if !self.world.data.with_entity_data(&self.main_unit, |_, _| {}).is_none() {
+                    set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
+                    self.world.remove_entity(self.main_unit);
+                }
                 self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
             }
 
@@ -1023,7 +1052,10 @@ impl View for UnitsECSView {
                 self.unit_name_str = format!("{}: {}",
                                              self.unit_id,
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
-                self.world.remove_entity(self.main_unit);
+                if !self.world.data.with_entity_data(&self.main_unit, |_, _| {}).is_none() {
+                    set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
+                    self.world.remove_entity(self.main_unit);
+                }
                 self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
             }
         }
@@ -1043,13 +1075,15 @@ impl View for UnitsECSView {
                 data.iscript_state[ent].set_animation(&gd.iscript,
                                                       AnimationType::Walking);
             });
+
         } else if context.events.now.is_key_pressed(&Keycode::A) {
             self.world.with_entity_data(&self.main_unit, |ent, data| {
                 data.iscript_state[ent].set_animation(&gd.iscript,
                                                       AnimationType::GndAttkInit);
             });
+        } else if context.events.now.is_key_pressed(&Keycode::D) {
+            set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
         }
-
 
         // interpret iscript for units
         self.world.update();
@@ -1067,6 +1101,10 @@ impl View for UnitsECSView {
                 IScriptEntityAction::CreateImageUnderlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
                         create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                    self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
+                                             data: &mut UnitComponents| {
+                                                 data.iscript_state[e].children.push(ent);
+                                             });
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
@@ -1078,6 +1116,10 @@ impl View for UnitsECSView {
                 IScriptEntityAction::CreateImageOverlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
                         create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                    self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
+                                             data: &mut UnitComponents| {
+                                                 data.iscript_state[e].children.push(ent);
+                                             });
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
@@ -1095,8 +1137,9 @@ impl View for UnitsECSView {
                 IScriptEntityAction::CreateSpriteUnderlay { parent, sprite_id, x, y, use_parent_dir } => {
                     let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent);
                     let parent_dir = if use_parent_dir {
-                        self.world.with_entity_data(&parent.unwrap(), |ent, data| {
-                            data.iscript_state[ent].direction
+                        self.world.with_entity_data(&parent.unwrap(), |e, data| {
+                            data.iscript_state[e].children.push(ent);
+                            data.iscript_state[e].direction
                         })
                     } else {
                         None
