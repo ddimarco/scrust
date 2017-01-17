@@ -52,6 +52,13 @@ macro_rules! def_opcodes {
         $gd:ident,
         $debug:expr,
         $code_var:ident,
+
+        dynamic_parameters:
+        $( $opcode_:pat => ($num_var:ident: $num_tpe:ident,
+                            $vec_name:ident: <$vec_tpe:ident>)
+           $code_:block),*
+
+        fixed_parameters:
         $( $opcode:pat => ( $( $param:ident : $tpe:ident),*)
            $code:block),*
     )
@@ -59,6 +66,18 @@ macro_rules! def_opcodes {
     {
 
             match $code_var {
+                $(
+                    $opcode_ => {
+                        let $num_var = var_read!($num_tpe, $gd, $self_var);
+                        let mut $vec_name = Vec::<$vec_tpe>::with_capacity($num_var as usize);
+                        for _ in 0..$num_var {
+                            $vec_name.push(var_read!($vec_tpe, $gd, $self_var));
+                        }
+                        $code_
+                    }
+                ),*
+
+
                 $(
                     $opcode => {
                         if $debug {
@@ -284,15 +303,32 @@ impl IScriptSteppingSys {
                 false,
                 opcode,
 
-                OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
-                    // shadows and such; img* is associated with the current entity
-                    return Some(IScriptEntityAction::CreateImageUnderlay {
-                        parent: **e,
-                        image_id: image_id,
-                        rel_x: rel_x as i8,
-                        rel_y: rel_y as i8,
-                    });
-                },
+            dynamic_parameters:
+            OpCode::PlaySndRand => (no_sounds: u8, soundids: <u16>) {
+                // plays a random sound from a list.
+                println!("playsndrand: {}/{} sounds", no_sounds, soundids.len());
+                for si in soundids {
+                    println!("sound: {}", si);
+                }
+            },
+            OpCode::AttackMelee => (no_sounds: u8, soundids: <u16>) {
+                // applies damage to target without creating a flingy and plays a sound.
+                println!("attackmelee: {}/{} sounds", no_sounds, soundids.len());
+                for si in soundids {
+                    println!("sound: {}", si);
+                }
+            }
+
+            fixed_parameters:
+            OpCode::ImgUl => (image_id: u16, rel_x: u8, rel_y: u8) {
+                // shadows and such; img* is associated with the current entity
+                return Some(IScriptEntityAction::CreateImageUnderlay {
+                    parent: **e,
+                    image_id: image_id,
+                    rel_x: rel_x as i8,
+                    rel_y: rel_y as i8,
+                });
+            },
             OpCode::ImgUlNextId => (rel_x: u8, rel_y: u8) {
                 // Displays an active image overlay at the shadow animation
                 // level at a specified offset position. The image overlay that
@@ -364,8 +400,6 @@ impl IScriptSteppingSys {
                 // FIXME
                 println!("imgoluselo not implemented yet");
             },
-            // OpCode::AttackMelee => dynamic_parameters(no_sounds: u8, snd1: u16, ...) {
-            // },
         OpCode::CreateGasOverlays => (overlay_no: u8) {
             let smoke_img_id = 430 + overlay_no as u16;
             // FIXME
@@ -509,6 +543,8 @@ impl IScriptSteppingSys {
         },
         OpCode::PlaySnd => (sound_id: u16) {
         },
+        // OpCode::PlaySndRand => dynamic_parameters(no_sounds: u8, snd1: u8, ...) {
+        // },
 
         OpCode::SetFlipState => (flipstate: u8) {
             // FIXME
@@ -539,6 +575,10 @@ impl IScriptSteppingSys {
         // Sets the current image overlay state to visible
             // println!("tmprmgraphicend, has parent: {}", parent.is_some());
             dh.iscript_state[e].visible = true;
+        },
+        OpCode::AttkShiftProj => (distance: u8) {
+            // Creates the weapon flingy at a particular distance in front of the unit.
+            println!("attkshiftproj; dist: {}", distance);
         },
         OpCode::Attack => () {
         // FIXME
