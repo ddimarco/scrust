@@ -3,6 +3,8 @@ use std::io::Read;
 // TODO: macroify?
 use ::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
 
+use ::num::FromPrimitive;
+
 
 macro_rules! dat_reader {
     (u32, $file:ident, $count:expr) => (read_vec_u32($file, $count));
@@ -30,6 +32,14 @@ macro_rules! dat_struct {
                 $struct_name {
                     $( $name: $name, )*
                 }
+            }
+
+            pub fn print_entry(&self, i: usize) {
+                println!("entry {} of {}",
+                         i, stringify!($struct_name));
+                $(
+                    println!(" {}: {}", stringify!($name), self.$name[i]);
+                )*
             }
         }
 
@@ -111,6 +121,59 @@ dat_struct! (
     }
 );
 
+enum_from_primitive! {
+    pub enum WeaponsDamageType {
+        Independent = 0,
+        Explosive,
+        Concussive,
+        Normal,
+        IgnoreArmor,
+    }
+}
+enum_from_primitive! {
+    pub enum WeaponsExplosionType {
+        None,
+        Normal,
+        RadialSplash,
+        EnemySplash,
+        Lockdown,
+        NuclearMissile,
+        Parasite,
+        Broodlings,
+        EMPShockwave,
+        Irradiate,
+        Ensnare,
+        Plague,
+        StasisField,
+        DarkSwarm,
+        Consume,
+        YamatoGun,
+        Restoration,
+        DisruptionWeb,
+        CorrosiveAcid,
+        MindControl,
+        Feedback,
+        OpticalFlare,
+        Maelstrom,
+        Unknown1,
+        SplashAir,
+    }
+}
+enum_from_primitive! {
+    pub enum WeaponsBehavior {
+        FlyToTarget,
+        FlyToTarget2,
+        AppearOnTargetUnit,
+        PsionicStorm,
+        AppearOnTargetSite,
+        AppearOnAttacker,
+        AttackAndSelfDestruct,
+        Bounce,
+        AttackTarget3x3Area,
+        GoToMaxRange,
+    }
+}
+
 dat_struct! (
     UnitsDat
     {
@@ -174,5 +237,93 @@ dat_struct! (
         unit_map_string                 :u16  ;228,
         broodwar_unit_flag              :u8   ;228,
         star_edit_availability_flags    :u16  ;228
+    }
+);
+
+dat_struct! (
+    WeaponsDat
+    {
+// The name of the weapon, displayed when you highlight its
+// icon in the control bar. [pointer to stat_txt.tbl]
+        label: u16; 130,
+ // The main graphics that the weapon uses. 0-Scourge = No
+ // graphics.[pointer to flingy.dat]
+        graphics: u32; 130,
+        unused1: u8; 130,
+        target_flags: u16; 130,
+        minimum_range: u32; 130,
+        maximum_range: u32; 130,
+ // The upgrade that will increase the damage dealt by
+ // the weapon by the "Bonus" value.
+        damage_upgrade: u8; 130,
+ // The type of damage the weapon does. Normal, Explosive
+ // and Concussive do different amount of damage to units
+ // of different Size (Small, Medium or Large): Normal does
+ // equal damage to Small, Medium and Large. Explosive does
+ // 50% to Small and 75% to Medium. Concussive does 50% to
+ // Medium and 25% to Large. Independent deals 1 point of
+ // damage every second attack, regardless of target's
+ // armor.
+        weapon_damage_type: u8; 130,
+ // Determines how the weapon sprite will "behave" when
+ // it attacks the target. Weapon behaviours that
+ // "Follow" will track the target as it moves, those
+ // that "Don't Follow" will strike the place where the
+ // target was at the moment of attack.
+        weapon_behavior: u8; 130,
+ // Time until the weapon is removed if it does not hit a
+ // target. 1 game second equals: on Fastest-24, on
+ // Faster-21, on Fast-18, on Normal-15, on Slow-12, on
+ // Slower-9 and on Slowest-6.
+        remove_after: u8; 130,
+ // Effect the weapon has on the area around the target
+ // after hitting its target. Used to determine
+ // different type of spell effects and splash damage.
+        explosion_type: u8; 130,
+ // Distance from the target at which the weapon
+ // will deal 100% of its base damage. Works ONLY
+ // if the "Explosion" is set to "Nuclear Missile",
+ // "Splash (Radial)", "Splash (Enemy)" or "Splash
+ // (Air)".
+        inner_splash_range: u16; 130,
+        medium_splash_range: u16; 130,
+        outer_splash_range: u16; 130,
+        damage_amount: u16; 130,
+        damage_bonus: u16; 130,
+ // "Reload time" - time delay between two attacks.
+ // Depends on the game speed used. 1 game second
+ // equals: on Fastest-24, on Faster-21, on Fast-18, on
+ // Normal-15, on Slow-12, on Slower-9 and on
+ // Slowest-6. Value of 0 will crash the game.
+        weapon_cooldown: u8; 130,
+ // Usually, multiple this value by the Damage Amount to
+ // get the total damage that is DISPLAYED for the
+ // weapon. To a degree also the number of weapons used
+ // per attack, but anything other than 2 will result in
+ // 1 weapon being used. (e.g. Goliath, Scout and
+ // Valkyrie use 2 missiles per attack).
+        damage_factor: u8; 130,
+ // Angle within which the weapon can be fired without
+ // waiting for the unit's graphics to turn. 128 = 180
+ // degrees.
+        attack_angle: u8; 130,
+ // Angle by which the weapon's sprite will spin after it
+ // is spawned. 128 = 180 degrees.
+        launch_spin: u8; 130,
+ // Distance (in pixels) from the front of the attacking
+ // unit (depending on which direction it is facing), at
+ // which the weapon's sprite will be spawned.
+        forward_offset: u8; 130,
+ // Distance (in pixels) from the top of the attacking
+ // unit, at which the weapon's sprite will be spawned.
+        upward_offset: u8; 130,
+ // The line displayed when the weapon is to
+ // acquire an invalid target (e.g. attacking a
+ // Mutalisk with a ground-only weapon, like
+ // Flamethrower) [pointer to stat_txt.tbl]
+        target_error_message: u16; 130,
+ // The icon used for the weapon. [pointer to a frame in
+ // unit\cmdbtns\cmdicons.grp]
+        icon: u16; 130
     }
 );

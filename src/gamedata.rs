@@ -13,7 +13,7 @@ use ::iscript::IScript;
 use ::grp::GRP;
 use ::lox::LOX;
 
-use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat};
+use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat};
 
 use Video;
 use smacker::SMK;
@@ -108,6 +108,8 @@ pub struct GameData {
     pub sprites_dat: SpritesDat,
     pub flingy_dat: FlingyDat,
 
+    pub weapons_dat: WeaponsDat,
+
     pub install_pal: Palette,
 
     pub iscript: IScript,
@@ -142,6 +144,9 @@ impl GameData {
         let sprites_dat = SpritesDat::read(&mut GameData::open_(&archives, "arr/sprites.dat")
             .unwrap());
         let flingy_dat = FlingyDat::read(&mut GameData::open_(&archives, "arr/flingy.dat")
+            .unwrap());
+
+        let weapons_dat = WeaponsDat::read(&mut GameData::open_(&archives, "arr/weapons.dat")
             .unwrap());
 
         let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe")
@@ -222,6 +227,7 @@ impl GameData {
             units_dat: units_dat,
             sprites_dat: sprites_dat,
             flingy_dat: flingy_dat,
+            weapons_dat: weapons_dat,
 
             iscript: iscript,
             ofire_reindexing: ofire_reindexing,

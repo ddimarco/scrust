@@ -584,6 +584,11 @@ impl IScriptSteppingSys {
         // FIXME
         },
         OpCode::AttackWith => (weapon: u8) {
+// attackwith <ground = 1, air = 2>
+// Attack with either the ground or air weapon depending on a parameter.
+
+            // ground/air weapons: referenced in Unitsdat
+
         // FIXME
         },
         OpCode::GotoRepeatAttk => () {
@@ -950,6 +955,12 @@ fn create_scunit(world: &mut World<UnitSystems>,
                  unit_id: usize,
                  map_x: u16,
                  map_y: u16) -> Entity {
+    let gd_weapon = gd.units_dat.ground_weapon[unit_id] as usize;
+    if gd_weapon < 130 {
+        gd.weapons_dat.print_entry(gd_weapon);
+        println!("ground weapon label: {}", gd.stat_txt_tbl[gd.weapons_dat.label[gd_weapon] as usize]);
+    }
+
     let flingy_id = gd.units_dat.flingy_id[unit_id as usize];
 
     let entity = create_scflingy(world, gd, flingy_id as usize, map_x, map_y);
