@@ -15,7 +15,6 @@ codegen-units = 4  # controls whether the compiler passes `-C codegen-units`
 # `codegen-units` is ignored when `lto = true      `
 
 [dependencies]
-#sdl2 = "0.22.0"
 sdl2 = "*"
 byteorder = "*"
 libc = "*"

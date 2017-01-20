@@ -3,7 +3,6 @@ use std::env;
 
 extern crate scrust;
 use scrust::gamedata::GameData;
-use scrust::unitsdata::{WeaponsDat, UnitsDat, FlingyDat};
 
 fn print_usage(args: &[String]) {
     println!("usage: {} [dattype] [index]", args[0]);

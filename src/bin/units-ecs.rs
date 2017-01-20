@@ -231,11 +231,6 @@ impl IScriptStateElement {
         self.pos += 2;
         val
     }
-    // fn read_u32(&mut self, iscript: &IScript) -> u32 {
-    //     let val = LittleEndian::read_u32(&iscript.data[(self.pos as usize)..]);
-    //     self.pos += 4;
-    //     val
-    // }
 }
 /// *****************************************
 
@@ -279,7 +274,6 @@ impl System for IScriptSteppingSys {
     }
 }
 impl IScriptSteppingSys {
-
     fn interpret_iscript(&self,
                          cpy: &IScript,
                          e: ecs::EntityData<UnitComponents>,

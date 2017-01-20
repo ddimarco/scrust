@@ -52,6 +52,11 @@ dat_struct! (
         grp_id:                u32;  999,
         graphic_turns:         u8;   999,
         clickable:             u8;   999,
+// Allows running for Iscript animations other than the Initial and
+// Death animations. Unchecked, prevents the sprite movement, attack,
+// spellcasting etc. If the Movement Control for the corresponding
+// flingy.dat entry is set to "Flingy.dat Control", the sprite
+// movement WILL take place, but without any animation.
         use_full_iscript:      u8;   999,
         draw_if_cloaked:       u8;   999,
         draw_function:         u8;   999,

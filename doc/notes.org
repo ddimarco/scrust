@@ -2,7 +2,13 @@
   - dlgs/tile.grp: border edge images for dialogs
   - game/blink.grp: minimal "zoomin" signal
   - glue/palXX/tile.grp: border edge images
-
+** Cmdicons.grp
+*** Unit Images
+   The first 195 images correspond to unit IDs in units.dat, and are the outlines that appear in the selected unit panel in the middle of the hud while playing.
+   e.g. 0 = Terran Marine, 32 = Firebat, 84 = Protoss Observer.
+   Note: Some images are omitted and have placeholder images that read "BLANK" because they are not selectable.
+*** Command Buttons
+   The rest of the images are the buttons used for unit commands. Order pattern unknown.
 * terrain
 ** map
 *** mtxm: megatile ids for the full map
