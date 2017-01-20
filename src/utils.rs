@@ -1,6 +1,5 @@
 use std::io::Read;
 
-extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 #[macro_export]

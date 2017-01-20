@@ -12,6 +12,9 @@ extern crate smacker;
 use smacker::SMK;
 
 #[macro_use]
+extern crate ecs;
+
+#[macro_use]
 pub mod events;
 
 pub mod stormlib;
@@ -32,6 +35,8 @@ pub mod lox;
 pub mod spk;
 pub mod ui;
 pub mod render;
+pub mod unit_ecs;
+pub mod iscriptsys;
 
 use std::path::Path;
 use sdl2::render::Renderer;
