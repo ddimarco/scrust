@@ -361,7 +361,8 @@ impl VideoCache {
         if !self.cache.contains_key(&pathstr) {
             // let pcx = PCX::read(&mut gd.open(path).unwrap());
             let mut file = gd.open(path).unwrap();
-            let fsize = file.get_filesize();
+            //let fsize = file.get_filesize();
+            let fsize = file.get_ref().len();
             let mut smk = SMK::read(&mut file, fsize);
 
             let video = Video::from_smk(&mut smk);

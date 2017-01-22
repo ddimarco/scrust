@@ -46,61 +46,67 @@ extern "C" {
                         -> bool;
 }
 
+use std::io::Cursor;
+// FIXME: use buffered read
+pub type MPQArchiveFile = Cursor<Vec<u8>>;
+
 // FIXME: lifetime of maf should be < mpqarchive
 // datatype for a file inside an mpq archive
-pub struct MPQArchiveFile {
-    handle: u64, // archive: MPQArchive,
-}
-impl Drop for MPQArchiveFile {
-    fn drop(&mut self) {
-        // println!("closing mpqarchivefile!");
-        unsafe {
-            SFileCloseFile(self.handle);
-        }
-    }
-}
-impl MPQArchiveFile {
-    pub fn get_filesize(&self) -> usize {
-        unsafe {
-            let mut fshigh: u32 = 0;
-            let fs = SFileGetFileSize(self.handle, &mut fshigh);
-            fs as usize
-        }
-    }
-}
+// pub struct MPQArchiveFile {
+//     handle: u64, // archive: MPQArchive,
+// }
+// impl Drop for MPQArchiveFile {
+//     fn drop(&mut self) {
+//         // println!("closing mpqarchivefile!");
+//         unsafe {
+//             SFileCloseFile(self.handle);
+//         }
+//     }
+// }
+// impl MPQArchiveFile {
+//     pub fn get_filesize(&self) -> usize {
+//         unsafe {
+//             let mut fshigh: u32 = 0;
+//             let fs = SFileGetFileSize(self.handle, &mut fshigh);
+//             fs as usize
+//         }
+//     }
+// }
 
-impl Read for MPQArchiveFile {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let len = buf.len() as u32;
-        let mut read_bytes: u32 = 0;
-        unsafe {
-            let succ = SFileReadFile(self.handle, buf.as_mut_ptr(), len, &mut read_bytes, 0);
-            // assert!(succ == true);
-            // FIXME:
-            if !succ {
-                return Ok(read_bytes as usize);
-            }
-        }
-        Ok(read_bytes as usize)
-    }
-}
-impl Seek for MPQArchiveFile {
-    fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
-        // FIXME: untested, p has different types here (can be < 0)!!!
-        let (move_method, fpos) = match pos {
-            SeekFrom::Current(p) => (1, p as u32),
-            SeekFrom::Start(p) => (0, p as u32),
-            SeekFrom::End(p) => (2, p as u32),
-        };
-        let mut fph: u32 = 0;
-        unsafe {
-            let fs = SFileSetFilePointer(self.handle, fpos, &mut fph, move_method as u32);
-            // println!("fs: {}, lFilePosHigh: {}", fs, fph);
-            // FIXME: is this correct?
-            Ok(fs as u64)
-        }
-    }
-}
+
+// impl Read for MPQArchiveFile {
+//     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+//         let len = buf.len() as u32;
+//         let mut read_bytes: u32 = 0;
+//         // println!("reading {} bytes", len);
+//         unsafe {
+//             let succ = SFileReadFile(self.handle, buf.as_mut_ptr(), len, &mut read_bytes, 0);
+//             // assert!(succ == true);
+//             // FIXME:
+//             if !succ {
+//                 return Ok(read_bytes as usize);
+//             }
+//         }
+//         Ok(read_bytes as usize)
+//     }
+// }
+// impl Seek for MPQArchiveFile {
+//     fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
+//         // FIXME: untested, p has different types here (can be < 0)!!!
+//         let (move_method, fpos) = match pos {
+//             SeekFrom::Current(p) => (1, p as u32),
+//             SeekFrom::Start(p) => (0, p as u32),
+//             SeekFrom::End(p) => (2, p as u32),
+//         };
+//         let mut fph: u32 = 0;
+//         unsafe {
+//             let fs = SFileSetFilePointer(self.handle, fpos, &mut fph, move_method as u32);
+//             // println!("fs: {}, lFilePosHigh: {}", fs, fph);
+//             // FIXME: is this correct?
+//             Ok(fs as u64)
+//         }
+//     }
+// }
 
 pub struct MPQArchive {
     pub filename: String,
@@ -148,10 +154,21 @@ impl MPQArchive {
             let mut reshandle: u64 = 0;
             let succ = SFileOpenFileEx(self.handle, filepath.as_ptr(), 0, &mut reshandle);
             assert!(succ);
-            MPQArchiveFile {
-                handle: reshandle,
-                //archive: self,
-            }
+
+            let mut fshigh: u32 = 0;
+            let fs = SFileGetFileSize(reshandle, &mut fshigh);
+
+            let mut read_bytes: u32 = 0;
+            let mut buf = vec![0u8; fs as usize];
+            let succ2 = SFileReadFile(reshandle, buf.as_mut_ptr(), fs, &mut read_bytes, 0);
+            assert!(succ2);
+            SFileCloseFile(reshandle);
+
+            Cursor::new(buf)
+            // MPQArchiveFile {
+            //     handle: reshandle,
+            //     //archive: self,
+            // }
         }
     }
 
