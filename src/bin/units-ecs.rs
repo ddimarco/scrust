@@ -21,7 +21,6 @@ extern crate ecs;
 use ecs::World;
 use ecs::DataHelper;
 use ecs::Entity;
-use ecs::ModifyData;
 use ecs::EntityData;
 
 use scrust::unit_ecs::{UnitComponents, UnitSystems, UnitServices};
@@ -30,119 +29,9 @@ use scrust::unit_ecs::{UnderlayComponent, OverlayComponent, SelectableComponent}
 use scrust::unit_ecs::{SCUnitComponent, SCFlingyComponent, SCImageComponent, SCSpriteComponent, FlingyMoveControl};
 use scrust::unit_ecs::EntityInit;
 use scrust::unit_ecs::IScriptStateElement;
+use scrust::unit_ecs::{create_scimage, create_scsprite, create_scunit};
+use ecs::ModifyData;
 
-/// Public*****************************************
-
-// ****************************************************************************
-
-fn create_scimage(world: &mut World<UnitSystems>,
-                  gd: &GameData,
-                  image_id: usize,
-                  map_x: u16,
-                  map_y: u16,
-                  parent: Option<Entity>)
-                  -> Entity {
-    let iscript_id = gd.images_dat.iscript_id[image_id];
-
-    world.create_entity(EntityInit {
-        iscript_state: Some(IScriptStateElement::new(&gd.iscript,
-                                                     iscript_id,
-                                                     map_x,
-                                                     map_y,
-                                                     parent)),
-        scimage: Some(SCImageComponent::new(gd, image_id as u16)),
-        ..Default::default()
-    })
-}
-
-fn create_scsprite(world: &mut World<UnitSystems>,
-                   gd: &GameData,
-                   sprite_id: usize,
-                   map_x: u16,
-                   map_y: u16,
-                   parent: Option<Entity>) -> Entity {
-    let image_id = gd.sprites_dat.image_id[sprite_id];
-    let entity = create_scimage(world, gd, image_id as usize, map_x, map_y, parent);
-
-    world.modify_entity(entity,
-                        |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
-        data.scsprite.insert(&e, SCSpriteComponent { sprite_id: sprite_id as u16 });
-
-        // not all sprites are selectable
-        if sprite_id >= 130 {
-            let circle_img = gd.sprites_dat.selection_circle_image[(sprite_id - 130) as usize];
-            let circle_grp_id = gd.images_dat.grp_id[561 + circle_img as usize];
-
-            let (sel_width, sel_height) = {
-                let mut grp_cache = gd.grp_cache.borrow_mut();
-                let grp = grp_cache.get(gd, circle_grp_id);
-                (grp.header.width, grp.header.height)
-            };
-
-            data.selectable
-                .insert(&e,
-                        SelectableComponent {
-                            health_bar: gd.sprites_dat.health_bar[(sprite_id - 130) as usize],
-                            circle_offset:
-                                gd.sprites_dat.selection_circle_offset[(sprite_id - 130) as usize],
-                            circle_grp_id: circle_grp_id,
-                            sel_width: sel_width,
-                            sel_height: sel_height,
-                        });
-        }
-    });
-    entity
-}
-
-fn create_scflingy(world: &mut World<UnitSystems>,
-                   gd: &GameData,
-                   flingy_id: usize,
-                   map_x: u16,
-                   map_y: u16) -> Entity {
-    let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
-    let move_control =
-        match gd.flingy_dat.move_control[flingy_id as usize] {
-            0 => FlingyMoveControl::FlingyDat,
-            1 => FlingyMoveControl::PartiallyMobile,
-            2 => FlingyMoveControl::IScriptBin,
-            _ => unimplemented!(),
-        };
-    let entity = create_scsprite(world, gd, sprite_id as usize, map_x, map_y, None);
-
-    world.modify_entity(entity, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
-        data.scflingy.insert(&e,
-                             SCFlingyComponent {
-                                 flingy_id: flingy_id as u16,
-                                 move_control: move_control,
-                             });
-                        });
-
-    entity
-}
-
-fn create_scunit(world: &mut World<UnitSystems>,
-                 gd: &GameData,
-                 unit_id: usize,
-                 map_x: u16,
-                 map_y: u16) -> Entity {
-    let gd_weapon = gd.units_dat.ground_weapon[unit_id] as usize;
-    if gd_weapon < 130 {
-        gd.weapons_dat.print_entry(gd_weapon);
-        println!("ground weapon label: {}", gd.stat_txt_tbl[gd.weapons_dat.label[gd_weapon] as usize]);
-    }
-
-    let flingy_id = gd.units_dat.flingy_id[unit_id as usize];
-
-    let entity = create_scflingy(world, gd, flingy_id as usize, map_x, map_y);
-    world.modify_entity(entity, |e: ModifyData<UnitComponents>, data: &mut UnitComponents| {
-        data.scunit.insert(&e,  SCUnitComponent {
-            unit_id: unit_id as u16,
-            kill_count: 0,
-        });
-    });
-
-    entity
-}
 
 struct UnitsECSView {
     world: World<UnitSystems>,
