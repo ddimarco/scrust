@@ -14,6 +14,7 @@ use scrust::font::FontSize;
 use scrust::font::RenderText;
 use scrust::iscriptsys::IScriptSteppingSys;
 use scrust::iscript::{IScript, AnimationType};
+use scrust::unitsdata::WeaponsBehavior;
 
 #[macro_use]
 extern crate ecs;
@@ -25,13 +26,12 @@ use ecs::EntityData;
 
 use scrust::unit_ecs::{UnitComponents, UnitSystems, UnitServices};
 use scrust::unit_ecs::IScriptEntityAction;
-use scrust::unit_ecs::{UnderlayComponent, OverlayComponent, SelectableComponent};
-use scrust::unit_ecs::{SCUnitComponent, SCFlingyComponent, SCImageComponent, SCSpriteComponent, FlingyMoveControl};
-use scrust::unit_ecs::EntityInit;
-use scrust::unit_ecs::IScriptStateElement;
-use scrust::unit_ecs::{create_scimage, create_scsprite, create_scunit};
+use scrust::unit_ecs::{UnderlayComponent, OverlayComponent, SCWeaponComponent};
+use scrust::unit_ecs::{create_scimage, create_scsprite, create_scflingy, create_scunit};
 use ecs::ModifyData;
 
+extern crate enum_primitive;
+use enum_primitive::FromPrimitive;
 
 struct UnitsECSView {
     world: World<UnitSystems>,
@@ -52,6 +52,7 @@ impl UnitsECSView {
         world.systems.iscript_stepping_sys.init(IScriptSteppingSys {
             iscript_copy: gd.iscript.clone(),
             images_dat: gd.images_dat.clone(),
+            weapons_dat: gd.weapons_dat.clone(),
             lox_cache: gd.lox_cache.clone(),
             iscript_entity_actions: Vec::<IScriptEntityAction>::new(),
             interested: HashMap::new(),
@@ -76,12 +77,12 @@ impl UnitsECSView {
     }
 
     fn draw_scimage(&self,
-                   e: EntityData<UnitComponents>,
-                   dh: &DataHelper<UnitComponents, UnitServices>,
-                   gd: &GameData,
-                   buffer: &mut [u8],
-                   buffer_pitch: u32,
-                   grp_cache: &GRPCache) {
+                    e: EntityData<UnitComponents>,
+                    dh: &DataHelper<UnitComponents, UnitServices>,
+                    gd: &GameData,
+                    buffer: &mut [u8],
+                    buffer_pitch: u32,
+                    grp_cache: &GRPCache) {
         // every entity is an scimage
         let scimg_comp = &dh.scimage[e];
         let grp = grp_cache.get_ro(scimg_comp.grp_id);
@@ -118,9 +119,10 @@ fn set_animation_rec(world: &mut World<UnitSystems>,
                      entity: Entity,
                      anim: AnimationType) {
     for e in world.with_entity_data(&entity, |ent, data| {
-        data.iscript_state[ent].set_animation(&iscript, anim.clone());
-        data.iscript_state[ent].children.clone()
-    }).unwrap_or(Vec::new()) {
+            data.iscript_state[ent].set_animation(&iscript, anim.clone());
+            data.iscript_state[ent].children.clone()
+        })
+        .unwrap_or(Vec::new()) {
         world.with_entity_data(&e, |ent, data| {
             data.iscript_state[ent].set_animation(&iscript, anim.clone());
         });
@@ -149,7 +151,10 @@ impl View for UnitsECSView {
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
 
                 if !self.world.data.with_entity_data(&self.main_unit, |_, _| {}).is_none() {
-                    set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
+                    set_animation_rec(&mut self.world,
+                                      &gd.iscript,
+                                      self.main_unit,
+                                      AnimationType::Death);
                     self.world.remove_entity(self.main_unit);
                 }
                 self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
@@ -163,7 +168,10 @@ impl View for UnitsECSView {
                                              self.unit_id,
                                              gd.stat_txt_tbl[self.unit_id].to_owned());
                 if !self.world.data.with_entity_data(&self.main_unit, |_, _| {}).is_none() {
-                    set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
+                    set_animation_rec(&mut self.world,
+                                      &gd.iscript,
+                                      self.main_unit,
+                                      AnimationType::Death);
                     self.world.remove_entity(self.main_unit);
                 }
                 self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
@@ -171,28 +179,39 @@ impl View for UnitsECSView {
         }
 
         if context.events.now.is_key_pressed(&Keycode::Q) {
-            self.world.with_entity_data(&self.main_unit, |ent, data| {
-                data.iscript_state[ent].turn_ccwise(1);
-            });
+            self.world.with_entity_data(&self.main_unit,
+                                        |ent, data| { data.iscript_state[ent].turn_ccwise(1); });
         } else if context.events.now.is_key_pressed(&Keycode::E) {
-            self.world.with_entity_data(&self.main_unit, |ent, data| {
-                data.iscript_state[ent].turn_cwise(1);
-            });
+            self.world.with_entity_data(&self.main_unit,
+                                        |ent, data| { data.iscript_state[ent].turn_cwise(1); });
         }
 
         if context.events.now.is_key_pressed(&Keycode::W) {
             self.world.with_entity_data(&self.main_unit, |ent, data| {
-                data.iscript_state[ent].set_animation(&gd.iscript,
-                                                      AnimationType::Walking);
+                if data.iscript_state[ent].is_animation_valid(&gd.iscript, AnimationType::IsWorking) {
+                    data.iscript_state[ent].set_animation(&gd.iscript, AnimationType::IsWorking);
+                } else {
+                    data.iscript_state[ent].set_animation(&gd.iscript, AnimationType::Walking);
+                }
             });
 
         } else if context.events.now.is_key_pressed(&Keycode::A) {
             self.world.with_entity_data(&self.main_unit, |ent, data| {
-                data.iscript_state[ent].set_animation(&gd.iscript,
-                                                      AnimationType::GndAttkInit);
+                data.iscript_state[ent].set_animation(&gd.iscript, AnimationType::GndAttkInit);
+            });
+        } else if context.events.now.is_key_pressed(&Keycode::B) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].set_animation(&gd.iscript, AnimationType::Burrow);
+            });
+        } else if context.events.now.is_key_pressed(&Keycode::L) {
+            self.world.with_entity_data(&self.main_unit, |ent, data| {
+                data.iscript_state[ent].set_animation(&gd.iscript, AnimationType::LiftOff);
             });
         } else if context.events.now.is_key_pressed(&Keycode::D) {
-            set_animation_rec(&mut self.world, &gd.iscript, self.main_unit, AnimationType::Death);
+            set_animation_rec(&mut self.world,
+                              &gd.iscript,
+                              self.main_unit,
+                              AnimationType::Death);
         }
 
         // interpret iscript for units
@@ -200,21 +219,26 @@ impl View for UnitsECSView {
         self.world.flush_queue();
 
         // generate new images, units
-        let actions =
-            mem::replace(&mut self.world.systems.iscript_stepping_sys.inner.as_mut().unwrap().iscript_entity_actions,
-                         Vec::<IScriptEntityAction>::new());
+        let actions = mem::replace(&mut self.world
+                                       .systems
+                                       .iscript_stepping_sys
+                                       .inner
+                                       .as_mut()
+                                       .unwrap()
+                                       .iscript_entity_actions,
+                                   Vec::<IScriptEntityAction>::new());
         for action in actions {
             match action {
-                IScriptEntityAction::RemoveEntity {entity} => {
+                IScriptEntityAction::RemoveEntity { entity } => {
                     self.world.remove_entity(entity);
-                },
+                }
                 IScriptEntityAction::CreateImageUnderlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
                         create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
                     self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
-                                             data: &mut UnitComponents| {
-                                                 data.iscript_state[e].children.push(ent);
-                                             });
+                                              data: &mut UnitComponents| {
+                        data.iscript_state[e].children.push(ent);
+                    });
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
@@ -227,25 +251,30 @@ impl View for UnitsECSView {
                     let ent =
                         create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
                     self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
-                                             data: &mut UnitComponents| {
-                                                 data.iscript_state[e].children.push(ent);
-                                             });
+                                              data: &mut UnitComponents| {
+                        data.iscript_state[e].children.push(ent);
+                    });
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].rel_x = rel_x;
                         data.iscript_state[e].rel_y = rel_y;
                         data.overlay.insert(&e, OverlayComponent {});
                     });
-                },
+                }
                 IScriptEntityAction::CreateSpriteOverlay { sprite_id, x, y } => {
                     let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, None);
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
-                                             data: &mut UnitComponents| {
-                         data.overlay.insert(&e, OverlayComponent {});
+                                              data: &mut UnitComponents| {
+                        data.overlay.insert(&e, OverlayComponent {});
                     });
-                },
-                IScriptEntityAction::CreateSpriteUnderlay { parent, sprite_id, x, y, use_parent_dir } => {
-                    let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent);
+                }
+                IScriptEntityAction::CreateSpriteUnderlay { parent,
+                                                            sprite_id,
+                                                            x,
+                                                            y,
+                                                            use_parent_dir } => {
+                    let ent =
+                        create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent);
                     let parent_dir = if use_parent_dir {
                         self.world.with_entity_data(&parent.unwrap(), |e, data| {
                             data.iscript_state[e].children.push(ent);
@@ -255,12 +284,34 @@ impl View for UnitsECSView {
                         None
                     };
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
-                                             data: &mut UnitComponents| {
-                         data.underlay.insert(&e, UnderlayComponent {});
-                         if let Some(initial_dir) = parent_dir {
-                             data.iscript_state[e].direction = initial_dir;
-                         }});
-                },
+                                              data: &mut UnitComponents| {
+                        data.underlay.insert(&e, UnderlayComponent {});
+                        if let Some(initial_dir) = parent_dir {
+                            data.iscript_state[e].direction = initial_dir;
+                        }
+                    });
+                }
+                IScriptEntityAction::CreateWeaponsFlingy { weapon_id } => {
+                    let ent = create_scflingy(&mut self.world,
+                                              gd,
+                                              gd.weapons_dat.graphics[weapon_id as usize] as usize,
+                                              // FIXME: use proper location
+                                              0,
+                                              0);
+
+                    let behavior = WeaponsBehavior::from_u8(gd.weapons_dat.behavior[weapon_id as
+                                                            usize])
+                        .expect("could not get weapon behavior!");
+                    self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
+                                              data: &mut UnitComponents| {
+                        data.scweapon.insert(&e,
+                                             SCWeaponComponent {
+                                                 weapon_id: weapon_id,
+                                                 behavior: behavior,
+                                                 age: 0,
+                                             });
+                    });
+                }
                 // _ => {
                 //     println!("ignoring {:?} iscript create action", action);
                 // }
@@ -284,8 +335,9 @@ impl View for UnitsECSView {
 
             let dh = &self.world.data;
 
-            for e in self.world.entities().filter(aspect!(<UnitComponents> all: [underlay]), &self.world)
-            {
+            for e in self.world
+                .entities()
+                .filter(aspect!(<UnitComponents> all: [underlay]), &self.world) {
                 if !dh.iscript_state[e].alive {
                     continue;
                 }
@@ -293,9 +345,12 @@ impl View for UnitsECSView {
             }
 
             // NOTE order is random in this loop!
-            for e in self.world.entities().filter(aspect!(<UnitComponents> none: [underlay, overlay]), &self.world) {
+            for e in self.world
+                .entities()
+                .filter(aspect!(<UnitComponents> none: [underlay, overlay]),
+                        &self.world) {
                 // TODO we should remove dead entities instead
-                if !dh.iscript_state[e].alive  {
+                if !dh.iscript_state[e].alive {
                     continue;
                 }
                 assert!(!dh.underlay.has(&e) && !dh.overlay.has(&e));
@@ -305,15 +360,15 @@ impl View for UnitsECSView {
                     // dh.selectable[e].draw_healthbar(200, 230,
                     //                                 buffer,
                     //                                 buffer_pitch);
-                    dh.selectable[e].draw_selection_circle(&*grp_cache,
-                                                           200, 200,
-                                                           buffer,
-                                                           buffer_pitch);
+                    dh.selectable[e]
+                        .draw_selection_circle(&*grp_cache, 200, 200, buffer, buffer_pitch);
                 }
                 self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
-            for e in self.world.entities().filter(aspect!(<UnitComponents> all: [overlay]), &self.world) {
+            for e in self.world
+                .entities()
+                .filter(aspect!(<UnitComponents> all: [overlay]), &self.world) {
                 if !dh.iscript_state[e].alive {
                     continue;
                 }

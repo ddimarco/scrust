@@ -10,6 +10,7 @@ use gamedata::GameData;
 use render::{render_buffer_with_solid_reindexing, render_buffer_with_transparency_reindexing, render_buffer_solid};
 use gamedata::GRPCache;
 use iscriptsys::IScriptSteppingSys;
+use unitsdata::WeaponsBehavior;
 
 #[derive(Debug)]
 pub enum IScriptEntityAction {
@@ -27,6 +28,8 @@ pub enum IScriptEntityAction {
     },
     CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
     CreateSpriteUnderlay { parent: Option<Entity>, sprite_id: u16, x: u16, y: u16, use_parent_dir: bool },
+
+    CreateWeaponsFlingy { weapon_id: u16},
     RemoveEntity {entity: Entity},
 }
 /// *****************************************
@@ -106,11 +109,19 @@ impl IScriptStateElement {
 
     pub fn set_animation(&mut self, iscript: &IScript, anim: AnimationType) {
         // FIXME: need to also change the animation for its children
+        self.paused = false;
         self.waiting_ticks_left = 0;
-        self.pos = self.iscript_anim_offsets(iscript)[anim as usize] as usize;
+        let valid = self.is_animation_valid(iscript, anim.clone());
+        if valid {
+            self.pos = self.iscript_anim_offsets(iscript)[anim as usize] as usize;
+        } else {
+            println!("trying to set invalid animation");
+        }
     }
     pub fn is_animation_valid(&self, iscript: &IScript, anim: AnimationType) -> bool {
-        self.iscript_anim_offsets(iscript)[anim as usize] > 0
+        let offsets = self.iscript_anim_offsets(iscript);
+        let anim_idx = anim as usize;
+        (offsets.len() > anim_idx) && (offsets[anim_idx] > 0)
     }
 
     pub fn set_direction(&mut self, dir: u8) {
@@ -347,11 +358,24 @@ pub struct SCFlingyComponent {
 pub struct SCUnitComponent {
     pub unit_id: u16,
     pub kill_count: usize,
+    // TODO: could be looked up from gamedata
+    pub ground_weapon_id: usize,
+    pub air_weapon_id: usize,
+
+    /// weapon id currently in use
+    pub used_weapon: usize,
 }
 
 // TODO: merge into 1?
 pub struct UnderlayComponent {}
 pub struct OverlayComponent {}
+
+pub struct SCWeaponComponent {
+    pub weapon_id: u16,
+    pub age: usize,
+    // FIXME: implement behaviors
+    pub behavior: WeaponsBehavior,
+}
 
 use ecs::system::LazySystem;
 components! {
@@ -363,6 +387,7 @@ components! {
         #[hot] scsprite: SCSpriteComponent,
         #[hot] scflingy: SCFlingyComponent,
         #[hot] scunit: SCUnitComponent,
+        #[hot] scweapon: SCWeaponComponent,
 
         #[hot] underlay: UnderlayComponent,
         #[hot] overlay: OverlayComponent,
@@ -439,10 +464,11 @@ pub fn create_scsprite(world: &mut World<UnitSystems>,
 }
 
 pub fn create_scflingy(world: &mut World<UnitSystems>,
-                   gd: &GameData,
-                   flingy_id: usize,
-                   map_x: u16,
-                   map_y: u16) -> Entity {
+                       gd: &GameData,
+                       flingy_id: usize,
+                       map_x: u16,
+                       map_y: u16,
+) -> Entity {
     let sprite_id = gd.flingy_dat.sprite_id[flingy_id as usize];
     let move_control =
         match gd.flingy_dat.move_control[flingy_id as usize] {
@@ -474,6 +500,11 @@ pub fn create_scunit(world: &mut World<UnitSystems>,
         gd.weapons_dat.print_entry(gd_weapon);
         println!("ground weapon label: {}", gd.stat_txt_tbl[gd.weapons_dat.label[gd_weapon] as usize]);
     }
+    let air_weapon = gd.units_dat.air_weapon[unit_id] as usize;
+    if air_weapon < 130 {
+        gd.weapons_dat.print_entry(air_weapon);
+        println!("air weapon label: {}", gd.stat_txt_tbl[gd.weapons_dat.label[air_weapon] as usize]);
+    }
 
     let flingy_id = gd.units_dat.flingy_id[unit_id as usize];
 
@@ -482,6 +513,9 @@ pub fn create_scunit(world: &mut World<UnitSystems>,
         data.scunit.insert(&e,  SCUnitComponent {
             unit_id: unit_id as u16,
             kill_count: 0,
+            ground_weapon_id: gd_weapon,
+            air_weapon_id: air_weapon,
+            used_weapon: gd_weapon,
         });
     });
 

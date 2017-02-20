@@ -3,7 +3,10 @@ use std::io::Read;
 // TODO: macroify?
 use ::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
 
-use ::num::FromPrimitive;
+
+// from StarLite comment:
+// Top Speed and Acceleration: PyDAT is actually wrong about how these are calculated. It isn't *3/320, it's /256 just like the Halt Distance. I suspect Blizzard was avoiding floating point operations and instead used bit-shifting the position to get the pixel coordinates.
+// Flingy "Partially Mobile/Weapon" Control: PyDAT claims it is poorly understood, and that if it is selected the Acceleration/Top Speed are ignored, but in fact only the Halt Distance is ignored. This is so weapons will continue accelerating to their top speed and ram the target rather than slowing down to gently "land" at it. That is the only difference as I can tell between it and "Flingy Control."
 
 
 macro_rules! dat_reader {
@@ -269,13 +272,13 @@ dat_struct! (
  // Medium and 25% to Large. Independent deals 1 point of
  // damage every second attack, regardless of target's
  // armor.
-        weapon_damage_type: u8; 130,
+        damage_type: u8; 130,
  // Determines how the weapon sprite will "behave" when
  // it attacks the target. Weapon behaviours that
  // "Follow" will track the target as it moves, those
  // that "Don't Follow" will strike the place where the
  // target was at the moment of attack.
-        weapon_behavior: u8; 130,
+        behavior: u8; 130,
  // Time until the weapon is removed if it does not hit a
  // target. 1 game second equals: on Fastest-24, on
  // Faster-21, on Fast-18, on Normal-15, on Slow-12, on
@@ -300,7 +303,7 @@ dat_struct! (
  // equals: on Fastest-24, on Faster-21, on Fast-18, on
  // Normal-15, on Slow-12, on Slower-9 and on
  // Slowest-6. Value of 0 will crash the game.
-        weapon_cooldown: u8; 130,
+        cooldown: u8; 130,
  // Usually, multiple this value by the Damage Amount to
  // get the total damage that is DISPLAYED for the
  // weapon. To a degree also the number of weapons used

@@ -15,8 +15,8 @@ use enum_primitive::FromPrimitive;
 
 use ::iscript::IScript;
 use ::gamedata::LOXCache;
-use ::unitsdata::ImagesDat;
-use ::iscript::OpCode;
+use ::unitsdata::{ImagesDat, WeaponsDat};
+use ::iscript::{OpCode, AnimationType};
 use ::unit_ecs::{IScriptEntityAction, UnitComponents, UnitServices};
 
 macro_rules! var_read {
@@ -86,6 +86,7 @@ pub struct IScriptSteppingSys {
     // ugly HACK, bc we cannot borrow refs to service.xyz and dh.yyy in process()
     pub iscript_copy: IScript,
     pub images_dat: ImagesDat,
+    pub weapons_dat: WeaponsDat,
     pub lox_cache: Rc<RefCell<LOXCache>>,
 
     pub iscript_entity_actions: Vec<IScriptEntityAction>,
@@ -310,7 +311,7 @@ impl IScriptSteppingSys {
         OpCode::SigOrder => (signal: u8) {
             // Masks thingy's orderSignal with <signal>, usually a bit or flag. (This was already documented elsewhere)
         // FIXME
-            println!("--- sigorder not implemented yet ---");
+            println!("--- sigorder({}) not implemented yet ---", signal);
         },
         OpCode::Goto => (target: u16) {
             dh.iscript_state[e].pos = target as usize;
@@ -368,8 +369,6 @@ impl IScriptSteppingSys {
         },
         OpCode::PlaySnd => (sound_id: u16) {
         },
-        // OpCode::PlaySndRand => dynamic_parameters(no_sounds: u8, snd1: u8, ...) {
-        // },
 
         OpCode::SetFlipState => (flipstate: u8) {
             // FIXME
@@ -409,17 +408,48 @@ impl IScriptSteppingSys {
         // FIXME
         },
         OpCode::AttackWith => (weapon: u8) {
-// attackwith <ground = 1, air = 2>
-// Attack with either the ground or air weapon depending on a parameter.
-
-            // ground/air weapons: referenced in Unitsdat
+            // Attack with either the ground or air weapon depending on a parameter.
+            // attackwith <ground = 1, air = 2>
+            assert!(dh.scunit.has(&e));
+            assert!((weapon == 1) || (weapon == 2));
+            match weapon {
+                1 => {
+                    println!("firing ground weapon");
+                    dh.scunit[e].used_weapon = dh.scunit[e].ground_weapon_id;
+                    return Some(IScriptEntityAction::CreateWeaponsFlingy {
+                        weapon_id: dh.scunit[e].ground_weapon_id as u16,
+                    });
+                },
+                2 => {
+                    println!("firing air weapon");
+                    dh.scunit[e].used_weapon = dh.scunit[e].air_weapon_id;
+                    return Some(IScriptEntityAction::CreateWeaponsFlingy {
+                        weapon_id: dh.scunit[e].air_weapon_id as u16,
+                    });
+                },
+                _ => { unreachable!(); },
+            }
 
         // FIXME
         },
         OpCode::GotoRepeatAttk => () {
         // Signals to StarCraft that after this point, when the unit's cooldown time
         // is over, the repeat attack animation can be called.
-        // FIXME
+            let wpid = dh.scunit[e].used_weapon;
+            let anim = if wpid == dh.scunit[e].air_weapon_id {
+                AnimationType::AirAttkRpt
+            } else {
+                AnimationType::GndAttkRpt
+            };
+            dh.iscript_state[e].waiting_ticks_left = self.weapons_dat.cooldown[wpid] as usize;
+            dh.iscript_state[e].pos = dh.iscript_state[e].iscript_anim_offsets(&self.iscript_copy)
+                [anim as usize] as usize;
+        },
+        OpCode::DoMissileDmg => () {
+            // Causes the damage of a weapon flingy to be applied according to its weapons.dat entry.
+        },
+        OpCode::TrgtRangeCondJmp => (dist: u16, file_offset: u16) {
+            // Jumps to a block depending on the distance to the target.
         },
         OpCode::IgnoreRest => () {
         // this causes the script to stop until the next animation is called.
@@ -445,15 +475,6 @@ impl Process for IScriptSteppingSys {
         let cpy = &self.iscript_copy;
         let iter = EntityIter::Map(self.interested.values());
         for e in iter {
-            // TODO: unnecessary here?
-            // there should be a better way to check if an entity exists
-            // if let Some(parent_entity) = dh.iscript_state[e].parent_entity {
-            //     if dh.with_entity_data(&parent_entity, |_, _| {}).is_none() {
-            //         dh.remove_entity(**e);
-            //         continue;
-            //     }
-            // }
-
             let create_action = self.interpret_iscript(&cpy, e, dh);
             if let Some(action) = create_action {
                 self.iscript_entity_actions.push(action);
