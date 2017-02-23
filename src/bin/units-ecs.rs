@@ -14,7 +14,7 @@ use scrust::font::FontSize;
 use scrust::font::RenderText;
 use scrust::iscriptsys::IScriptSteppingSys;
 use scrust::iscript::{IScript, AnimationType};
-use scrust::unitsdata::WeaponsBehavior;
+use scrust::unitsdata::WeaponBehavior;
 
 #[macro_use]
 extern crate ecs;
@@ -32,6 +32,39 @@ use ecs::ModifyData;
 
 extern crate enum_primitive;
 use enum_primitive::FromPrimitive;
+
+fn draw_scimage(e: EntityData<UnitComponents>,
+                dh: &DataHelper<UnitComponents, UnitServices>,
+                gd: &GameData,
+                buffer: &mut [u8],
+                buffer_pitch: u32,
+                grp_cache: &GRPCache) {
+    // every entity is an scimage
+    let scimg_comp = &dh.scimage[e];
+    let grp = grp_cache.get_ro(scimg_comp.grp_id);
+    let fridx = scimg_comp.frame_idx(&dh.iscript_state[e]);
+    // this seems like a hack
+    if fridx >= grp.frames.len() {
+        println!("WARNING: suspicious frame index");
+        return;
+    }
+    let draw_flipped = scimg_comp.draw_flipped(&dh.iscript_state[e]);
+
+    let (cx, cy) = (200, 200);
+    let x_center = cx + dh.iscript_state[e].rel_x as i32;
+    let y_center = cy + dh.iscript_state[e].rel_y as i32;
+
+    scimg_comp.draw(&grp.frames[fridx],
+                    grp.header.width as u32,
+                    grp.header.height as u32,
+                    draw_flipped,
+                    x_center,
+                    y_center,
+                    buffer,
+                    buffer_pitch,
+                    scimg_comp.reindexing_table(gd));
+}
+
 
 struct UnitsECSView {
     world: World<UnitSystems>,
@@ -76,38 +109,6 @@ impl UnitsECSView {
         }
     }
 
-    fn draw_scimage(&self,
-                    e: EntityData<UnitComponents>,
-                    dh: &DataHelper<UnitComponents, UnitServices>,
-                    gd: &GameData,
-                    buffer: &mut [u8],
-                    buffer_pitch: u32,
-                    grp_cache: &GRPCache) {
-        // every entity is an scimage
-        let scimg_comp = &dh.scimage[e];
-        let grp = grp_cache.get_ro(scimg_comp.grp_id);
-        let fridx = scimg_comp.frame_idx(&dh.iscript_state[e]);
-        // this seems like a hack
-        if fridx >= grp.frames.len() {
-            println!("WARNING: suspicious frame index");
-            return;
-        }
-        let draw_flipped = scimg_comp.draw_flipped(&dh.iscript_state[e]);
-
-        let (cx, cy) = (200, 200);
-        let x_center = cx + dh.iscript_state[e].rel_x as i32;
-        let y_center = cy + dh.iscript_state[e].rel_y as i32;
-
-        scimg_comp.draw(&grp.frames[fridx],
-                        grp.header.width as u32,
-                        grp.header.height as u32,
-                        draw_flipped,
-                        x_center,
-                        y_center,
-                        buffer,
-                        buffer_pitch,
-                        scimg_comp.reindexing_table(gd));
-    }
 }
 
 /// set animation state for an entity an all its children
@@ -291,7 +292,7 @@ impl View for UnitsECSView {
                         }
                     });
                 }
-                IScriptEntityAction::CreateWeaponsFlingy { weapon_id } => {
+                IScriptEntityAction::CreateWeaponsFlingy { weapon_id, rel_x, rel_y } => {
                     let ent = create_scflingy(&mut self.world,
                                               gd,
                                               gd.weapons_dat.graphics[weapon_id as usize] as usize,
@@ -299,7 +300,7 @@ impl View for UnitsECSView {
                                               0,
                                               0);
 
-                    let behavior = WeaponsBehavior::from_u8(gd.weapons_dat.behavior[weapon_id as
+                    let behavior = WeaponBehavior::from_u8(gd.weapons_dat.behavior[weapon_id as
                                                             usize])
                         .expect("could not get weapon behavior!");
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
@@ -341,7 +342,7 @@ impl View for UnitsECSView {
                 if !dh.iscript_state[e].alive {
                     continue;
                 }
-                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
             // NOTE order is random in this loop!
@@ -363,7 +364,7 @@ impl View for UnitsECSView {
                     dh.selectable[e]
                         .draw_selection_circle(&*grp_cache, 200, 200, buffer, buffer_pitch);
                 }
-                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
 
             for e in self.world
@@ -372,7 +373,7 @@ impl View for UnitsECSView {
                 if !dh.iscript_state[e].alive {
                     continue;
                 }
-                self.draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
+                draw_scimage(e, dh, gd, buffer, buffer_pitch, &*grp_cache);
             }
         });
 

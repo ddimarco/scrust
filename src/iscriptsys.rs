@@ -19,6 +19,19 @@ use ::unitsdata::{ImagesDat, WeaponsDat};
 use ::iscript::{OpCode, AnimationType};
 use ::unit_ecs::{IScriptEntityAction, UnitComponents, UnitServices};
 
+use std::f32;
+
+pub fn angle_to_discrete32(angle: f32) -> u8 {
+    let pi = f32::consts::PI;
+    // x+24 % 32 ~ x + 90°
+    (((angle+pi)*32. / (2.*pi)).round() + 24.) as u8 % 32
+}
+
+pub fn discrete32_to_angle(discrete_angle: u8) -> f32 {
+    let pi = f32::consts::PI;
+    (((discrete_angle + 8) % 32) as f32 / 32.) * (2.*pi) - pi
+}
+
 macro_rules! var_read {
     (u8, $gd: ident, $file:expr) => ($file.read_u8($gd));
     (u16, $gd: ident, $file:expr) => ($file.read_u16($gd));
@@ -79,7 +92,6 @@ macro_rules! def_opcodes {
             }
     }
 }
-
 
 
 pub struct IScriptSteppingSys {
@@ -228,7 +240,6 @@ impl IScriptSteppingSys {
             },
         OpCode::CreateGasOverlays => (overlay_no: u8) {
             let smoke_img_id = 430 + overlay_no as u16;
-            // FIXME
             let overlay_id = self.images_dat.special_overlay[dh.scimage[e].image_id as usize];
             let (rx, ry) = {
                 let c = self.lox_cache.borrow();
@@ -265,8 +276,6 @@ impl IScriptSteppingSys {
                     dh.iscript_state[e].frameset = frame as u16;
                 }
             }
-
-
         },
         OpCode::FollowMainGraphic => () {
             // Copies frame, flipstate, and direction of primary image in the sprite. Reapplies palette?
@@ -382,53 +391,65 @@ impl IScriptSteppingSys {
 
         OpCode::NoBrkCodeStart => () {
             // Holds the processing of player orders until a nobrkcodeend is encountered.
-
-        // FIXME
+            assert!(dh.scunit.has(&e));
+            dh.scunit[e].accepts_player_orders = false;
         },
         OpCode::NoBrkCodeEnd => () {
             // Allows the processing of player orders after a nobrkcodestart instruction.
-        // FIXME
+            assert!(dh.scunit.has(&e));
+            dh.scunit[e].accepts_player_orders = true;
         },
         OpCode::TmpRmGraphicStart => () {
         // Sets the current image overlay state to hidden
             // only used for nukes
-            // println!("tmprmgraphicstart, has parent: {}", parent.is_some());
             dh.iscript_state[e].visible = false;
         },
         OpCode::TmpRmGraphicEnd => () {
         // Sets the current image overlay state to visible
-            // println!("tmprmgraphicend, has parent: {}", parent.is_some());
             dh.iscript_state[e].visible = true;
         },
         OpCode::AttkShiftProj => (distance: u8) {
             // Creates the weapon flingy at a particular distance in front of the unit.
             println!("attkshiftproj; dist: {}", distance);
-        },
-        OpCode::Attack => () {
-        // FIXME
+            assert!(dh.scunit.has(&e));
+            dh.scunit[e].weapon_shift_proj = distance;
         },
         OpCode::AttackWith => (weapon: u8) {
             // Attack with either the ground or air weapon depending on a parameter.
             // attackwith <ground = 1, air = 2>
             assert!(dh.scunit.has(&e));
             assert!((weapon == 1) || (weapon == 2));
-            match weapon {
+            dh.scunit[e].used_weapon = match weapon {
                 1 => {
                     println!("firing ground weapon");
-                    dh.scunit[e].used_weapon = dh.scunit[e].ground_weapon_id;
-                    return Some(IScriptEntityAction::CreateWeaponsFlingy {
-                        weapon_id: dh.scunit[e].ground_weapon_id as u16,
-                    });
+                    dh.scunit[e].ground_weapon_id
                 },
                 2 => {
                     println!("firing air weapon");
-                    dh.scunit[e].used_weapon = dh.scunit[e].air_weapon_id;
-                    return Some(IScriptEntityAction::CreateWeaponsFlingy {
-                        weapon_id: dh.scunit[e].air_weapon_id as u16,
-                    });
+                     dh.scunit[e].air_weapon_id
                 },
                 _ => { unreachable!(); },
-            }
+            };
+            let forward_offset = self.weapons_dat.forward_offset[dh.scunit[e].used_weapon] +
+                dh.scunit[e].weapon_shift_proj;
+            dh.scunit[e].weapon_shift_proj = 0;
+            let upward_offset = self.weapons_dat.upward_offset[dh.scunit[e].used_weapon];
+
+            // FIXME: use movement_angle (?)
+            let dir_f32 = discrete32_to_angle(dh.iscript_state[e].direction);
+            let rel_x_f32 = dir_f32.cos() * (forward_offset as f32);
+            let rel_y_f32 = dir_f32.sin() * (forward_offset as f32);
+
+            let rel_x = rel_x_f32 as isize;
+            let rel_y = (rel_y_f32 as isize) + (upward_offset as isize);
+            println!("rel: {}, {}", rel_x, rel_y);
+
+            return Some(IScriptEntityAction::CreateWeaponsFlingy {
+                weapon_id: dh.scunit[e].ground_weapon_id as u16,
+                // FIXME: calc from offsets
+                rel_x: rel_x,
+                rel_y: rel_y,
+            });
 
         // FIXME
         },
@@ -450,6 +471,7 @@ impl IScriptSteppingSys {
         },
         OpCode::TrgtRangeCondJmp => (dist: u16, file_offset: u16) {
             // Jumps to a block depending on the distance to the target.
+            println!("trgtrangecondjmp not implemented yet! {}, {}", dist, file_offset);
         },
         OpCode::IgnoreRest => () {
         // this causes the script to stop until the next animation is called.
@@ -457,6 +479,7 @@ impl IScriptSteppingSys {
         },
         OpCode::SetFlSpeed => (speed: u16) {
         // FIXME
+            println!("setflspeed not implemented yet! {}", speed);
         },
 
         OpCode::End => () {

@@ -168,7 +168,7 @@ enum_from_primitive! {
     }
 }
 enum_from_primitive! {
-    pub enum WeaponsBehavior {
+    pub enum WeaponBehavior {
         FlyToTarget,
         FlyToTarget2,
         AppearOnTargetUnit,

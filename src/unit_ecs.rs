@@ -10,7 +10,7 @@ use gamedata::GameData;
 use render::{render_buffer_with_solid_reindexing, render_buffer_with_transparency_reindexing, render_buffer_solid};
 use gamedata::GRPCache;
 use iscriptsys::IScriptSteppingSys;
-use unitsdata::WeaponsBehavior;
+use unitsdata::WeaponBehavior;
 
 #[derive(Debug)]
 pub enum IScriptEntityAction {
@@ -29,7 +29,11 @@ pub enum IScriptEntityAction {
     CreateSpriteOverlay { sprite_id: u16, x: u16, y: u16 },
     CreateSpriteUnderlay { parent: Option<Entity>, sprite_id: u16, x: u16, y: u16, use_parent_dir: bool },
 
-    CreateWeaponsFlingy { weapon_id: u16},
+    CreateWeaponsFlingy {
+        weapon_id: u16,
+        rel_x: isize,
+        rel_y: isize,
+    },
     RemoveEntity {entity: Entity},
 }
 /// *****************************************
@@ -55,6 +59,7 @@ pub struct IScriptStateElement {
     pub visible: bool,
     pub alive: bool,
     pub current_state: IScriptCurrentUnitState,
+    /// for move opcode
     pub movement_angle: f32,
 
     pub map_pos_x: u16,
@@ -62,7 +67,7 @@ pub struct IScriptStateElement {
     pub parent_entity: Option<Entity>,
     pub children: Vec<Entity>,
     /// stops iscript interpretation (for opcode IgnoreRest)
-    pub paused: bool
+    pub paused: bool,
 }
 impl IScriptStateElement {
     pub fn new(iscript: &IScript,
@@ -364,6 +369,9 @@ pub struct SCUnitComponent {
 
     /// weapon id currently in use
     pub used_weapon: usize,
+    /// from attkshiftproj op code
+    pub weapon_shift_proj: u8,
+    pub accepts_player_orders: bool,
 }
 
 // TODO: merge into 1?
@@ -374,7 +382,7 @@ pub struct SCWeaponComponent {
     pub weapon_id: u16,
     pub age: usize,
     // FIXME: implement behaviors
-    pub behavior: WeaponsBehavior,
+    pub behavior: WeaponBehavior,
 }
 
 use ecs::system::LazySystem;
@@ -516,6 +524,8 @@ pub fn create_scunit(world: &mut World<UnitSystems>,
             ground_weapon_id: gd_weapon,
             air_weapon_id: air_weapon,
             used_weapon: gd_weapon,
+            accepts_player_orders: true,
+            weapon_shift_proj: 0,
         });
     });
 
