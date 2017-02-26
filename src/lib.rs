@@ -13,6 +13,7 @@ use smacker::SMK;
 
 #[macro_use]
 extern crate ecs;
+use ecs::Entity;
 
 #[macro_use]
 pub mod events;
@@ -117,12 +118,12 @@ pub enum MousePointerType {
 pub enum GameEvents {
     ChangeMouseCursor(MousePointerType),
     MoveMap(i32, i32),
-    SelectUnit(usize),
+    SelectUnit(Entity),
 }
 
 pub struct GameState {
     // pub unit_instances: Stash<SCUnit>,
-    pub selected_units: Vec<usize>,
+    pub selected_units: Vec<Entity>,
 
     pub game_events: Vec<GameEvents>,
     pub map_pos: Point,
@@ -131,7 +132,7 @@ impl GameState {
     fn new() -> Self {
         GameState {
             // unit_instances: Stash::<SCUnit>::new(),
-            selected_units: Vec::<usize>::new(),
+            selected_units: Vec::<Entity>::new(),
             game_events: Vec::<GameEvents>::new(),
             map_pos: Point::new(0, 0),
         }

@@ -34,11 +34,11 @@ extern crate enum_primitive;
 use enum_primitive::FromPrimitive;
 
 fn draw_scimage(e: EntityData<UnitComponents>,
-                dh: &DataHelper<UnitComponents, UnitServices>,
-                gd: &GameData,
-                buffer: &mut [u8],
-                buffer_pitch: u32,
-                grp_cache: &GRPCache) {
+                    dh: &DataHelper<UnitComponents, UnitServices>,
+                    gd: &GameData,
+                    buffer: &mut [u8],
+                    buffer_pitch: u32,
+                    grp_cache: &GRPCache) {
     // every entity is an scimage
     let scimg_comp = &dh.scimage[e];
     let grp = grp_cache.get_ro(scimg_comp.grp_id);
@@ -64,7 +64,6 @@ fn draw_scimage(e: EntityData<UnitComponents>,
                     buffer_pitch,
                     scimg_comp.reindexing_table(gd));
 }
-
 
 struct UnitsECSView {
     world: World<UnitSystems>,

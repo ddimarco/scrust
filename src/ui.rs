@@ -9,12 +9,9 @@ use ::pal::{Palette, palimg_to_texture};
 use ::pcx::PCX;
 use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 use ::terrain::Map;
-// use ::scunits::SCUnit;
 use ::font::{FontSize, RenderText};
 
 use ::gamedata::GameData;
-
-// use ::stash::Stash;
 
 use std::cmp::{min, max};
 
@@ -281,12 +278,12 @@ impl SelectionPanel {
         // }
 
 
-        self.text = palimg_to_texture(&mut ctx.renderer,
-                                      230,
-                                      90,
-                                      &self.buffer,
-                                      &gd.font_reindexing_store.get_game_reindex().palette
-        );
+        // self.text = palimg_to_texture(&mut ctx.renderer,
+        //                               230,
+        //                               90,
+        //                               &self.buffer,
+        //                               &gd.font_reindexing_store.get_game_reindex().palette
+        // );
     }
 
     pub fn render(&self, renderer: &mut Renderer) {
@@ -325,6 +322,13 @@ impl UiLayer {
         }
     }
 
+    pub fn is_over_hud(&self, x: i32, y: i32) -> bool {
+        // TODO: use masked hud_texture?
+        (y > 367) ||
+            ((x < 166) && (y > 314)) ||
+            ((x > 466) && (y > 325))
+    }
+
     fn make_map_move_from_scroll(&self,
                                  scroll_horizontal: i16,
                                  scroll_vertical: i16,
@@ -352,7 +356,7 @@ impl UiLayer {
     }
 }
 impl LayerTrait for UiLayer {
-    fn update(&mut self, gd: &GameData, gc: &mut GameContext, state: &mut GameState) {
+    fn update(&mut self, _: &GameData, gc: &mut GameContext, state: &mut GameState) {
         self.minimap.update(state.map_pos.x() as u16, state.map_pos.y() as u16);
 
         if let Some((mouse_x, mouse_y)) = gc.events.now.mouse_move {
@@ -364,8 +368,7 @@ impl LayerTrait for UiLayer {
             self.mp.update();
         }
 
-        self.selection_panel.update(gd, gc, &state.selected_units// , &state.unit_instances
-        );
+        // self.selection_panel.update(gd, gc, &state.selected_units);
     }
     fn process_event(&mut self, event: &GameEvents) -> bool {
         match *event {
