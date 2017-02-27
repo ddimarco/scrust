@@ -15,6 +15,8 @@ use smacker::SMK;
 extern crate ecs;
 use ecs::Entity;
 
+extern crate bresenham;
+
 #[macro_use]
 pub mod events;
 

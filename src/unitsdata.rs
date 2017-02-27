@@ -4,10 +4,6 @@ use std::io::Read;
 use ::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
 
 
-// from StarLite comment:
-// Top Speed and Acceleration: PyDAT is actually wrong about how these are calculated. It isn't *3/320, it's /256 just like the Halt Distance. I suspect Blizzard was avoiding floating point operations and instead used bit-shifting the position to get the pixel coordinates.
-// Flingy "Partially Mobile/Weapon" Control: PyDAT claims it is poorly understood, and that if it is selected the Acceleration/Top Speed are ignored, but in fact only the Halt Distance is ignored. This is so weapons will continue accelerating to their top speed and ram the target rather than slowing down to gently "land" at it. That is the only difference as I can tell between it and "Flingy Control."
-
 
 macro_rules! dat_reader {
     (u32, $file:ident, $count:expr) => (read_vec_u32($file, $count));

@@ -24,6 +24,7 @@ rand = "*"
 stash = "*"
 ecs = "*"
 bitflags = "*"
+bresenham = "*"
 
 [dependencies.pathplanning]
 path = "src/pathplanning"

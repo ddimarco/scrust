@@ -15,6 +15,21 @@ use gamedata::GRPCache;
 use iscriptsys::IScriptSteppingSys;
 use unitsdata::WeaponBehavior;
 
+use std::f32;
+
+use bresenham::Bresenham;
+
+pub fn angle2discrete(angle: f32) -> u8 {
+    let pi = f32::consts::PI;
+    // x+24 % 32 ~ x + 90°
+    (((angle+pi)*32. / (2.*pi)).round() + 24.) as u8 % 32
+}
+
+pub fn discrete2angle(discrete_angle: u8) -> f32 {
+    let pi = f32::consts::PI;
+    (((discrete_angle + 8) % 32) as f32 / 32.) * (2.*pi) - pi
+}
+
 #[derive(Debug)]
 pub enum IScriptEntityAction {
     CreateImageUnderlay {
@@ -48,10 +63,10 @@ pub enum IScriptEntityAction {
 /// *****************************************
 
 /// current unit state
-pub enum IScriptCurrentUnitState {
-    Idle,
-    Moving(i32, i32),
-}
+// pub enum IScriptCurrentUnitState {
+//     Idle,
+//     Moving(i32, i32),
+// }
 pub struct IScriptStateElement {
     pub iscript_id: u32,
     /// current position in iscript
@@ -67,7 +82,7 @@ pub struct IScriptStateElement {
     pub frameset: u16,
     pub visible: bool,
     pub alive: bool,
-    pub current_state: IScriptCurrentUnitState,
+    // pub current_state: IScriptCurrentUnitState,
     /// for move opcode
     pub movement_angle: f32,
 
@@ -77,6 +92,7 @@ pub struct IScriptStateElement {
     pub children: Vec<Entity>,
     /// stops iscript interpretation (for opcode IgnoreRest)
     pub paused: bool,
+    pub next_animation: Option<AnimationType>,
 }
 impl IScriptStateElement {
     pub fn new(iscript: &IScript,
@@ -107,12 +123,13 @@ impl IScriptStateElement {
             direction: 0,
             movement_angle: 0f32,
             alive: true,
-            current_state: IScriptCurrentUnitState::Idle,
+            // current_state: IScriptCurrentUnitState::Idle,
             map_pos_x: map_x,
             map_pos_y: map_y,
             parent_entity: parent_entity,
             children: Vec::new(),
             paused: false,
+            next_animation: None,
         }
     }
 
@@ -357,7 +374,7 @@ impl SelectableComponent {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum FlingyMoveControl {
     FlingyDat,
     PartiallyMobile,
@@ -366,6 +383,25 @@ pub enum FlingyMoveControl {
 pub struct SCFlingyComponent {
     pub flingy_id: u16,
     pub move_control: FlingyMoveControl,
+
+    /// only used when FlingyDat move control, measured in pixels per frame
+    pub speed: f32,
+    // FIXME: ignoring turn_radius for now
+
+    // FIXME: use global FlingyDat
+    top_speed: u32,
+    acceleration: u16,
+    halt_distance: u32,
+}
+#[derive(Debug)]
+pub enum UnitCommand {
+    Move(i32, i32),
+    Attack(u32),
+}
+#[derive(Debug,Clone)]
+pub enum UnitState {
+    FollowingPath,
+    Idle,
 }
 pub struct SCUnitComponent {
     pub unit_id: u16,
@@ -379,7 +415,237 @@ pub struct SCUnitComponent {
     /// from attkshiftproj op code
     pub weapon_shift_proj: u8,
     pub accepts_player_orders: bool,
+
+    /// command stack
+    pub commands: Vec<UnitCommand>,
+    pub state: UnitState,
+    pub path: Option<Path>,
 }
+
+pub struct Path {
+    /// reverse, i.e. tile_path[0] is goal
+    pub path: Vec<::Point>,
+}
+use pathplanning::jps::{jps_a_star, PlanningMapTrait};
+impl Path {
+    pub fn plan(sx: i32, sy: i32, tx: i32, ty: i32, map: &Map) -> Self {
+        let sidx = map.xy2idx(sx / 32, sy / 32);
+        let tidx = map.xy2idx(tx / 32, ty / 32);
+        let (pointpath, _) = jps_a_star(
+            sidx,
+            tidx,
+            map);
+        let tp: Vec<::Point> = pointpath.into_iter().map(|pp: ::pathplanning::jps::Point| {
+            ::Point::new(pp.x * 32 + 16, pp.y * 32 + 16)
+        }).collect();
+        Path {
+            path: tp,
+        }
+    }
+
+    pub fn mark_tiles(&self,
+                   map: &Map, map_x: isize, map_y: isize,
+                   buffer: &mut [u8],
+                   _: u32) {
+        for &p in &self.path {
+            let tl_x = p.x() * 32 - map_x as i32;
+            let tl_y = p.y() * 32 - map_y as i32;
+            map.mark_megatile(buffer, tl_x, tl_y, 17);
+        }
+    }
+
+    /// cx, cy in screen coordinates
+    pub fn draw(&self,
+                cx: isize,
+                cy: isize,
+                map_x: isize,
+                map_y: isize,
+                buffer: &mut [u8],
+                buffer_pitch: u32) {
+        let mut cx = cx as i32;
+        let mut cy = cy as i32;
+        for p in self.path.iter().rev() {
+            let tx = p.x() - map_x as i32;
+            let ty = p.y() - map_y as i32;
+            for (x, y) in Bresenham::new((cx as isize, cy as isize),
+                                         (tx as isize, ty as isize)) {
+                if (x >= 0) && (x < 640) && (y >= 0) && (y < 480) {
+                    buffer[(y*buffer_pitch as isize+x) as usize] = 255;
+                }
+            }
+            cx = tx;
+            cy = ty;
+        }
+    }
+
+    /// give the rest length of the path in pixels
+    pub fn path_dist(&self, mx: isize, my: isize) -> f32 {
+        let mut dist = 0f32;
+
+
+        let mut mx = mx as i32;
+        let mut my = my as i32;
+        for p in self.path.iter().rev() {
+            dist += ((p.x() - mx) as f32).hypot((p.y() - my) as f32);
+
+            mx = p.x();
+            my = p.y();
+        }
+
+        dist
+    }
+
+    /// returns: -180 to +180 (in rad)
+    fn follow(&mut self, mx: i32, my: i32) -> Option<f32> {
+        if self.path.len() == 0 {
+            return None;
+        }
+        let (xdiff, ydiff) = {
+            let next_tile = &self.path.last().unwrap();
+            ((next_tile.x() - mx as i32) as f32,
+             (next_tile.y() - my as i32) as f32)
+        };
+
+        let goal_dist = xdiff.hypot(ydiff);
+        // println!("following path len: {}, dist: {}",
+        //          self.tile_path.len(),
+        //          goal_dist);
+        if goal_dist < 4. {
+            if self.path.len() >= 1 {
+                self.path.pop();
+                return self.follow(mx, my);
+            } else {
+                return None;
+            }
+        }
+        let angle = ydiff.atan2(xdiff);
+        return Some(angle);
+    }
+}
+
+use ::terrain::Map;
+use std::rc::Rc;
+pub struct SCUnitStep {
+    pub map: Option<Rc<Map>>,
+}
+use ecs::system::{EntityProcess, EntitySystem};
+use ecs::{EntityIter, System};
+impl System for SCUnitStep {
+    type Components = UnitComponents;
+    type Services = UnitServices;
+}
+impl SCUnitStep {
+
+    // from StarLite:
+    // Top Speed and Acceleration: PyDAT is actually wrong about how these
+    // are calculated. It isn't *3/320, it's /256 just like the Halt
+    // Distance. I suspect Blizzard was avoiding floating point operations
+    // and instead used bit-shifting the position to get the pixel
+    // coordinates.
+    // Flingy "Partially Mobile/Weapon" Control: PyDAT claims it is poorly
+    // understood, and that if it is selected the Acceleration/Top Speed
+    // are ignored, but in fact only the Halt Distance is ignored. This is
+    // so weapons will continue accelerating to their top speed and ram
+    // the target rather than slowing down to gently "land" at it. That is
+    // the only difference as I can tell between it and "Flingy Control."
+    fn follow_path(e: &EntityData<UnitComponents>,
+                   dh: &mut DataHelper<UnitComponents, UnitServices>) {
+        let mx = dh.iscript_state[*e].map_pos_x;
+        let my = dh.iscript_state[*e].map_pos_y;
+
+        let angle = dh.scunit[*e].path.as_mut()
+            .expect("following path, but no path set!")
+            .follow(mx as i32, my as i32);
+        match angle {
+            Some(angle) => {
+                let disc_angle = angle2discrete(angle);
+                dh.iscript_state[*e].direction = disc_angle;
+                dh.iscript_state[*e].movement_angle = angle;
+
+                let mc = dh.scflingy[*e].move_control.clone();
+                match mc {
+                    FlingyMoveControl::IScriptBin => {
+                        // movement is done in iscript 'move' ops
+                    },
+                    FlingyMoveControl::FlingyDat => {
+                        // use flingy data
+                        let top_speed = (dh.scflingy[*e].top_speed as f32) / 256f32;
+                        let acceleration = (dh.scflingy[*e].acceleration as f32) / 256f32;
+                        let halt_distance = (dh.scflingy[*e].halt_distance as f32) / 256f32;
+
+                        let dist = dh.scunit[*e].path.as_ref().unwrap().path_dist(mx as isize,
+                                                                                  my as isize);
+                        // println!("remaining distance: {}", dist);
+                        let speed = dh.scflingy[*e].speed;
+                        if (speed < top_speed) && (dist > halt_distance) {
+                            let newspeed = speed + acceleration;
+                            dh.scflingy[*e].speed = newspeed.min(top_speed);
+                        } else if dist <= halt_distance {
+                            dh.scflingy[*e].speed -= acceleration;
+                        }
+
+                        let (dx, dy) = (angle.cos() * speed,
+                                        angle.sin() * speed);
+                        dh.iscript_state[*e].map_pos_x = (mx as i32 + dx.round() as i32) as u16;
+                        dh.iscript_state[*e].map_pos_y = (my as i32 + dy.round() as i32) as u16;
+                    },
+                    _ => {
+                        println!("partiallyMobile move control niy!");
+                    },
+                }
+
+            },
+            None => {
+                println!("goal reached!");
+                dh.iscript_state[*e].next_animation = Some(AnimationType::WalkingToIdle);
+                dh.scunit[*e].state = UnitState::Idle;
+            }
+        }
+    }
+}
+
+impl EntityProcess for SCUnitStep {
+
+    fn process(&mut self, en: EntityIter<UnitComponents>,
+               dh: &mut DataHelper<UnitComponents, UnitServices>) {
+        if self.map.is_none() {
+            return;
+        }
+        let mapref = &self.map.as_ref();
+        let map = mapref.cloned().unwrap();
+        for e in en {
+            let mx = dh.iscript_state[e].map_pos_x;
+            let my = dh.iscript_state[e].map_pos_y;
+
+            // take in & apply new commands
+            if let Some(cmd) = dh.scunit[e].commands.pop() {
+                match cmd {
+                    UnitCommand::Move(tx, ty) => {
+                        println!("move {}, {}", tx, ty);
+                        // let tile_path = self.plan_path(mx as i32, my as i32, tx, ty, &map);
+                        let tile_path = Path::plan(mx as i32, my as i32, tx, ty, &map);
+
+                        dh.scunit[e].state = UnitState::FollowingPath;
+                        dh.scunit[e].path = Some(tile_path);
+                        dh.iscript_state[e].next_animation = Some(AnimationType::Walking);
+                    },
+                    UnitCommand::Attack(u) => {
+                        println!("attacking {}", u);
+                    },
+                }
+            }
+
+            let state = dh.scunit[e].state.clone();
+            match state {
+                UnitState::FollowingPath => {
+                    SCUnitStep::follow_path(&e, dh);
+                },
+                UnitState::Idle => {},
+            }
+        }
+    }
+}
+
 
 // TODO: merge into 1?
 pub struct UnderlayComponent {}
@@ -413,6 +679,14 @@ systems! {
         active: {
             iscript_stepping_sys: LazySystem<IScriptSteppingSys>
                 = LazySystem::<IScriptSteppingSys>::new(),
+            // scunit_stepping_sys: LazySystem<SCUnitStep>
+            //     = LazySystem::<SCUnitStep>::new(),
+            scunit_stepping_sys: EntitySystem<SCUnitStep> =
+                EntitySystem::new(SCUnitStep {
+                    map: None,
+                },
+                                  aspect!(<UnitComponents>
+                                          all: [scunit])),
         },
         passive: {
         }
@@ -505,6 +779,10 @@ pub fn create_scflingy(world: &mut World<UnitSystems>,
                              SCFlingyComponent {
                                  flingy_id: flingy_id as u16,
                                  move_control: move_control,
+                                 speed: 0f32,
+                                 acceleration: gd.flingy_dat.acceleration[flingy_id],
+                                 top_speed: gd.flingy_dat.top_speed[flingy_id],
+                                 halt_distance: gd.flingy_dat.halt_distance[flingy_id],
                              });
     });
 
@@ -545,6 +823,9 @@ pub fn create_scunit(world: &mut World<UnitSystems>,
                                used_weapon: gd_weapon,
                                accepts_player_orders: true,
                                weapon_shift_proj: 0,
+                               commands: Vec::<UnitCommand>::new(),
+                               state: UnitState::Idle,
+                               path: None,
                            });
     });
 

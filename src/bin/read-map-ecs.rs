@@ -20,12 +20,13 @@ extern crate ecs;
 use ecs::World;
 use ecs::DataHelper;
 use ecs::EntityData;
+use ecs::ModifyData;
 
 use scrust::unit_ecs::{UnitComponents, UnitSystems, UnitServices};
 use scrust::unit_ecs::IScriptEntityAction;
 use scrust::unit_ecs::{UnderlayComponent, OverlayComponent, SCWeaponComponent};
 use scrust::unit_ecs::{create_scimage, create_scsprite, create_scflingy, create_scunit};
-use ecs::ModifyData;
+use scrust::unit_ecs::UnitCommand;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
@@ -76,7 +77,7 @@ struct UnitsLayer {
     cursor_over_unit: bool,
 }
 impl UnitsLayer {
-    fn from_map(gd: &GameData, context: &mut GameContext, state: &mut GameState, map: &Map) -> Self {
+    fn from_map(gd: &GameData, context: &mut GameContext, state: &mut GameState, map: Rc<Map>) -> Self {
         let mut world = World::<UnitSystems>::new();
         world.systems.iscript_stepping_sys.init(IScriptSteppingSys {
             iscript_copy: gd.iscript.clone(),
@@ -99,6 +100,8 @@ impl UnitsLayer {
             let _ = create_scunit(&mut world, gd, mapunit.unit_id as usize,
                                   mapunit.x, mapunit.y, mapunit.player_no as usize);
         }
+
+        world.systems.scunit_stepping_sys.map = Some(map);
 
         // let mut sprites = Vec::<SCSprite>::new();
         // for mapsprite in &map.data.sprites {
@@ -252,30 +255,32 @@ impl UnitsLayer {
         // mouse over unit?
         let mouse_pos_map = state.map_pos + gc.events.mouse_pos;
         let mut over_unit_instance = None;
-        let dh = &self.world.data;
-        for e in self.world
-            .entities()
-            .filter(aspect!(<UnitComponents> all: [selectable]), &self.world) {
-                if !dh.iscript_state[e].alive {
-                    continue;
-                }
-
-                let seldata = &dh.selectable[e];
-                let iss = &dh.iscript_state[e];
-                let halfw = seldata.sel_width as i32 / 2;
-                let halfh = seldata.sel_height as i32 / 2;
-
-                let ux = iss.map_pos_x as i32;
-                let uy = iss.map_pos_y as i32;
-
-                if mouse_pos_map.x() > ux - halfw && mouse_pos_map.x() < ux + halfw &&
-                    mouse_pos_map.y() > uy - halfh &&
-                    mouse_pos_map.y() < uy + halfh {
-                        over_unit_instance = Some(e);
-                        break;
+        {
+            let dh = &self.world.data;
+            for e in self.world
+                .entities()
+                .filter(aspect!(<UnitComponents> all: [selectable]), &self.world) {
+                    if !dh.iscript_state[e].alive {
+                        continue;
                     }
 
-            }
+                    let seldata = &dh.selectable[e];
+                    let iss = &dh.iscript_state[e];
+                    let halfw = seldata.sel_width as i32 / 2;
+                    let halfh = seldata.sel_height as i32 / 2;
+
+                    let ux = iss.map_pos_x as i32;
+                    let uy = iss.map_pos_y as i32;
+
+                    if mouse_pos_map.x() > ux - halfw && mouse_pos_map.x() < ux + halfw &&
+                        mouse_pos_map.y() > uy - halfh &&
+                        mouse_pos_map.y() < uy + halfh {
+                            over_unit_instance = Some(**e);
+                            break;
+                        }
+
+                }
+        }
 
         if over_unit_instance.is_some() && !self.cursor_over_unit {
             events.push(GameEvents::ChangeMouseCursor(MousePointerType::MagnifierGreen));
@@ -286,20 +291,25 @@ impl UnitsLayer {
         }
 
         if over_unit_instance.is_some() && gc.events.now.mouse_left {
-            events.push(GameEvents::SelectUnit(**over_unit_instance.unwrap()));
+            events.push(GameEvents::SelectUnit(over_unit_instance.unwrap()));
         }
-
 
         // commands for selected unit
         if !state.selected_units.is_empty() {
             if !self.cursor_over_unit && gc.events.now.mouse_right {
                 // move command
                 println!("moving to {}, {}", mouse_pos_map.x(), mouse_pos_map.y());
-                //FIXME
-                // for uidx in &state.selected_units {
-                //     let mut u = state.unit_instances.get_mut(*uidx).unwrap();
-                //     u.get_scimg_mut().commands.push(UnitCommands::Move(mouse_pos_map.x(), mouse_pos_map.y()));
-                // }
+                for e in &state.selected_units {
+                    self.world.with_entity_data(&e, |e, data| {
+                        let cmd = UnitCommand::Move(mouse_pos_map.x(), mouse_pos_map.y());
+                        // overwrite old command
+                        if data.scunit[e].commands.len() > 0 {
+                            data.scunit[e].commands[0] = cmd;
+                        } else {
+                            data.scunit[e].commands.push(cmd);
+                        }
+                    });
+                }
             }
         }
 
@@ -341,6 +351,23 @@ impl UnitsLayer {
                 let cx = dh.iscript_state[e].map_pos_x as i32 - map_x as i32;
                 let cy = dh.iscript_state[e].map_pos_y as i32 - map_y as i32;
 
+                // draw path if available
+                    if dh.scunit.has(&e) {
+                        match &dh.scunit[e].path {
+                            &Some(ref p) => {
+                                // p.mark_tiles(
+                                //     self.world.systems.scunit_stepping_sys.map.as_ref().unwrap(),
+                                //     map_x as isize, map_y as isize,
+                                //     buffer,
+                                //     buffer_pitch);
+                                p.draw(cx as isize, cy as isize,
+                                       map_x as isize, map_y as isize,
+                                       buffer, buffer_pitch);
+                            },
+                            _ => {},
+                        }
+                    }
+
                 // draw selection circle if available
                 if dh.selectable.has(&e) {
                     let is_selected = state.selected_units.contains(&**e);
@@ -368,9 +395,10 @@ impl UnitsLayer {
     }
 }
 
+use std::rc::Rc;
 
 struct MapView {
-    map: Map,
+    map: Rc<Map>,
 
     units_layer: UnitsLayer,
     ui_layer: UiLayer,
@@ -379,12 +407,12 @@ const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
 impl MapView {
     fn new(gd: &GameData, context: &mut GameContext, state: &mut GameState, mapfn: &str) -> Self {
-        let map = Map::read(gd, mapfn);
+        let map = Rc::new(Map::read(gd, mapfn));
         println!("map name: {}", map.name());
         println!("map desc: {}", map.description());
         context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
-        let units_layer = UnitsLayer::from_map(gd, context, state, &map);
-        let ui_layer = UiLayer::new(gd, context, &map);
+        let units_layer = UnitsLayer::from_map(gd, context, state, map.clone());
+        let ui_layer = UiLayer::new(gd, context, &*map);
 
         MapView {
             map: map,
@@ -481,7 +509,7 @@ fn main() {
         let mapfn = if args.len() == 2 {
             args[1].clone()
         } else {
-            String::from("test.scx")
+            String::from("simple.scm")
         };
         Box::new(MapView::new(gd, gc, state, &mapfn))
     });

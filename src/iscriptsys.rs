@@ -124,6 +124,15 @@ impl IScriptSteppingSys {
                          dh: &mut DataHelper<UnitComponents, UnitServices>)
                          -> Option<IScriptEntityAction> {
 
+        let na = dh.iscript_state[e].next_animation.clone();
+        match na {
+            Some(a) => {
+                dh.iscript_state[e].set_animation(&self.iscript_copy, a);
+            },
+            _ => {}
+        }
+        dh.iscript_state[e].next_animation = None;
+
         if !dh.iscript_state[e].alive || dh.iscript_state[e].paused {
             return None;
         }
