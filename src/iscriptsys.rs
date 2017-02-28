@@ -118,6 +118,7 @@ impl System for IScriptSteppingSys {
     }
 }
 impl IScriptSteppingSys {
+    // FIXME: make sure there can be only one overlay/underlay type per parent instance
     fn interpret_iscript(&self,
                          cpy: &IScript,
                          e: EntityData<UnitComponents>,
@@ -128,6 +129,13 @@ impl IScriptSteppingSys {
         match na {
             Some(a) => {
                 dh.iscript_state[e].set_animation(&self.iscript_copy, a);
+
+                let children = dh.iscript_state[e].children.clone();
+                for c in children {
+                    dh.with_entity_data(&c, |ent, data| {
+                        data.iscript_state[ent].next_animation = Some(a);
+                    });
+                }
             },
             _ => {}
         }
@@ -374,12 +382,15 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].rel_x = val as i8;
         },
         OpCode::Move => (dist: u8) {
-            let mut iss = &mut dh.iscript_state[e];
-            let fdist = dist as f32;
-            let (dx, dy) = (iss.movement_angle.cos() * fdist ,
-                            iss.movement_angle.sin() * fdist);
-            iss.map_pos_x = (iss.map_pos_x as i32 + dx.round() as i32) as u16;
-            iss.map_pos_y = (iss.map_pos_y as i32 + dy.round() as i32) as u16;
+            dh.iscript_state[e].move_forward(dist);
+            let children = dh.iscript_state[e].children.clone();
+            let (mx, my) = (dh.iscript_state[e].map_pos_x, dh.iscript_state[e].map_pos_y);
+            for c in children {
+                dh.with_entity_data(&c, |ent, data| {
+                    data.iscript_state[ent].map_pos_x = mx;
+                    data.iscript_state[ent].map_pos_y = my;
+                });
+            }
         },
 
         // FIXME sounds

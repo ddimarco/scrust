@@ -133,6 +133,14 @@ impl IScriptStateElement {
         }
     }
 
+    pub fn move_forward(&mut self, dist: u8) {
+        let fdist = dist as f32;
+        let (dx, dy) = (self.movement_angle.cos() * fdist ,
+                        self.movement_angle.sin() * fdist);
+        self.map_pos_x = (self.map_pos_x as i32 + dx.round() as i32) as u16;
+        self.map_pos_y = (self.map_pos_y as i32 + dy.round() as i32) as u16;
+    }
+
     /// reference to iscript animation offsets
     pub fn iscript_anim_offsets<'a>(&self, iscript: &'a IScript) -> &'a Vec<u16> {
         iscript.id_offsets_map.get(&self.iscript_id).unwrap()
@@ -588,6 +596,16 @@ impl SCUnitStep {
                                         angle.sin() * speed);
                         dh.iscript_state[*e].map_pos_x = (mx as i32 + dx.round() as i32) as u16;
                         dh.iscript_state[*e].map_pos_y = (my as i32 + dy.round() as i32) as u16;
+
+                        // FIXME: duplicated from OpCode::Move
+                        let children = dh.iscript_state[*e].children.clone();
+                        let (mx, my) = (dh.iscript_state[*e].map_pos_x, dh.iscript_state[*e].map_pos_y);
+                        for c in children {
+                            dh.with_entity_data(&c, |ent, data| {
+                                data.iscript_state[ent].map_pos_x = mx;
+                                data.iscript_state[ent].map_pos_y = my;
+                            });
+                        }
                     },
                     _ => {
                         println!("partiallyMobile move control niy!");
