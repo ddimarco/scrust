@@ -1,13 +1,32 @@
+use std::io::Cursor;
+
 use std::io::{Read, Seek, SeekFrom};
 extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
-use ::utils::{read_u8buf, read_u16buf};
+use ::utils::{read_vec_u8, read_vec_u16};
 use ::pal::Palette;
-use ::gamedata::{TileSet, GameData};
 use ::stormlib::MPQArchive;
 
-use ::pathplanning::jps::PlanningMapTrait;
+
+// FIXME: this makes things ugly
+pub trait GameDataTrait {
+    fn open(&self, filename: &str) -> Option<Cursor<Vec<u8>>>;
+}
+
+
+#[derive(Copy, Clone, Debug)]
+pub enum TileSet {
+    Badlands = 0,
+    SpacePlatform = 1,
+    Installation = 2,
+    Ashworld = 3,
+    Jungle = 4,
+    Desert = 5,
+    Arctic = 6,
+    Twilight = 7,
+}
+
 
 pub struct MapData {
     pub mpq_archive: MPQArchive,
@@ -28,17 +47,6 @@ pub struct Map {
     pub passable_megatiles: Vec<bool>,
 }
 
-impl PlanningMapTrait for Map {
-    fn is_passable(&self, idx: usize) -> bool {
-        self.passable_megatiles[idx]
-    }
-    fn width(&self) -> usize {
-        self.data.width as usize
-    }
-    fn height(&self) -> usize {
-        self.data.height as usize
-    }
-}
 // XXX: almost same as in read-units, merge
 macro_rules! var_read {
     (u8, $file:ident) => ($file.read_u8());
@@ -235,7 +243,7 @@ impl MapData {
         // 06 - Human (Open Slot)
         // 07 - Neutral
         // 08 - Closed slot
-                let owners = read_u8buf(chk_file, 12);
+                let owners = read_vec_u8(chk_file, 12);
                 println!(" owners: {:?}", owners);
                 for (i, owner) in owners.iter().enumerate() {
                     self.owners[i] = *owner;
@@ -287,7 +295,7 @@ impl MapData {
         // 06 - Random (Forced; Acts as a selected race)
         // 07 - Inactive
         // Italicized settings denote invalid map options. Note Players 9-11 are defaultly Inactive and Player 12 is defaultly Neutral.
-                let species = read_u8buf(chk_file, 12);
+                let species = read_vec_u8(chk_file, 12);
                 println!(" side: {:?}", species);
             },
             "MTXM" => () {
@@ -399,7 +407,7 @@ impl MapData {
                     string_offsets.push(chk_file.read_u16::<LittleEndian>().unwrap());
                 }
                 let strings_start = 2 + 2 * (string_count as usize);
-                let data = read_u8buf(chk_file, (size as usize) - strings_start);
+                let data = read_vec_u8(chk_file, (size as usize) - strings_start);
                 let mut strings = Vec::<String>::with_capacity(string_count as usize);
                 let mut inpos;
                 for string_offset in string_offsets {
@@ -530,7 +538,7 @@ impl Map {
     }
 
     // XXX scms are just mpq files, so we need to read them from disk
-    pub fn read(gd: &GameData, filename: &str) -> Map {
+    pub fn read(gd: &GameDataTrait, filename: &str) -> Map {
         println!("reading {}", filename);
         let mpq_archive = MPQArchive::open(filename);
         let mut chk_file = mpq_archive.open_file("staredit/scenario.chk");
@@ -692,7 +700,7 @@ pub struct CV5 {
     // dd_width: u16,
     // dd_height: u16,
     // _unused: u16,
-    pub mega_tiles: [u16; 16],
+    pub mega_tiles: Vec<u16>, //[u16; 16],
 }
 impl CV5 {
     fn read<T: Read + Seek>(infile: &mut T) -> Option<CV5> {
@@ -702,8 +710,7 @@ impl CV5 {
                 let buildability = infile.read_u8().unwrap();
                 let ground_height = infile.read_u8().unwrap();
                 infile.seek(SeekFrom::Current(16)).ok();
-                let mut mega_tiles = [0 as u16; 16];
-                read_u16buf(infile, 16, &mut mega_tiles);
+                let mut mega_tiles = read_vec_u16(infile, 16);
                 Some(CV5 {
                     index: index,
                     buildability: buildability,
@@ -728,7 +735,8 @@ struct Doodad {
     pub width: u16,
     pub height: u16,
     // _unused: u16
-    pub mega_tiles: [u16; 16],
+    // pub mega_tiles: [u16; 16],
+    pub mega_tiles: Vec<u16>,
 }
 impl Doodad {
     pub fn read<T: Read + Seek>(infile: &mut T) -> Option<Doodad> {
@@ -744,9 +752,11 @@ impl Doodad {
                 let dddata_idx = infile.read_u16::<LittleEndian>().unwrap();
                 let width = infile.read_u16::<LittleEndian>().unwrap();
                 let height = infile.read_u16::<LittleEndian>().unwrap();
-                let mut mega_tiles = [0 as u16; 16];
+                // let mut mega_tiles = [0 as u16; 16];
                 infile.seek(SeekFrom::Current(2)).ok();
-                read_u16buf(infile, 16, &mut mega_tiles);
+                // read_u16buf(infile, 16, &mut mega_tiles);
+                let mega_tiles = read_vec_u16(infile, 16);
+
                 Some(Doodad {
                     index: index,
                     buildability: buildability,
@@ -872,7 +882,7 @@ pub struct TerrainInfo {
     vf4: Vec<VF4>,
 }
 impl TerrainInfo {
-    pub fn read(gd: &GameData, tileset: TileSet) -> TerrainInfo {
+    pub fn read(gd: &GameDataTrait, tileset: TileSet) -> TerrainInfo {
         let pal = Palette::read_wpe(&mut gd.open(make_tileset_filename(tileset, ".wpe").as_str())
             .unwrap());
         let mut cv5 = Vec::<CV5>::new();

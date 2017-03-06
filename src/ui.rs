@@ -4,12 +4,13 @@ use sdl2::render::{Renderer, Texture};
 use sdl2::pixels::Color;
 use sdl2::keyboard::Keycode;
 
-use ::grp::GRP;
-use ::pal::{Palette, palimg_to_texture};
-use ::pcx::PCX;
+use scformats::grp::GRP;
+use scformats::pal::{Palette, palimg_to_texture};
+use scformats::pcx::PCX;
+use scformats::terrain::Map;
+use scformats::font::{FontSize, RenderText};
+use scformats::terrain::GameDataTrait;
 use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
-use ::terrain::Map;
-use ::font::{FontSize, RenderText};
 
 use ::gamedata::GameData;
 

@@ -5,9 +5,13 @@ use std::collections::HashMap;
 #[macro_use]
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
-use scrust::terrain::Map;
+
 use scrust::gamedata::{GameData, GRPCache};
-use scrust::unitsdata::WeaponBehavior;
+use scrust::unit_ecs::PlanningMap;
+
+extern crate scformats;
+use scformats::unitsdata::WeaponBehavior;
+use scformats::terrain::Map;
 
 use scrust::LayerTrait;
 use scrust::ui::UiLayer;
@@ -77,7 +81,7 @@ struct UnitsLayer {
     cursor_over_unit: bool,
 }
 impl UnitsLayer {
-    fn from_map(gd: &GameData, context: &mut GameContext, state: &mut GameState, map: Rc<Map>) -> Self {
+    fn from_map(gd: &GameData, context: &mut GameContext, state: &mut GameState, map: Rc<PlanningMap>) -> Self {
         let mut world = World::<UnitSystems>::new();
         world.systems.iscript_stepping_sys.init(IScriptSteppingSys {
             iscript_copy: gd.iscript.clone(),
@@ -89,7 +93,7 @@ impl UnitsLayer {
         });
 
         // create map units
-        for mapunit in &map.data.units {
+        for mapunit in &map.scmap.data.units {
             // XXX: make use of mapunit data
             // let unit = SCUnit::new(&context.gd,
             //                        mapunit.unit_id as usize,
@@ -398,7 +402,7 @@ impl UnitsLayer {
 use std::rc::Rc;
 
 struct MapView {
-    map: Rc<Map>,
+    map: Rc<PlanningMap>,
 
     units_layer: UnitsLayer,
     ui_layer: UiLayer,
@@ -407,12 +411,12 @@ const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
 impl MapView {
     fn new(gd: &GameData, context: &mut GameContext, state: &mut GameState, mapfn: &str) -> Self {
-        let map = Rc::new(Map::read(gd, mapfn));
-        println!("map name: {}", map.name());
-        println!("map desc: {}", map.description());
-        context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
+        let map = Rc::new(PlanningMap::new(Map::read(gd, mapfn)));
+        println!("map name: {}", map.scmap.name());
+        println!("map desc: {}", map.scmap.description());
+        context.screen.set_palette(&map.scmap.terrain_info.pal.to_sdl()).ok();
         let units_layer = UnitsLayer::from_map(gd, context, state, map.clone());
-        let ui_layer = UiLayer::new(gd, context, &*map);
+        let ui_layer = UiLayer::new(gd, context, &map.scmap);
 
         MapView {
             map: map,
@@ -443,7 +447,7 @@ impl View for MapView {
             let grp_cache = &*gd.grp_cache.borrow();
             let mut screen = &mut context.screen;
             screen.with_lock_mut(|buffer: &mut [u8]| {
-                self.map.render(map_x,
+                self.map.scmap.render(map_x,
                                 map_y,
                                 MAP_RENDER_W,
                                 MAP_RENDER_H,

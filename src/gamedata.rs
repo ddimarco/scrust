@@ -4,31 +4,19 @@ use std::path::Path;
 
 use std::cell::RefCell;
 
-use ::stormlib::{MPQArchive, MPQArchiveFile};
-use ::font::{Font, FontSize};
-use ::pcx::PCX;
-use ::tbl::read_tbl;
-use ::pal::Palette;
-use ::iscript::IScript;
-use ::grp::GRP;
-use ::lox::LOX;
+use scformats::stormlib::{MPQArchive, MPQArchiveFile};
+use scformats::font::{Font, FontSize};
+use scformats::pcx::PCX;
+use scformats::tbl::read_tbl;
+use scformats::pal::Palette;
+use scformats::iscript::IScript;
+use scformats::grp::GRP;
+use scformats::lox::LOX;
 
-use ::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat};
+use scformats::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat};
 
 use Video;
 use smacker::SMK;
-
-#[derive(Copy, Clone, Debug)]
-pub enum TileSet {
-    Badlands = 0,
-    SpacePlatform = 1,
-    Installation = 2,
-    Ashworld = 3,
-    Jungle = 4,
-    Desert = 5,
-    Arctic = 6,
-    Twilight = 7,
-}
 
 pub struct FontReindexingStore {
     game_pcx: PCX,
@@ -120,6 +108,15 @@ pub struct GameData {
     pub video_cache: RefCell<VideoCache>,
 
     pub unit_wireframe_grp: GRP,
+}
+
+// FIXME: ugly
+use scformats::terrain::GameDataTrait;
+impl GameDataTrait for GameData {
+    fn open(&self, filename: &str) -> Option<MPQArchiveFile> {
+        GameData::open_(&self.mpq_archives, filename)
+    }
+
 }
 
 impl GameData {
@@ -283,10 +280,6 @@ impl GameData {
             }
         }
         None
-    }
-
-    pub fn open(&self, filename: &str) -> Option<MPQArchiveFile> {
-        GameData::open_(&self.mpq_archives, filename)
     }
 
     pub fn font(&self, size: FontSize) -> &Font {

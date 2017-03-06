@@ -7,17 +7,43 @@ use ecs::DataHelper;
 
 use byteorder::{LittleEndian, ByteOrder};
 
-use iscript::{IScript, AnimationType};
 use gamedata::GameData;
 use render::{render_buffer_with_solid_reindexing, render_buffer_with_transparency_reindexing,
              render_buffer_solid};
 use gamedata::GRPCache;
 use iscriptsys::IScriptSteppingSys;
-use unitsdata::WeaponBehavior;
+use scformats::unitsdata::WeaponBehavior;
+use scformats::iscript::{IScript, AnimationType};
 
 use std::f32;
 
 use bresenham::Bresenham;
+
+use scformats::terrain::Map;
+use std::rc::Rc;
+
+use pathplanning::jps::{jps_a_star, PlanningMapTrait};
+
+pub struct PlanningMap{
+    pub scmap: Map,
+}
+impl PlanningMap {
+    pub fn new(map: Map) -> Self {
+        PlanningMap{scmap: map}
+    }
+
+}
+impl PlanningMapTrait for PlanningMap {
+    fn is_passable(&self, idx: usize) -> bool {
+        self.scmap.passable_megatiles[idx]
+    }
+    fn width(&self) -> usize {
+        self.scmap.data.width as usize
+    }
+    fn height(&self) -> usize {
+        self.scmap.data.height as usize
+    }
+}
 
 pub fn angle2discrete(angle: f32) -> u8 {
     let pi = f32::consts::PI;
@@ -434,9 +460,8 @@ pub struct Path {
     /// reverse, i.e. tile_path[0] is goal
     pub path: Vec<::Point>,
 }
-use pathplanning::jps::{jps_a_star, PlanningMapTrait};
 impl Path {
-    pub fn plan(sx: i32, sy: i32, tx: i32, ty: i32, map: &Map) -> Self {
+    pub fn plan(sx: i32, sy: i32, tx: i32, ty: i32, map: &PlanningMap) -> Self {
         let sidx = map.xy2idx(sx / 32, sy / 32);
         let tidx = map.xy2idx(tx / 32, ty / 32);
         let (pointpath, _) = jps_a_star(
@@ -531,10 +556,8 @@ impl Path {
     }
 }
 
-use ::terrain::Map;
-use std::rc::Rc;
 pub struct SCUnitStep {
-    pub map: Option<Rc<Map>>,
+    pub map: Option<Rc<PlanningMap>>,
 }
 use ecs::system::{EntityProcess, EntitySystem};
 use ecs::{EntityIter, System};

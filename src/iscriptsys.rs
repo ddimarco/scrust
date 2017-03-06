@@ -13,10 +13,10 @@ use ecs::IndexedEntity;
 
 use enum_primitive::FromPrimitive;
 
-use ::iscript::IScript;
+use scformats::unitsdata::{ImagesDat, WeaponsDat};
+use scformats::iscript::IScript;
+use scformats::iscript::{OpCode, AnimationType};
 use ::gamedata::LOXCache;
-use ::unitsdata::{ImagesDat, WeaponsDat};
-use ::iscript::{OpCode, AnimationType};
 use ::unit_ecs::{IScriptEntityAction, UnitComponents, UnitServices};
 
 use std::f32;

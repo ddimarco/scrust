@@ -21,10 +21,12 @@ libc = "*"
 enum_primitive = "*"
 num = "*"
 rand = "*"
-stash = "*"
 ecs = "*"
 bitflags = "*"
 bresenham = "*"
+
+[dependencies.scformats]
+path = "src/scformats"
 
 [dependencies.pathplanning]
 path = "src/pathplanning"

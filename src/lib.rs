@@ -5,11 +5,13 @@ extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
 extern crate rand;
-// extern crate stash;
 
 extern crate pathplanning;
 extern crate smacker;
 use smacker::SMK;
+
+extern crate scformats;
+use scformats::pal::Palette;
 
 #[macro_use]
 extern crate ecs;
@@ -20,22 +22,9 @@ extern crate bresenham;
 #[macro_use]
 pub mod events;
 
-pub mod stormlib;
-pub mod pcx;
-pub mod tbl;
-pub mod grp;
-pub mod font;
-pub mod pal;
 pub mod gamedata;
-pub mod unitsdata;
-pub mod iscript;
 #[macro_use]
 pub mod utils;
-pub mod terrain;
-// pub mod iscriptstate;
-// pub mod scunits;
-pub mod lox;
-pub mod spk;
 pub mod ui;
 pub mod render;
 pub mod unit_ecs;
@@ -46,10 +35,7 @@ use sdl2::render::Renderer;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
-// use scunits::SCUnit;
-use pal::Palette;
 
-// use stash::Stash;
 use std::collections::HashSet;
 
 struct_events! (

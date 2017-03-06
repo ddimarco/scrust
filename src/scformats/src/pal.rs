@@ -1,8 +1,7 @@
 use std::io::Read;
 
-extern crate sdl2;
-use sdl2::pixels::Color;
-use sdl2::render::{Renderer, Texture};
+use ::sdl2::pixels::Color;
+use ::sdl2::render::{Renderer, Texture};
 
 pub struct Palette {
     pub data: Vec<u8>,
@@ -31,7 +30,7 @@ impl Palette {
         Palette { data: data }
     }
 
-    pub fn to_sdl(&self) -> sdl2::pixels::Palette {
+    pub fn to_sdl(&self) -> ::sdl2::pixels::Palette {
         let mut cols = [Color::RGB(0, 0, 0); 256];
         for i in 0..256 {
             let r = self.data[i * 3];
@@ -39,7 +38,7 @@ impl Palette {
             let b = self.data[i * 3 + 2];
             cols[i] = Color::RGB(r, g, b);
         }
-        sdl2::pixels::Palette::with_colors(&cols).unwrap()
+        ::sdl2::pixels::Palette::with_colors(&cols).unwrap()
     }
 }
 
@@ -50,14 +49,14 @@ pub fn palimg_to_texture(renderer: &mut Renderer,
                          pal: &Palette)
                          -> Texture {
     // XXX need to specify the pixel_mask like this, otherwise we get wrong colors
-    let pixel_mask = sdl2::pixels::PixelMasks {
+    let pixel_mask = ::sdl2::pixels::PixelMasks {
         bpp: 32,
         rmask: 0x000000FF,
         gmask: 0x0000FF00,
         bmask: 0x00FF0000,
         amask: 0xFF000000,
     };
-    let mut surf = sdl2::surface::Surface::from_pixelmasks(width, height, pixel_mask).unwrap();
+    let mut surf = ::sdl2::surface::Surface::from_pixelmasks(width, height, pixel_mask).unwrap();
 
     surf.with_lock_mut(|buffer: &mut [u8]| {
         let mut outidx = 0;
