@@ -10,6 +10,9 @@ use scrust::Video;
 extern crate smacker;
 use smacker::SMK;
 
+extern crate scformats;
+use scformats::terrain::GameDataTrait;
+
 // TODO: convert smks into video structure?
 struct SMKView {
     // smk: SMK,
@@ -19,7 +22,7 @@ struct SMKView {
 impl SMKView {
     fn new(gd: &GameData, context: &mut GameContext, smk_filename: &str) -> Self {
         let mut file = gd.open(smk_filename).unwrap();
-        let fsize = file.get_filesize();
+        let fsize = file.get_ref().len();
         let mut smk = SMK::read(&mut file, fsize);
 
         let video = Video::from_smk(&mut smk);

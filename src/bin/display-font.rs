@@ -2,9 +2,10 @@ extern crate sdl2;
 use sdl2::rect::Rect;
 
 extern crate scrust;
-use scrust::font::FontSize;
 
-use scrust::font::RenderText;
+extern crate scformats;
+use scformats::font::FontSize;
+use scformats::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::gamedata::GameData;
 

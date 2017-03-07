@@ -22,7 +22,6 @@ enum_primitive = "*"
 num = "*"
 rand = "*"
 ecs = "*"
-bitflags = "*"
 bresenham = "*"
 
 [dependencies.scformats]

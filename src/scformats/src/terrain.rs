@@ -710,7 +710,7 @@ impl CV5 {
                 let buildability = infile.read_u8().unwrap();
                 let ground_height = infile.read_u8().unwrap();
                 infile.seek(SeekFrom::Current(16)).ok();
-                let mut mega_tiles = read_vec_u16(infile, 16);
+                let mega_tiles = read_vec_u16(infile, 16);
                 Some(CV5 {
                     index: index,
                     buildability: buildability,

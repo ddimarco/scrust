@@ -9,12 +9,13 @@ use sdl2::rect::Rect;
 extern crate scrust;
 use scrust::gamedata::{GameData, GRPCache};
 use scrust::{GameContext, GameState, View, ViewAction};
-
-use scrust::font::FontSize;
-use scrust::font::RenderText;
 use scrust::iscriptsys::IScriptSteppingSys;
-use scrust::iscript::{IScript, AnimationType};
-use scrust::unitsdata::WeaponBehavior;
+
+extern crate scformats;
+use scformats::font::FontSize;
+use scformats::font::RenderText;
+use scformats::iscript::{IScript, AnimationType};
+use scformats::unitsdata::WeaponBehavior;
 
 #[macro_use]
 extern crate ecs;
@@ -97,7 +98,7 @@ impl UnitsECSView {
             0
         };
 
-        let main_unit = create_scunit(&mut world, gd, unit_id, 0, 0);
+        let main_unit = create_scunit(&mut world, gd, unit_id, 0, 0, 0);
         let unit_name_str = format!("{}: {}", unit_id, gd.stat_txt_tbl[unit_id].to_owned());
 
         UnitsECSView {
@@ -157,7 +158,7 @@ impl View for UnitsECSView {
                                       AnimationType::Death);
                     self.world.remove_entity(self.main_unit);
                 }
-                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
+                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0, 0);
             }
 
         } else if context.events.now.is_key_pressed(&Keycode::P) {
@@ -174,7 +175,7 @@ impl View for UnitsECSView {
                                       AnimationType::Death);
                     self.world.remove_entity(self.main_unit);
                 }
-                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0);
+                self.main_unit = create_scunit(&mut self.world, gd, self.unit_id, 0, 0, 0);
             }
         }
 
@@ -234,7 +235,8 @@ impl View for UnitsECSView {
                 }
                 IScriptEntityAction::CreateImageUnderlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
-                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent),
+                        0);
                     self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].children.push(ent);
@@ -249,7 +251,7 @@ impl View for UnitsECSView {
                 }
                 IScriptEntityAction::CreateImageOverlay { parent, image_id, rel_x, rel_y } => {
                     let ent =
-                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent));
+                        create_scimage(&mut self.world, gd, image_id as usize, 0, 0, Some(parent),0);
                     self.world.modify_entity(parent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.iscript_state[e].children.push(ent);
@@ -262,7 +264,7 @@ impl View for UnitsECSView {
                     });
                 }
                 IScriptEntityAction::CreateSpriteOverlay { sprite_id, x, y } => {
-                    let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, None);
+                    let ent = create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, None, 0);
                     self.world.modify_entity(ent, |e: ModifyData<UnitComponents>,
                                               data: &mut UnitComponents| {
                         data.overlay.insert(&e, OverlayComponent {});
@@ -274,7 +276,7 @@ impl View for UnitsECSView {
                                                             y,
                                                             use_parent_dir } => {
                     let ent =
-                        create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent);
+                        create_scsprite(&mut self.world, gd, sprite_id as usize, x, y, parent, 0);
                     let parent_dir = if use_parent_dir {
                         self.world.with_entity_data(&parent.unwrap(), |e, data| {
                             data.iscript_state[e].children.push(ent);
@@ -296,6 +298,7 @@ impl View for UnitsECSView {
                                               gd,
                                               gd.weapons_dat.graphics[weapon_id as usize] as usize,
                                               // FIXME: use proper location
+                                              0,
                                               0,
                                               0);
 
