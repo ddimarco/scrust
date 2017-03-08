@@ -4,11 +4,14 @@ use std::env;
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents};
 use scrust::gamedata::GameData;
-use scrust::terrain::Map;
-use scrust::font::{FontSize, RenderText};
+
+extern crate scformats;
+use scformats::terrain::Map;
+use scformats::font::{FontSize, RenderText};
 
 use scrust::LayerTrait;
 use scrust::ui::UiLayer;
+use scrust::unit_ecs::PlanningMap;
 
 extern crate sdl2;
 use sdl2::pixels::Color;
@@ -20,7 +23,7 @@ use pathplanning::jps::{jps_a_star, PlanningMapTrait};
 // TODO: path smoothing, merge empty cells (quadtree?), pre-calculate jump points
 
 struct MapView {
-    map: Map,
+    map: PlanningMap,
 
     start_tile: Option<Point>,
     end_tile: Option<Point>,
@@ -33,11 +36,11 @@ const MAP_RENDER_W: u16 = 20;
 const MAP_RENDER_H: u16 = 12;
 impl MapView {
     fn new(gd: &GameData, context: &mut GameContext, _: &mut GameState, mapfn: &str) -> Self {
-        let map = Map::read(gd, mapfn);
-        println!("map name: {}", map.name());
-        println!("map desc: {}", map.description());
-        context.screen.set_palette(&map.terrain_info.pal.to_sdl()).ok();
-        let ui_layer = UiLayer::new(gd, context, &map);
+        let map = PlanningMap::new(Map::read(gd, mapfn));
+        println!("map name: {}", map.scmap.name());
+        println!("map desc: {}", map.scmap.description());
+        context.screen.set_palette(&map.scmap.terrain_info.pal.to_sdl()).ok();
+        let ui_layer = UiLayer::new(gd, context, &map.scmap);
 
         MapView {
             map: map,
@@ -72,7 +75,7 @@ impl View for MapView {
         {
             let mut screen = &mut context.screen;
             screen.with_lock_mut(|buffer: &mut [u8]| {
-                self.map.render(map_x,
+                self.map.scmap.render(map_x,
                                 map_y,
                                 MAP_RENDER_W,
                                 MAP_RENDER_H,
@@ -83,25 +86,25 @@ impl View for MapView {
                 for spt in &self.considered {
                     let tl_x = spt.x() * 32 - state.map_pos.x();
                     let tl_y = spt.y() * 32 - state.map_pos.y();
-                    self.map.mark_megatile(buffer, tl_x, tl_y, 10);
+                    self.map.scmap.mark_megatile(buffer, tl_x, tl_y, 10);
                 }
 
                 for spt in &self.path {
                     let tl_x = spt.x() * 32 - state.map_pos.x();
                     let tl_y = spt.y() * 32 - state.map_pos.y();
-                    self.map.mark_megatile(buffer, tl_x, tl_y, 17);
+                    self.map.scmap.mark_megatile(buffer, tl_x, tl_y, 17);
                 }
 
                 // draw start/end points
                 if let Some(spt) = self.start_tile {
                     let tl_x = spt.x() * 32 - state.map_pos.x();
                     let tl_y = spt.y() * 32 - state.map_pos.y();
-                    self.map.mark_megatile(buffer, tl_x, tl_y, 117u8);
+                    self.map.scmap.mark_megatile(buffer, tl_x, tl_y, 117u8);
                 }
                 if let Some(spt) = self.end_tile {
                     let tl_x = spt.x() * 32 - state.map_pos.x();
                     let tl_y = spt.y() * 32 - state.map_pos.y();
-                    self.map.mark_megatile(buffer, tl_x, tl_y, 23);
+                    self.map.scmap.mark_megatile(buffer, tl_x, tl_y, 23);
                 }
 
                 // diagnostic text

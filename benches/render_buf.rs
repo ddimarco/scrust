@@ -3,7 +3,7 @@ extern crate bencher;
 use bencher::Bencher;
 
 extern crate scrust;
-use scrust::scunits::{render_buffer, render_buffer_faster, render_buffer_macro};
+use scrust::render::{render_buffer_solid};
 
 // safe array access
 // running 2 tests
@@ -26,25 +26,25 @@ fn simple_map(col: u8, _: u8) -> Option<u8> {
     Some(col)
 }
 
-fn b640480(bench: &mut Bencher) {
-    let (screen_width, screen_height) = (80, 60);
-    let (sw, sh) = (64, 32);
-    let mut screen = vec![0u8; (screen_width*screen_height) as usize];
-    let sprite = vec![255u8; (sw*sh) as usize];
+// fn b640480(bench: &mut Bencher) {
+//     let (screen_width, screen_height) = (80, 60);
+//     let (sw, sh) = (64, 32);
+//     let mut screen = vec![0u8; (screen_width*screen_height) as usize];
+//     let sprite = vec![255u8; (sw*sh) as usize];
 
-    bench.iter(|| {
-        for flipped in vec![false, true] {
-            for y in 0..screen_height {
-                for x in 0..screen_width {
-                    render_buffer(&sprite, sw, sh,
-                                  flipped,
-                                  x, y,
-                                  &mut screen, screen_width, &simple_map);
-                }
-            }
-        }
-    });
-}
+//     bench.iter(|| {
+//         for flipped in vec![false, true] {
+//             for y in 0..screen_height {
+//                 for x in 0..screen_width {
+//                     render_buffer(&sprite, sw, sh,
+//                                   flipped,
+//                                   x, y,
+//                                   &mut screen, screen_width, &simple_map);
+//                 }
+//             }
+//         }
+//     });
+// }
 
 fn b640480_nolambda(bench: &mut Bencher) {
     let (screen_width, screen_height) = (80, 60);
@@ -56,36 +56,16 @@ fn b640480_nolambda(bench: &mut Bencher) {
         for flipped in vec![false, true] {
             for y in 0..screen_height {
                 for x in 0..screen_width {
-                    render_buffer_faster(&sprite, sw, sh,
+                    render_buffer_solid(&sprite, sw, sh,
                                          flipped,
                                          x, y,
-                                         &mut screen, screen_width);
+                                         &mut screen, screen_width as u32);
                 }
             }
         }
     });
 }
 
-fn b640480_macro(bench: &mut Bencher) {
-    let (screen_width, screen_height) = (80, 60);
-    let (sw, sh) = (64, 32);
-    let mut screen = vec![0u8; (screen_width*screen_height) as usize];
-    let sprite = vec![255u8; (sw*sh) as usize];
 
-    bench.iter(|| {
-        for flipped in vec![false, true] {
-            for y in 0..screen_height {
-                for x in 0..screen_width {
-                    render_buffer_macro(&sprite, sw, sh,
-                                         flipped,
-                                         x, y,
-                                        &mut screen, screen_width,
-                    1);
-                }
-            }
-        }
-    });
-}
-
-benchmark_group!(benches, b640480, b640480_nolambda, b640480_macro);
+benchmark_group!(benches, b640480_nolambda);
 benchmark_main!(benches);

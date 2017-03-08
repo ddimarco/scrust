@@ -1,6 +1,6 @@
-extern crate scrust;
-use scrust::stormlib::MPQArchive;
-use scrust::spk::SPK;
+extern crate scformats;
+use scformats::stormlib::MPQArchive;
+use scformats::spk::SPK;
 
 fn main() {
     let mpq = MPQArchive::open("/home/dm/code/mysc/data/STARDAT.MPQ");

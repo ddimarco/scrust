@@ -1,9 +1,12 @@
 extern crate sdl2;
 extern crate scrust;
-use scrust::pcx::PCX;
 
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
+
+extern crate scformats;
+use scformats::pcx::PCX;
+use scformats::terrain::GameDataTrait;
 
 struct PCXView {
     pcx: PCX,
