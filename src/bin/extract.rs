@@ -13,8 +13,8 @@ fn main() {
         return;
     }
 
-    let ref infile = args[1];
-    let ref outfile = args[2];
-    let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
-    gd.extract(&infile, &outfile);
+    let infile = &args[1];
+    let outfile = &args[2];
+    let gd = GameData::init(Path::new("/home/dm/.wine/drive_c/StarCraft/"));
+    gd.extract(infile, outfile);
 }

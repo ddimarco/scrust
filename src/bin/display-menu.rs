@@ -5,12 +5,11 @@ use sdl2::rect::Point;
 use sdl2::pixels::Color;
 
 extern crate byteorder;
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{ReadBytesExt};
 
 extern crate num;
 use num::FromPrimitive;
 
-#[macro_use]
 extern crate scrust;
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
@@ -146,13 +145,10 @@ impl EntityProcess for InputSys {
             }
 
             // hotkey handling
-            match dh.button_element[e].hotkey {
-                Some(c) => {
+            if let Some(c) = dh.button_element[e].hotkey {
                     if self.events.is_key_pressed(&sdl2::keyboard::Keycode::from_i32(c as i32).unwrap()) {
                         self.selected_entry = Some(dh.ui_element[e].bwid);
                     }
-                },
-                None => {}
             }
         }
     }
@@ -397,7 +393,7 @@ impl Dialog {
         // The format of it is slightly different, such as the SMK offset
         // becomes the offset to the first control.
         let mainlldlg = DialogLLStruct::read(file);
-        assert!(mainlldlg.next_entry == 0);
+        assert_eq!(mainlldlg.next_entry, 0);
 
         if mainlldlg.smk_offset > 0 {
             println!(" reading controls");
@@ -464,11 +460,8 @@ impl View for MenuView {
         self.dlg.world.systems.input_sys.events = context.events.now.clone();
         //self.mouse_pointer.update();
         process!(self.dlg.world, input_sys);
-        match self.dlg.world.systems.input_sys.selected_entry {
-            Some(bwid) => {
-                println!("selected {}!", bwid);
-            },
-            _ => {},
+        if let Some(bwid) = self.dlg.world.systems.input_sys.selected_entry {
+            println!("selected {}!", bwid);
         }
 
         // clear the screen

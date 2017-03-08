@@ -1,6 +1,5 @@
 use std::env;
 
-#[macro_use]
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents};
 use scrust::gamedata::GameData;
@@ -160,8 +159,7 @@ impl View for MapView {
             self.start_tile = Some(Point::new(megax, megay));
             println!("start tile selected: {}, {}", megax, megay);
             new_problem = true;
-        }
-        if context.events.now.mouse_right {
+        } else if context.events.now.mouse_right {
             // set start pos
             let megax = mpos_map.x() / 32;
             let megay = mpos_map.y() / 32;

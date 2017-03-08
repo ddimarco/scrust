@@ -120,12 +120,12 @@ fn set_animation_rec(world: &mut World<UnitSystems>,
                      entity: Entity,
                      anim: AnimationType) {
     for e in world.with_entity_data(&entity, |ent, data| {
-            data.iscript_state[ent].set_animation(&iscript, anim.clone());
+            data.iscript_state[ent].set_animation(iscript, anim);
             data.iscript_state[ent].children.clone()
         })
         .unwrap_or(Vec::new()) {
         world.with_entity_data(&e, |ent, data| {
-            data.iscript_state[ent].set_animation(&iscript, anim.clone());
+            data.iscript_state[ent].set_animation(iscript, anim);
         });
     }
 }
@@ -293,7 +293,7 @@ impl View for UnitsECSView {
                         }
                     });
                 }
-                IScriptEntityAction::CreateWeaponsFlingy { weapon_id, rel_x, rel_y } => {
+                IScriptEntityAction::CreateWeaponsFlingy { weapon_id, ../*rel_x, rel_y*/ } => {
                     let ent = create_scflingy(&mut self.world,
                                               gd,
                                               gd.weapons_dat.graphics[weapon_id as usize] as usize,

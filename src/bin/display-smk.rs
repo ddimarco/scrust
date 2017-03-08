@@ -47,7 +47,7 @@ impl View for SMKView {
         let data = &self.video.frames[self.frame];
         let screen_pitch = context.screen.pitch();
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            render_buffer_solid(&data, self.video.width as u32, self.video.height as u32,
+            render_buffer_solid(data, self.video.width as u32, self.video.height as u32,
                                 false,
                                 320, 240, buffer, screen_pitch);
         });

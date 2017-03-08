@@ -25,7 +25,7 @@ impl View for PCXView {
         }
 
         context.screen.with_lock_mut(|buffer: &mut [u8]| {
-            buffer.clone_from_slice(&self.pcx.data.as_slice());
+            buffer.clone_from_slice(self.pcx.data.as_slice());
         });
 
         ViewAction::None

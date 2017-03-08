@@ -15,7 +15,7 @@ fn main() {
         return;
     }
 
-    let gd = GameData::init(&Path::new("/home/dm/.wine/drive_c/StarCraft/"));
+    let gd = GameData::init(Path::new("/home/dm/.wine/drive_c/StarCraft/"));
     let dattype_str = &args[1];
     let i = args[2].parse::<usize>().expect("index needs to be an integer!");
 

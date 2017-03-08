@@ -2,7 +2,6 @@ use std::mem;
 use std::env;
 use std::collections::HashMap;
 
-#[macro_use]
 extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
 
@@ -81,7 +80,7 @@ struct UnitsLayer {
     cursor_over_unit: bool,
 }
 impl UnitsLayer {
-    fn from_map(gd: &GameData, context: &mut GameContext, state: &mut GameState, map: Rc<PlanningMap>) -> Self {
+    fn from_map(gd: &GameData, _: &mut GameContext, _: &mut GameState, map: Rc<PlanningMap>) -> Self {
         let mut world = World::<UnitSystems>::new();
         world.systems.iscript_stepping_sys.init(IScriptSteppingSys {
             iscript_copy: gd.iscript.clone(),
@@ -119,7 +118,7 @@ impl UnitsLayer {
         }
     }
 
-    fn update(&mut self, gd: &GameData, context: &GameContext, state: &mut GameState) {
+    fn update(&mut self, gd: &GameData, _: &GameContext, _: &mut GameState) {
         // for (_, u) in &mut state.unit_instances {
         //     let action = u.get_scimg_mut().step(&context.gd);
         //     match action {
@@ -224,7 +223,7 @@ impl UnitsLayer {
                         }
                     });
                 }
-                IScriptEntityAction::CreateWeaponsFlingy { weapon_id, rel_x, rel_y } => {
+                IScriptEntityAction::CreateWeaponsFlingy { weapon_id, ../*rel_x, rel_y*/ } => {
                     let ent = create_scflingy(&mut self.world,
                                               gd,
                                               gd.weapons_dat.graphics[weapon_id as usize] as usize,
@@ -304,13 +303,13 @@ impl UnitsLayer {
                 // move command
                 println!("moving to {}, {}", mouse_pos_map.x(), mouse_pos_map.y());
                 for e in &state.selected_units {
-                    self.world.with_entity_data(&e, |e, data| {
+                    self.world.with_entity_data(e, |e, data| {
                         let cmd = UnitCommand::Move(mouse_pos_map.x(), mouse_pos_map.y());
                         // overwrite old command
-                        if data.scunit[e].commands.len() > 0 {
-                            data.scunit[e].commands[0] = cmd;
-                        } else {
+                        if data.scunit[e].commands.is_empty() {
                             data.scunit[e].commands.push(cmd);
+                        } else {
+                            data.scunit[e].commands[0] = cmd;
                         }
                     });
                 }
@@ -357,18 +356,15 @@ impl UnitsLayer {
 
                 // draw path if available
                     if dh.scunit.has(&e) {
-                        match &dh.scunit[e].path {
-                            &Some(ref p) => {
-                                // p.mark_tiles(
-                                //     self.world.systems.scunit_stepping_sys.map.as_ref().unwrap(),
-                                //     map_x as isize, map_y as isize,
-                                //     buffer,
-                                //     buffer_pitch);
-                                p.draw(cx as isize, cy as isize,
-                                       map_x as isize, map_y as isize,
-                                       buffer, buffer_pitch);
-                            },
-                            _ => {},
+                        if let Some(ref p) = dh.scunit[e].path {
+                            // p.mark_tiles(
+                            //     self.world.systems.scunit_stepping_sys.map.as_ref().unwrap(),
+                            //     map_x as isize, map_y as isize,
+                            //     buffer,
+                            //     buffer_pitch);
+                            p.draw(cx as isize, cy as isize,
+                                   map_x as isize, map_y as isize,
+                                   buffer, buffer_pitch);
                         }
                     }
 
@@ -454,7 +450,7 @@ impl View for MapView {
                                 buffer,
                                 screen_pitch);
 
-                self.units_layer.render(gd, &state, map_x, map_y, grp_cache, buffer, screen_pitch);
+                self.units_layer.render(gd, state, map_x, map_y, grp_cache, buffer, screen_pitch);
 
             });
         }
