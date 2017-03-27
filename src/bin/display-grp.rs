@@ -5,14 +5,15 @@ use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 
 extern crate scrust;
-use scrust::font::FontSize;
-
-use scrust::font::RenderText;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::gamedata::GameData;
-use scrust::grp::GRP;
-use scrust::pcx::PCX;
 use scrust::render::{render_buffer_solid, render_buffer_with_solid_reindexing};
+
+extern crate scformats;
+use scformats::grp::GRP;
+use scformats::pcx::PCX;
+use scformats::font::{RenderText, FontSize};
+use scformats::terrain::GameDataTrait;
 
 struct GRPView {
     grpfile: String,
