@@ -299,6 +299,7 @@ pub struct UiLayer {
     hud_rect: Rect,
     minimap: MiniMap,
     is_scrolling: bool,
+    dragging_rect: Option<Rect>,
 
     selection_panel: SelectionPanel,
 }
@@ -319,6 +320,7 @@ impl UiLayer {
             hud_rect: Rect::new(0, 0, 640, 480),
             minimap: minimap,
             is_scrolling: false,
+            dragging_rect: None,
             selection_panel: SelectionPanel::new(gd, context),
         }
     }
@@ -355,6 +357,23 @@ impl UiLayer {
         };
         GameEvents::MoveMap(map_x, map_y)
     }
+
+}
+
+fn make_rect(sx: i32, sy: i32, mx: i32, my: i32) -> Rect {
+    Rect::new(
+        min(sx, mx),
+        min(sy, my),
+        if sx > mx {
+            sx - mx
+        } else {
+            mx - sx
+        } as u32,
+        if sy > my {
+            sy - my
+        } else {
+            my - sy
+        } as u32)
 }
 impl LayerTrait for UiLayer {
     fn update(&mut self, _: &GameData, gc: &mut GameContext, state: &mut GameState) {
@@ -362,6 +381,15 @@ impl LayerTrait for UiLayer {
 
         if let Some((mouse_x, mouse_y)) = gc.events.now.mouse_move {
             self.mp.update_pos(mouse_x, mouse_y);
+
+            if let Some((sx, sy)) = gc.events.mouse_down_pos {
+                self.dragging_rect = Some(make_rect(sx, sy, mouse_x, mouse_y));
+                self.mp.set_type(MousePointerType::Drag);
+            }
+        }
+        if self.dragging_rect.is_some() && gc.events.mouse_down_pos.is_none() {
+            self.dragging_rect = None;
+            self.mp.set_type(MousePointerType::Arrow);
         }
 
         self.ticks = (self.ticks + 1) % 1000;
@@ -399,7 +427,7 @@ impl LayerTrait for UiLayer {
         } else {
             0
         };
-        if scroll_vertical != 0 || scroll_horizontal != 0 {
+        if (scroll_vertical != 0 || scroll_horizontal != 0) && self.dragging_rect.is_none() {
             let mpt: MousePointerType = if scroll_vertical > 0 {
                 // down
                 if scroll_horizontal > 0 {
@@ -481,9 +509,14 @@ impl LayerTrait for UiLayer {
     }
 
     fn render(&self, renderer: &mut Renderer) {
+        if let Some(r) = self.dragging_rect {
+            renderer.set_draw_color(Color::RGB(0, 128, 0));
+            let _ = renderer.draw_rect(r);
+        }
         let _ = renderer.copy(&self.hud_texture, None, Some(self.hud_rect));
         self.minimap.render(renderer);
         self.mp.render(renderer);
+
         self.selection_panel.render(renderer);
     }
 }

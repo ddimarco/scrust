@@ -41,6 +41,7 @@ macro_rules! struct_events {
             pump: EventPump,
 
             pub mouse_pos: Point,
+            pub mouse_down_pos: Option<(i32, i32)>,
 
             pub now: ImmediateEvents,
         }
@@ -56,6 +57,7 @@ macro_rules! struct_events {
                     pump: pump,
                     now: ImmediateEvents::new(),
                     mouse_pos: Point::new(0,0),
+                    mouse_down_pos: None,
                 }
             }
 
@@ -72,12 +74,14 @@ macro_rules! struct_events {
                         MouseMotion { x, y, .. } => {
                             self.now.mouse_move = Some((x, y));
                             self.mouse_pos = Point::new(x,y);
+
                         },
 
-                        MouseButtonDown { mouse_btn, .. } => match mouse_btn {
+                        MouseButtonDown { mouse_btn, x, y, .. } => match mouse_btn {
                             $(
                                 MouseButton::$m_sdl => {
                                    self.now.$m_alias = true;
+                                    self.mouse_down_pos = Some((x,y));
                                 }
                             ), *
                             _ => {}
@@ -87,6 +91,7 @@ macro_rules! struct_events {
                             $(
                                 MouseButton::$m_sdl => {
                                     self.now.$m_alias = false;
+                                    self.mouse_down_pos = None;
                                 }
                             ), *
                                 _ => {}
