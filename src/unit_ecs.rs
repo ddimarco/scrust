@@ -468,9 +468,12 @@ impl Path {
             sidx,
             tidx,
             map);
-        let tp: Vec<::Point> = pointpath.into_iter().map(|pp: ::pathplanning::jps::Point| {
+        let mut tp: Vec<::Point> = pointpath.into_iter().map(|pp: ::pathplanning::jps::Point| {
             ::Point::new(pp.x * 32 + 16, pp.y * 32 + 16)
         }).collect();
+        if !tp.is_empty() {
+            tp.insert(0, ::Point::new(tx, ty));
+        }
         Path {
             path: tp,
         }
