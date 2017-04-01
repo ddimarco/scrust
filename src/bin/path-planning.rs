@@ -146,8 +146,8 @@ impl View for MapView {
         state.game_events.clear();
     }
 
-    fn generate_layer_events(&mut self, context: &mut GameContext, state: &mut GameState) {
-        let vecevents = self.ui_layer.generate_events(context, state);
+    fn generate_layer_events(&mut self, gd: &GameData, context: &mut GameContext, state: &mut GameState) {
+        let vecevents = self.ui_layer.generate_events(gd, context, state);
         state.game_events.extend(vecevents);
 
         let mpos_map = state.map_pos + context.events.mouse_pos;

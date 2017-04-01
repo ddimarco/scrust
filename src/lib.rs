@@ -1,6 +1,5 @@
 extern crate byteorder;
 extern crate libc;
-#[macro_use]
 extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
@@ -131,7 +130,7 @@ impl GameState {
 pub trait LayerTrait {
     fn render(&self, renderer: &mut Renderer);
     fn update(&mut self, gd: &GameData, gc: &mut GameContext, state: &mut GameState);
-    fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
+    fn generate_events(&mut self, gd: &GameData, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
 
     /// return true when processed, false if not
     fn process_event(&mut self, event: &GameEvents) -> bool;
@@ -139,16 +138,9 @@ pub trait LayerTrait {
 
 
 pub struct GameContext<'window> {
-    // gamedata is ref-counted so that refs can be kept by other objects
-    // pub gd: Rc<GameData>,
     pub events: Events,
     pub renderer: Renderer<'window>,
-    pub screen: Surface<'window>, /* pub game_events: Vec<GameEvents>,
-                                   *
-                                   * pub map_pos: Point,
-                                   *
-                                   * debug stuff
-                                   * pub timer: Timer<'window>, */
+    pub screen: Surface<'window>,
 }
 impl<'window> GameContext<'window> {
     fn new(//gd: GameData,
@@ -183,7 +175,7 @@ pub trait View {
 
     fn render_layers(&mut self, _: &mut GameContext) {}
 
-    fn generate_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {}
+    fn generate_layer_events(&mut self, _: &GameData, _: &mut GameContext, _: &mut GameState) {}
 
     fn process_layer_events(&mut self, _: &mut GameContext, _: &mut GameState) {}
 }
@@ -260,7 +252,7 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
         context.events.pump(&mut context.renderer);
         current_view.update(&gd, &mut context, &mut state);
 
-        current_view.generate_layer_events(&mut context, &mut state);
+        current_view.generate_layer_events(&gd, &mut context, &mut state);
         current_view.process_layer_events(&mut context, &mut state);
 
         let start = timer.ticks();

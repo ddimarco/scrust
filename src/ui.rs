@@ -409,7 +409,7 @@ impl LayerTrait for UiLayer {
         }
     }
 
-    fn generate_events(&mut self, gc: &GameContext, state: &GameState) -> Vec<GameEvents> {
+    fn generate_events(&mut self, _: &GameData, gc: &GameContext, state: &GameState) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
         let mpos = gc.events.mouse_pos;
 

@@ -252,7 +252,7 @@ impl UnitsLayer {
         }
     }
 
-    fn generate_events(&mut self, gc: &GameContext, state: &mut GameState) -> Vec<GameEvents> {
+    fn generate_events(&mut self, gd: &GameData, gc: &GameContext, state: &mut GameState) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
 
         // mouse over unit?
@@ -484,8 +484,8 @@ impl View for MapView {
         state.game_events.clear();
     }
 
-    fn generate_layer_events(&mut self, context: &mut GameContext, state: &mut GameState) {
-        let mut vecevents = self.ui_layer.generate_events(context, state);
+    fn generate_layer_events(&mut self, gd: &GameData, context: &mut GameContext, state: &mut GameState) {
+        let mut vecevents = self.ui_layer.generate_events(gd, context, state);
 
         let over_hud = self.ui_layer.is_over_hud(context.events.mouse_pos.x(),
                                                  context.events.mouse_pos.y());
@@ -493,7 +493,7 @@ impl View for MapView {
             // change to arrow cursor
             vecevents.push(GameEvents::ChangeMouseCursor(MousePointerType::Arrow));
         } else {
-            vecevents.extend(self.units_layer.generate_events(context, state));
+            vecevents.extend(self.units_layer.generate_events(gd, context, state));
         }
 
         state.game_events.extend(vecevents);
