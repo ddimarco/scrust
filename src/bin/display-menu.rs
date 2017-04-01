@@ -551,7 +551,6 @@ impl View for MenuView {
 
 fn main() {
     ::scrust::spawn("menu rendering",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| {
                         Box::new(MenuView::new(gd, gc,
                                                "mm",

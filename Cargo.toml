@@ -23,6 +23,7 @@ num = "*"
 rand = "*"
 ecs = "*"
 bresenham = "*"
+config = "*"
 
 [dependencies.scformats]
 path = "src/scformats"

@@ -114,7 +114,6 @@ fn main() {
     let use_reindex = args.len() >= 3;
 
     ::scrust::spawn("grp viewer",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| Box::new(GRPView::new(gd, gc, grpfile, use_reindex, reindexfile)));
 
 }

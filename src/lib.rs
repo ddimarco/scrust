@@ -4,6 +4,7 @@ extern crate enum_primitive;
 extern crate num;
 extern crate sdl2;
 extern crate rand;
+extern crate config;
 
 extern crate pathplanning;
 extern crate smacker;
@@ -197,7 +198,7 @@ pub trait View {
 
 
 
-pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
+pub fn spawn<F>(title: &str, init: F)
     where F: Fn(&GameData, &mut GameContext, &mut GameState) -> Box<View>
 {
     let sdl_context = sdl2::init().unwrap();
@@ -211,7 +212,12 @@ pub fn spawn<F>(title: &str, scdata_path: &str, init: F)
 
     let mut timer = sdl_context.timer().unwrap();
 
-    let gd = GameData::init(&Path::new(scdata_path));
+    let mut c = config::Config::new();
+    c.merge(config::File::new("settings", config::FileFormat::Toml).required(false)).unwrap();
+    let scdata_path = c.get_str("scdata_path").expect("no StarCraft data path given!");
+    println!("loading SC data from path: {:?}", scdata_path);
+
+    let gd = GameData::init(&Path::new(&scdata_path));
 
     // FIXME: set a default palette for screen surface
     let mut context = GameContext::new(Events::new(sdl_context.event_pump().unwrap()),

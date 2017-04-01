@@ -386,6 +386,5 @@ impl View for UnitsECSView {
 
 fn main() {
     ::scrust::spawn("units ecs",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| Box::new(UnitsECSView::new(gd, gc)));
 }

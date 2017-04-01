@@ -34,6 +34,5 @@ impl View for PCXView {
 
 fn main() {
     ::scrust::spawn("pcx loading",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| Box::new(PCXView::new(gd, gc, "glue\\title\\title.pcx")));
 }

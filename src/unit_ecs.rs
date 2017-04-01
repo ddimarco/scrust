@@ -518,7 +518,6 @@ impl Path {
     pub fn path_dist(&self, mx: isize, my: isize) -> f32 {
         let mut dist = 0f32;
 
-
         let mut mx = mx as i32;
         let mut my = my as i32;
         for p in self.path.iter().rev() {
@@ -602,6 +601,7 @@ impl SCUnitStep {
                         // movement is done in iscript 'move' ops
                     },
                     FlingyMoveControl::FlingyDat => {
+                        // FIXME: consider turn radius
                         // use flingy data
                         let top_speed = (dh.scflingy[*e].top_speed as f32) / 256f32;
                         let acceleration = (dh.scflingy[*e].acceleration as f32) / 256f32;
@@ -609,7 +609,6 @@ impl SCUnitStep {
 
                         let dist = dh.scunit[*e].path.as_ref().unwrap().path_dist(mx as isize,
                                                                                   my as isize);
-                        // println!("remaining distance: {}", dist);
                         let speed = dh.scflingy[*e].speed;
                         if (speed < top_speed) && (dist > halt_distance) {
                             let newspeed = speed + acceleration;

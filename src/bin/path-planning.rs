@@ -207,7 +207,6 @@ impl View for MapView {
 
 fn main() {
     ::scrust::spawn("path planning",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, state| {
         let args: Vec<String> = env::args().collect();
         let mapfn = if args.len() == 2 {

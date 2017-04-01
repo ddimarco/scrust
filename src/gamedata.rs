@@ -338,12 +338,9 @@ def_cache_struct! (GRPCache, u32, GRP, |gd: &GameData, grp_id: u32| {
 });
 def_cache_struct! (LOXCache, u32, LOX, |gd: &GameData, lox_id: u32| {
     let name = "unit/".to_string() + &gd.images_tbl[(lox_id as usize) - 1];
-    println!("lox id: {}, filename: {}", lox_id, name);
+    // println!("lox id: {}, filename: {}", lox_id, name);
     LOX::read(&mut gd.open(&name).unwrap())
 });
-// def_cache_struct! (PCXCache, String, PCX, |gd: &GameData, path: &String| {
-//     PCX::read(&mut gd.open(&path).unwrap())
-// });
 
 pub struct VideoCache {
     cache: HashMap<String, Video>,
@@ -356,9 +353,7 @@ impl VideoCache {
     pub fn load(&mut self, gd: &GameData, path: &str) {
         let pathstr = path.to_owned();
         if !self.cache.contains_key(&pathstr) {
-            // let pcx = PCX::read(&mut gd.open(path).unwrap());
             let mut file = gd.open(path).unwrap();
-            //let fsize = file.get_filesize();
             let fsize = file.get_ref().len();
             let mut smk = SMK::read(&mut file, fsize);
 

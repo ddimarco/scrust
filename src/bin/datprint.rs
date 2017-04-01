@@ -25,6 +25,7 @@ fn main() {
         "flingy" => gd.flingy_dat.print_entry(i),
         "units" => gd.units_dat.print_entry(i),
         "weapons" => gd.weapons_dat.print_entry(i),
+        "orders" => gd.orders_dat.print_entry(i),
         _ => { print_usage(&args); },
     }
 }

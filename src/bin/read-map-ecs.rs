@@ -252,7 +252,7 @@ impl UnitsLayer {
         }
     }
 
-    fn generate_events(&mut self, gd: &GameData, gc: &GameContext, state: &mut GameState) -> Vec<GameEvents> {
+    fn generate_events(&mut self, _: &GameData, gc: &GameContext, state: &mut GameState) -> Vec<GameEvents> {
         let mut events = Vec::<GameEvents>::new();
 
         // mouse over unit?
@@ -503,7 +503,6 @@ impl View for MapView {
 
 fn main() {
     ::scrust::spawn("map rendering",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, state| {
         let args: Vec<String> = env::args().collect();
         let mapfn = if args.len() == 2 {

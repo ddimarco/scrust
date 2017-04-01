@@ -58,7 +58,6 @@ impl View for FontView {
 
 fn main() {
     ::scrust::spawn("font rendering",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| Box::new(FontView::new(gd, gc, "Na wie isses?", FontSize::Font16, 0)));
 
 }

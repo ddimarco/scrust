@@ -59,6 +59,5 @@ impl View for SMKView {
 
 fn main() {
     ::scrust::spawn("smk viewer",
-                    "/home/dm/.wine/drive_c/StarCraft/",
                     |gd, gc, _| Box::new(SMKView::new(gd, gc, "glue/mainmenu/Editor.smk")));
 }
