@@ -13,7 +13,7 @@ use scformats::iscript::IScript;
 use scformats::grp::GRP;
 use scformats::lox::LOX;
 
-use scformats::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat};
+use scformats::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat, OrdersDat};
 
 use Video;
 use smacker::SMK;
@@ -97,6 +97,7 @@ pub struct GameData {
     pub flingy_dat: FlingyDat,
 
     pub weapons_dat: WeaponsDat,
+    pub orders_dat: OrdersDat,
 
     pub install_pal: Palette,
 
@@ -144,6 +145,8 @@ impl GameData {
             .unwrap());
 
         let weapons_dat = WeaponsDat::read(&mut GameData::open_(&archives, "arr/weapons.dat")
+            .unwrap());
+        let orders_dat = OrdersDat::read(&mut GameData::open_(&archives, "arr/orders.dat")
             .unwrap());
 
         let install_pal = Palette::read_wpe(&mut GameData::open_(&archives, "tileset/install.wpe")
@@ -225,6 +228,7 @@ impl GameData {
             sprites_dat: sprites_dat,
             flingy_dat: flingy_dat,
             weapons_dat: weapons_dat,
+            orders_dat: orders_dat,
 
             iscript: iscript,
             ofire_reindexing: ofire_reindexing,

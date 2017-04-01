@@ -61,11 +61,40 @@ dat_struct! (
         draw_function:         u8;   999,
         remapping:             u8;   999,
         iscript_id:            u32;  999,
+// Overlay used to place the Images.dat entry #424 ("Shield Overlay"),
+// if the unit has shields and is hit. [pointer to images.tbl]
         shield_overlay:        u32;  999,
+// This one usually controls a part of the attack animation. Except
+// for the Bunker (which is hardcoded), the use of this property is
+// not specific, but removing it will hang the game if unit's Iscript
+// animation calls for the overlay with the opcodes: 0xD(imgoluselo),
+// 0xE(imguluselo) or 0x15(sproluselo).[pointer to a LOG\LOL\LOX\LOA
+// file in images.tbl]
         attack_overlay:        u32;  999,
+// The "Flames/Bleeding" overlay control, dependent on the current HP
+// value. If the number of frames of the used GRP file is higher than
+// the number of frames of the overlay, the game will crash.[pointer
+// to a LOF file in images.tbl]
         damage_overlay:        u32;  999,
+// This one is used for various purposes: for "Resource Miners", it
+// controls where they "hold" the resources;for the gas-containers, it
+// controls the placement of the smoke graphics (iscript connection
+// via the "creategasoverlays" (0x38) opcode); for the base-turret
+// units, it controls the placement of the turret (also "imgoluselo"
+// connection); for the Battlecruiser, it is the location of the
+// Yamato Gun graphics.[pointer to a LOS\LOL\LOO\LOA\LOB file in
+// images.tbl]
         special_overlay:       u32;  999,
+// Complementary to "Lift-off Dust", this one controls the placement
+// of the landing dust. Some units (Dropship,Science Vessel)
+// originally had this one too, but the idea was abandoned.Also used
+// for the "2 in 1 Egg" zerg units, to determine the location where to
+// put the 2 spawned units.[pointer to a LOB\LOU file in images.tbl]
         landing_dust_overlay:  u32;  999,
+// Complementary to "Landing Dust", this one controls the placement of
+// the lifting-off dust. Some units (Dropship, Science Vessel)
+// originally had this too, but the idea was abandoned. [pointer to a
+// LOD file in images.tbl]
         lift_off_overlay:      u32;  999
     }
 );
@@ -329,5 +358,39 @@ dat_struct! (
  // The icon used for the weapon. [pointer to a frame in
  // unit\cmdbtns\cmdicons.grp]
         icon: u16; 130
+    }
+);
+
+dat_struct! (
+    OrdersDat
+    {
+// Probably the label of the order. Doesn't do anything - used only
+// for convenience.[pointer to stat_txt.tbl?]
+        label: u16; 189,
+// Order will use the weapons.dat targeting settings.
+        use_weapon_targeting: u8; 189,
+        unknown1: u32; 189,
+// Order's execution can be interrupted by calling another order (e.g.
+// movement or something). Does not work for the "Die" order.
+        can_be_interrupted: u8; 189,
+        unknown2: u8; 189,
+// Order execution can be queued using the SHIFT+click combination, up to 16 times.
+        can_be_queued: u8; 189,
+        unknown3: u32; 189,
+// Weapon used by the order to determine the targeting rules, if "Use
+// Weapon Targeting" is checked. [pointer to weapons.dat]
+        targeting: u8; 189,
+// Technology used to determine the energy cost of calling the order. [pointer to techdata.dat]
+        energy: u8; 189,
+// Unit Iscript animation to use while calling the order.
+        animation: u8; 189,
+// Determines which icon on the button panel is highlightened when the
+// order is being called. If the selected icon is not present, no icon
+// is highlightened. 65535 = no highlight at all [pointer to
+// cmdicons.grp]
+        highlight: u16; 189,
+        unknown4: u16; 189,
+// Order to be run if the target is obscured by the Fog-of-War. [pointer to orders.dat]
+        obscured: u8; 189
     }
 );
