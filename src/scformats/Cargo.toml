@@ -13,3 +13,6 @@ num-derive = "0.4"
 num-traits = "0.2"
 num = "0.4"
 bitflags = "2.6"
+
+[build-dependencies]
+cmake = "0.1"
