@@ -7,7 +7,8 @@
 // 2. Vendored source (copy CascLib into vendor/)
 // 3. System library (fallback)
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::fs;
 
 fn main() {
     // Strategy 1: Try git submodule at vendor/CascLib
@@ -44,6 +45,10 @@ fn main() {
         return;
     };
 
+    // Patch CMakeLists.txt to fix compatibility with newer CMake versions
+    // CascLib uses cmake_minimum_required(VERSION 2.6) which is too old
+    patch_cmake_minimum_version(casclib_src);
+
     // Build CascLib using cmake crate
     let dst = cmake::Config::new(casclib_src)
         .define("BUILD_SHARED_LIBS", "OFF")  // Build static library
@@ -61,4 +66,48 @@ fn main() {
     println!("cargo:rerun-if-changed=vendor/CascLib");
     println!("cargo:rerun-if-changed=vendor/casclib-src");
     println!("cargo:rerun-if-env-changed=CASCLIB_SRC");
+}
+
+/// Patch CascLib's CMakeLists.txt to use a newer cmake_minimum_required version
+///
+/// CascLib uses VERSION 2.6 which is too old for CMake 3.27+
+/// We temporarily patch it to VERSION 3.5 which works with all modern CMake
+fn patch_cmake_minimum_version(casclib_src: &Path) {
+    let cmake_file = casclib_src.join("CMakeLists.txt");
+
+    // Read the file
+    let content = match fs::read_to_string(&cmake_file) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("cargo:warning=Failed to read CMakeLists.txt: {}", e);
+            return;
+        }
+    };
+
+    // Check if already patched or if it needs patching
+    if content.contains("cmake_minimum_required(VERSION 3.5)") ||
+       content.contains("cmake_minimum_required(VERSION 3.") {
+        // Already has a good version
+        return;
+    }
+
+    // Patch: replace old cmake_minimum_required with VERSION 3.5
+    let patched = content.replace(
+        "cmake_minimum_required(VERSION 2.6)",
+        "cmake_minimum_required(VERSION 3.5)"
+    ).replace(
+        "cmake_minimum_required(VERSION 2.8)",
+        "cmake_minimum_required(VERSION 3.5)"
+    );
+
+    // Only write if something changed
+    if patched != content {
+        if let Err(e) = fs::write(&cmake_file, patched) {
+            println!("cargo:warning=Failed to patch CMakeLists.txt: {}", e);
+            println!("cargo:warning=You may need to manually edit {:?}", cmake_file);
+            println!("cargo:warning=Change 'cmake_minimum_required(VERSION 2.x)' to 'VERSION 3.5'");
+        } else {
+            println!("cargo:warning=Patched CMakeLists.txt to use cmake_minimum_required(VERSION 3.5)");
+        }
+    }
 }
