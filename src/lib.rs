@@ -196,9 +196,11 @@ pub fn spawn<F>(title: &str, init: F)
 
     let mut timer = sdl_context.timer().unwrap();
 
-    let mut c = config::Config::new();
-    c.merge(config::File::new("settings", config::FileFormat::Toml).required(false)).unwrap();
-    let scdata_path = c.get_str("scdata_path").expect("no StarCraft data path given!");
+    let c = config::Config::builder()
+        .add_source(config::File::with_name("settings").format(config::FileFormat::Toml).required(false))
+        .build()
+        .unwrap();
+    let scdata_path = c.get_string("scdata_path").expect("no StarCraft data path given!");
     println!("loading SC data from path: {:?}", scdata_path);
 
     let gd = GameData::init(&Path::new(&scdata_path));

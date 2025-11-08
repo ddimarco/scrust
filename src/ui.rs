@@ -167,7 +167,7 @@ impl MiniMap {
     }
 
     fn minimap_to_map_coords(&self, screen_pt: &Point) -> Option<Point> {
-        if !self.mmap_rect.contains(*screen_pt) {
+        if !self.mmap_rect.contains_point(*screen_pt) {
             None
         } else {
             let screen_offset = *screen_pt - self.mmap_rect.top_left();

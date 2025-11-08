@@ -1,3 +1,4 @@
+use ecs::{components, systems};
 use ecs::Entity;
 use ecs::ServiceManager;
 use ecs::ModifyData;
@@ -6,12 +7,13 @@ use ecs::EntityData;
 use ecs::DataHelper;
 
 use byteorder::{LittleEndian, ByteOrder};
+use sdl2::rect::Point;
 
-use gamedata::GameData;
-use render::{render_buffer_with_solid_reindexing, render_buffer_with_transparency_reindexing,
+use crate::gamedata::GameData;
+use crate::render::{render_buffer_with_solid_reindexing, render_buffer_with_transparency_reindexing,
              render_buffer_solid};
-use gamedata::GRPCache;
-use iscriptsys::IScriptSteppingSys;
+use crate::gamedata::GRPCache;
+use crate::iscriptsys::IScriptSteppingSys;
 use scformats::unitsdata::WeaponBehavior;
 use scformats::iscript::{IScript, AnimationType};
 
@@ -458,7 +460,7 @@ pub struct SCUnitComponent {
 
 pub struct Path {
     /// reverse, i.e. tile_path[0] is goal
-    pub path: Vec<::Point>,
+    pub path: Vec<Point>,
 }
 impl Path {
     pub fn plan(sx: i32, sy: i32, tx: i32, ty: i32, map: &PlanningMap) -> Self {
@@ -468,11 +470,11 @@ impl Path {
             sidx,
             tidx,
             map);
-        let mut tp: Vec<::Point> = pointpath.into_iter().map(|pp: ::pathplanning::jps::Point| {
-            ::Point::new(pp.x * 32 + 16, pp.y * 32 + 16)
+        let mut tp: Vec<Point> = pointpath.into_iter().map(|pp: ::pathplanning::jps::Point| {
+            Point::new(pp.x * 32 + 16, pp.y * 32 + 16)
         }).collect();
         if !tp.is_empty() {
-            tp.insert(0, ::Point::new(tx, ty));
+            tp.insert(0, Point::new(tx, ty));
         }
         Path {
             path: tp,

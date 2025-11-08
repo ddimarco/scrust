@@ -331,7 +331,7 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].waiting_ticks_left += ticks as usize;
         },
         OpCode::WaitRand => (minticks: u8, maxticks: u8) {
-            let r = ::rand::thread_rng().gen_range(minticks, maxticks+1);
+            let r = ::rand::thread_rng().gen_range(minticks..=maxticks);
             dh.iscript_state[e].waiting_ticks_left += r as usize;
         },
         OpCode::SigOrder => (signal: u8) {
@@ -359,7 +359,7 @@ impl IScriptSteppingSys {
             dh.iscript_state[e].pos = pos;
         },
         OpCode::TurnRand => (units: u8) {
-            if ::rand::thread_rng().gen_range(0, 100) < 50 {
+            if ::rand::thread_rng().gen_range(0..100) < 50 {
                 dh.iscript_state[e].turn_cwise(units);
             } else {
                 dh.iscript_state[e].turn_ccwise(units);
