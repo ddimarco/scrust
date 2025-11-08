@@ -2,6 +2,7 @@
 pub use num_traits::FromPrimitive;
 
 pub mod stormlib;
+pub mod casclib;
 pub mod pcx;
 pub mod pal;
 pub mod tbl;
