@@ -14,7 +14,8 @@ pub mod unit_ecs;
 pub mod iscriptsys;
 
 use std::path::Path;
-use sdl2::render::Renderer;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::surface::Surface;
 use gamedata::GameData;
@@ -112,7 +113,7 @@ impl GameState {
 
 
 pub trait LayerTrait {
-    fn render(&self, renderer: &mut Renderer);
+    fn render(&self, renderer: &mut Canvas<Window>);
     fn update(&mut self, gd: &GameData, gc: &mut GameContext, state: &mut GameState);
     fn generate_events(&mut self, gd: &GameData, gc: &GameContext, state: &GameState) -> Vec<GameEvents>;
 
@@ -123,13 +124,13 @@ pub trait LayerTrait {
 
 pub struct GameContext<'window> {
     pub events: Events,
-    pub renderer: Renderer<'window>,
+    pub renderer: Canvas<Window>,
     pub screen: Surface<'window>,
 }
 impl<'window> GameContext<'window> {
     fn new(//gd: GameData,
            events: Events,
-           renderer: Renderer<'window> /* timer: Timer<'window> */)
+           renderer: Canvas<Window> /* timer: Timer<'window> */)
            -> GameContext<'window> {
         GameContext {
             // gd: Rc::new(gd),
@@ -148,7 +149,7 @@ impl<'window> GameContext<'window> {
 pub enum ViewAction {
     None,
     Quit,
-    ChangeView(Box<View>),
+    ChangeView(Box<dyn View>),
 }
 
 pub trait View {
@@ -182,7 +183,7 @@ pub trait View {
 
 
 pub fn spawn<F>(title: &str, init: F)
-    where F: Fn(&GameData, &mut GameContext, &mut GameState) -> Box<View>
+    where F: Fn(&GameData, &mut GameContext, &mut GameState) -> Box<dyn View>
 {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -204,7 +205,7 @@ pub fn spawn<F>(title: &str, init: F)
 
     // FIXME: set a default palette for screen surface
     let mut context = GameContext::new(Events::new(sdl_context.event_pump().unwrap()),
-                                       window.renderer().accelerated().build().unwrap());
+                                       window.into_canvas().accelerated().build().unwrap());
     sdl_context.mouse().show_cursor(false);
     let mut state = GameState::new();
     let mut current_view = init(&gd, &mut context, &mut state);

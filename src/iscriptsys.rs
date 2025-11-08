@@ -16,8 +16,8 @@ use num_traits::FromPrimitive;
 use scformats::unitsdata::{ImagesDat, WeaponsDat};
 use scformats::iscript::IScript;
 use scformats::iscript::{OpCode, AnimationType};
-use ::gamedata::LOXCache;
-use ::unit_ecs::{IScriptEntityAction, UnitComponents, UnitServices};
+use crate::gamedata::LOXCache;
+use crate::unit_ecs::{IScriptEntityAction, UnitComponents, UnitServices};
 
 use std::f32;
 

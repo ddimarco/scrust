@@ -1,5 +1,6 @@
 use sdl2::rect::{Rect, Point};
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{Canvas, Texture, TextureCreator};
+use sdl2::video::{Window, WindowContext};
 use sdl2::pixels::Color;
 use sdl2::keyboard::Keycode;
 
@@ -9,18 +10,18 @@ use scformats::pcx::PCX;
 use scformats::terrain::Map;
 use scformats::font::{FontSize, RenderText};
 use scformats::terrain::GameDataTrait;
-use ::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
+use crate::{GameContext, GameState, LayerTrait, GameEvents, MousePointerType};
 
-use ::gamedata::GameData;
+use crate::gamedata::GameData;
 
 use std::cmp::{min, max};
 
 
-fn grp_to_textures(renderer: &mut Renderer, grp: &GRP, pal: &Palette) -> Vec<Texture> {
+fn grp_to_textures<'a>(texture_creator: &'a TextureCreator<WindowContext>, grp: &GRP, pal: &Palette) -> Vec<Texture<'a>> {
     let header = &grp.header;
     let mut res = Vec::<Texture>::with_capacity(header.frame_count);
     for framedata in &grp.frames {
-        let text = palimg_to_texture(renderer,
+        let text = palimg_to_texture(texture_creator,
                                      header.width as u32,
                                      header.height as u32,
                                      framedata,
@@ -102,7 +103,7 @@ impl MousePointer {
         }
     }
 
-    pub fn render(&self, renderer: &mut Renderer) {
+    pub fn render(&self, renderer: &mut Canvas<Window>) {
         let cursor_idx = self.cursor_type as usize;
         let ref texture = self.textures[cursor_idx];
         let _ = renderer.copy(&texture[self.frame_idx], None, Some(self.rect));
@@ -190,7 +191,7 @@ impl MiniMap {
         self.mmap_cur_rect.set_y(new_y);
     }
 
-    fn render(&self, renderer: &mut Renderer) {
+    fn render(&self, renderer: &mut Canvas<Window>) {
         let _ = renderer.copy(&self.minimap, None, Some(self.mmap_rect));
 
         renderer.set_draw_color(Color::RGB(255, 255, 255));
@@ -286,7 +287,7 @@ impl SelectionPanel {
         // );
     }
 
-    pub fn render(&self, renderer: &mut Renderer) {
+    pub fn render(&self, renderer: &mut Canvas<Window>) {
         let _ = renderer.copy(&self.text, None, Some(self.pos_rect));
     }
 }
@@ -507,7 +508,7 @@ impl LayerTrait for UiLayer {
         events
     }
 
-    fn render(&self, renderer: &mut Renderer) {
+    fn render(&self, renderer: &mut Canvas<Window>) {
         if let Some(r) = self.dragging_rect {
             renderer.set_draw_color(Color::RGB(0, 128, 0));
             let _ = renderer.draw_rect(r);

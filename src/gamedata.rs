@@ -15,7 +15,7 @@ use scformats::lox::LOX;
 
 use scformats::unitsdata::{ImagesDat, UnitsDat, SpritesDat, FlingyDat, WeaponsDat, OrdersDat};
 
-use Video;
+use crate::Video;
 use smacker::SMK;
 
 pub struct FontReindexingStore {

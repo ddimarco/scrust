@@ -1,7 +1,8 @@
 use std::io::Read;
 
 use sdl2::pixels::Color;
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{TextureCreator, Texture};
+use sdl2::video::WindowContext;
 
 pub struct Palette {
     pub data: Vec<u8>,
@@ -42,7 +43,7 @@ impl Palette {
     }
 }
 
-pub fn palimg_to_texture<'a>(renderer: &'a mut Renderer,
+pub fn palimg_to_texture<'a>(texture_creator: &'a TextureCreator<WindowContext>,
                          width: u32,
                          height: u32,
                          inbuf: &[u8],
@@ -56,7 +57,7 @@ pub fn palimg_to_texture<'a>(renderer: &'a mut Renderer,
         bmask: 0x00FF0000,
         amask: 0xFF000000,
     };
-    let mut surf = ::sdl2::surface::Surface::from_pixelmasks(width, height, &pixel_mask).unwrap();
+    let mut surf = ::sdl2::surface::Surface::from_pixelmasks(width, height, pixel_mask).unwrap();
 
     surf.with_lock_mut(|buffer: &mut [u8]| {
         let mut outidx = 0;
@@ -76,5 +77,5 @@ pub fn palimg_to_texture<'a>(renderer: &'a mut Renderer,
             outidx += 1;
         }
     });
-    renderer.create_texture_from_surface(surf).unwrap()
+    texture_creator.create_texture_from_surface(surf).unwrap()
 }
