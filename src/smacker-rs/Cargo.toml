@@ -2,6 +2,7 @@
 name = "smacker"
 version = "0.1.0"
 authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
+edition = "2021"
 build = "build.rs"
 exclude = [
         "src/c/libsmacker-code/.svn/*",
@@ -12,7 +13,8 @@ exclude = [
 ]
 
 [dependencies]
-libc = "*"
+libc = "0.2"
 
 [build-dependencies]
-gcc = "0.3"
+# gcc crate was renamed to cc
+cc = "1.2"

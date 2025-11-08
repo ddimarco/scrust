@@ -2,7 +2,6 @@ use std::mem;
 use std::env;
 use std::collections::HashMap;
 
-extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents, MousePointerType};
 
 use scrust::gamedata::{GameData, GRPCache};
@@ -31,12 +30,11 @@ use scrust::unit_ecs::{UnderlayComponent, OverlayComponent, SCWeaponComponent};
 use scrust::unit_ecs::{create_scimage, create_scsprite, create_scflingy, create_scunit};
 use scrust::unit_ecs::UnitCommand;
 
-extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 
 extern crate enum_primitive;
-use enum_primitive::FromPrimitive;
+use num_traits::FromPrimitive;
 
 fn draw_scimage(e: EntityData<UnitComponents>,
                 dh: &DataHelper<UnitComponents, UnitServices>,

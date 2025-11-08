@@ -2,6 +2,7 @@
 name = "scrust"
 version = "0.1.0"
 authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
+edition = "2021"
 
 [profile.release]
 # enable debug symbols in release
@@ -15,15 +16,17 @@ codegen-units = 4  # controls whether the compiler passes `-C codegen-units`
 # `codegen-units` is ignored when `lto = true      `
 
 [dependencies]
-sdl2 = "*"
-byteorder = "*"
-libc = "*"
-enum_primitive = "*"
-num = "*"
-rand = "*"
-ecs = "*"
-bresenham = "*"
-config = "*"
+sdl2 = "0.34"
+byteorder = "1.5"
+libc = "0.2"
+# enum_primitive is deprecated, use num-derive + num-traits instead
+num-derive = "0.4"
+num-traits = "0.2"
+num = "0.4"
+rand = "0.8"
+ecs = "0.23"
+bresenham = "0.1"
+config = "0.14"
 
 [dependencies.scformats]
 path = "src/scformats"

@@ -1,7 +1,6 @@
 use std::env;
 
-extern crate smacker;
-use smacker::{SMK};
+use smacker::SMK;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

@@ -1,7 +1,7 @@
 use std::io::Read;
 
-use ::sdl2::pixels::Color;
-use ::sdl2::render::{Renderer, Texture};
+use sdl2::pixels::Color;
+use sdl2::render::{Renderer, Texture};
 
 pub struct Palette {
     pub data: Vec<u8>,
@@ -42,12 +42,12 @@ impl Palette {
     }
 }
 
-pub fn palimg_to_texture(renderer: &mut Renderer,
+pub fn palimg_to_texture<'a>(renderer: &'a mut Renderer,
                          width: u32,
                          height: u32,
                          inbuf: &[u8],
                          pal: &Palette)
-                         -> Texture {
+                         -> Texture<'a> {
     // XXX need to specify the pixel_mask like this, otherwise we get wrong colors
     let pixel_mask = ::sdl2::pixels::PixelMasks {
         bpp: 32,
@@ -56,7 +56,7 @@ pub fn palimg_to_texture(renderer: &mut Renderer,
         bmask: 0x00FF0000,
         amask: 0xFF000000,
     };
-    let mut surf = ::sdl2::surface::Surface::from_pixelmasks(width, height, pixel_mask).unwrap();
+    let mut surf = ::sdl2::surface::Surface::from_pixelmasks(width, height, &pixel_mask).unwrap();
 
     surf.with_lock_mut(|buffer: &mut [u8]| {
         let mut outidx = 0;

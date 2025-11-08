@@ -1,10 +1,8 @@
 use std::env;
 
-extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::pixels::Color;
 
-extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::gamedata::GameData;
 use scrust::render::{render_buffer_solid, render_buffer_with_solid_reindexing};

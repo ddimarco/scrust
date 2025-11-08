@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Write, Seek, SeekFrom};
 
-extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 pub struct GRPHeader {

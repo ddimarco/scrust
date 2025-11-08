@@ -2,7 +2,6 @@ use std;
 
 use std::io::{Read, Seek, SeekFrom};
 
-extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 pub fn read_string<T: Read>(file: &mut T, length: Option<u16>) -> String {

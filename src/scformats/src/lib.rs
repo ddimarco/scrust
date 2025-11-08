@@ -1,14 +1,5 @@
-
-extern crate libc;
-extern crate byteorder;
-extern crate sdl2;
-
-#[macro_use]
-extern crate enum_primitive;
-
-#[macro_use]
-extern crate bitflags;
-extern crate num;
+// Re-export num-traits FromPrimitive for use in the modules
+pub use num_traits::FromPrimitive;
 
 pub mod stormlib;
 pub mod pcx;

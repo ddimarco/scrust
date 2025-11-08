@@ -1,7 +1,8 @@
 use std::io::Read;
+use num_derive::FromPrimitive;
 
 // TODO: macroify?
-use ::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
+use crate::utils::{read_vec_u32, read_vec_u16, read_vec_u8};
 
 
 
@@ -23,7 +24,7 @@ macro_rules! dat_struct {
             )*
         }
         impl $struct_name {
-            pub fn read(file: &mut Read) -> $struct_name {
+            pub fn read(file: &mut dyn Read) -> $struct_name {
                 $(
                     let $name = dat_reader!($tpe, file, $count);
                 )*
@@ -154,17 +155,17 @@ dat_struct! (
     }
 );
 
-enum_from_primitive! {
-    pub enum WeaponsDamageType {
-        Independent = 0,
-        Explosive,
-        Concussive,
-        Normal,
-        IgnoreArmor,
-    }
+#[derive(FromPrimitive)]
+pub enum WeaponsDamageType {
+    Independent = 0,
+    Explosive,
+    Concussive,
+    Normal,
+    IgnoreArmor,
 }
-enum_from_primitive! {
-    pub enum WeaponsExplosionType {
+
+#[derive(FromPrimitive)]
+pub enum WeaponsExplosionType {
         None,
         Normal,
         RadialSplash,
@@ -190,10 +191,10 @@ enum_from_primitive! {
         Maelstrom,
         Unknown1,
         SplashAir,
-    }
 }
-enum_from_primitive! {
-    pub enum WeaponBehavior {
+
+#[derive(FromPrimitive)]
+pub enum WeaponBehavior {
         FlyToTarget,
         FlyToTarget2,
         AppearOnTargetUnit,
@@ -204,7 +205,6 @@ enum_from_primitive! {
         Bounce,
         AttackTarget3x3Area,
         GoToMaxRange,
-    }
 }
 
 dat_struct! (

@@ -11,7 +11,7 @@ use ecs::Entity;
 use ecs::EntityData;
 use ecs::IndexedEntity;
 
-use enum_primitive::FromPrimitive;
+use num_traits::FromPrimitive;
 
 use scformats::unitsdata::{ImagesDat, WeaponsDat};
 use scformats::iscript::IScript;

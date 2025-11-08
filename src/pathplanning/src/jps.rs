@@ -173,7 +173,7 @@ impl Ord for JPSNode {
 }
 
 struct PlanningProblem<'a> {
-    map: &'a PlanningMapTrait,
+    map: &'a dyn PlanningMapTrait,
     start_idx: usize,
     end_idx: usize,
 
@@ -183,7 +183,7 @@ struct PlanningProblem<'a> {
 
 
 impl<'a> PlanningProblem<'a> {
-    fn new(map: &'a PlanningMapTrait, start_idx: usize, end_idx: usize) -> Self {
+    fn new(map: &'a dyn PlanningMapTrait, start_idx: usize, end_idx: usize) -> Self {
         PlanningProblem {
             map: map,
             start_idx: start_idx,
@@ -391,7 +391,7 @@ impl<'a> PlanningProblem<'a> {
     }
 }
 
-pub fn jps_a_star(start_idx: usize, end_idx: usize, mp: &PlanningMapTrait) -> (Vec<Point>, Vec<Point>) {
+pub fn jps_a_star(start_idx: usize, end_idx: usize, mp: &dyn PlanningMapTrait) -> (Vec<Point>, Vec<Point>) {
     if !mp.is_passable(start_idx) || !mp.is_passable(end_idx) {
         return (Vec::<Point>::new(), Vec::<Point>::new());
     }

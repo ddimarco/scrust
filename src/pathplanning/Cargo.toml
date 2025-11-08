@@ -2,8 +2,9 @@
 name = "pathplanning"
 version = "0.1.0"
 authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
+edition = "2021"
 
 [dependencies]
 # for maze generating mazes
-rand = "*"
+rand = "0.8"
 

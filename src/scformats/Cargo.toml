@@ -2,11 +2,14 @@
 name = "scformats"
 version = "0.1.0"
 authors = ["Daniel Di Marco <d.dimarco@gmx.de>"]
+edition = "2021"
 
 [dependencies]
-sdl2 = "*"
-byteorder = "*"
-libc = "*"
-enum_primitive = "*"
-num = "*"
-bitflags = "*"
+sdl2 = "0.34"
+byteorder = "1.5"
+libc = "0.2"
+# enum_primitive is deprecated, use num-derive + num-traits instead
+num-derive = "0.4"
+num-traits = "0.2"
+num = "0.4"
+bitflags = "2.6"

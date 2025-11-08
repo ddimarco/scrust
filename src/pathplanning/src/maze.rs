@@ -6,7 +6,7 @@ use ::rand;
 use rand::Rng;
 use std::vec::Vec;
 
-use ::jps::PlanningMapTrait;
+use crate::jps::PlanningMapTrait;
 
 enum Element {
     Wall,

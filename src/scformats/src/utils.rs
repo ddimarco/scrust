@@ -2,7 +2,7 @@ use std::io::Read;
 
 use ::byteorder::{LittleEndian, ReadBytesExt};
 
-pub fn read_vec_u32(file: &mut Read, count: usize) -> Vec<u32> {
+pub fn read_vec_u32(file: &mut dyn Read, count: usize) -> Vec<u32> {
     let mut res = Vec::<u32>::with_capacity(count);
     for _ in 0..count {
         let val = file.read_u32::<LittleEndian>().unwrap();
@@ -10,7 +10,7 @@ pub fn read_vec_u32(file: &mut Read, count: usize) -> Vec<u32> {
     }
     res
 }
-pub fn read_vec_u16(file: &mut Read, count: usize) -> Vec<u16> {
+pub fn read_vec_u16(file: &mut dyn Read, count: usize) -> Vec<u16> {
     let mut res = Vec::<u16>::with_capacity(count);
     for _ in 0..count {
         let val = file.read_u16::<LittleEndian>().unwrap();
@@ -18,7 +18,7 @@ pub fn read_vec_u16(file: &mut Read, count: usize) -> Vec<u16> {
     }
     res
 }
-pub fn read_vec_u8(file: &mut Read, count: usize) -> Vec<u8> {
+pub fn read_vec_u8(file: &mut dyn Read, count: usize) -> Vec<u8> {
     let mut res = Vec::<u8>::with_capacity(count);
     for _ in 0..count {
         let val = file.read_u8().unwrap();
@@ -49,7 +49,7 @@ macro_rules! def_bin_struct {
             }
 
             impl $name {
-                pub fn read(file: &mut Read) -> $name {
+                pub fn read(file: &mut dyn Read) -> $name {
                     $(
                         let $field_name = read_helper!($tpe, file).unwrap();
                     )*

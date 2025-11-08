@@ -1,12 +1,10 @@
 use std::mem;
 use std::collections::HashMap;
 
-extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
 
-extern crate scrust;
 use scrust::gamedata::{GameData, GRPCache};
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::iscriptsys::IScriptSteppingSys;
@@ -32,7 +30,7 @@ use scrust::unit_ecs::{create_scimage, create_scsprite, create_scflingy, create_
 use ecs::ModifyData;
 
 extern crate enum_primitive;
-use enum_primitive::FromPrimitive;
+use num_traits::FromPrimitive;
 
 fn draw_scimage(e: EntityData<UnitComponents>,
                     dh: &DataHelper<UnitComponents, UnitServices>,

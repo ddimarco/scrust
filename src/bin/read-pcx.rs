@@ -1,5 +1,3 @@
-extern crate sdl2;
-extern crate scrust;
 
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};

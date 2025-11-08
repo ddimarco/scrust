@@ -1,12 +1,11 @@
 use std::io::Cursor;
 
 use std::io::{Read, Seek, SeekFrom};
-extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
-use ::utils::{read_vec_u8, read_vec_u16};
-use ::pal::Palette;
-use ::stormlib::MPQArchive;
+use crate::utils::{read_vec_u8, read_vec_u16};
+use crate::pal::Palette;
+use crate::stormlib::MPQArchive;
 
 
 // FIXME: this makes things ugly
@@ -538,7 +537,7 @@ impl Map {
     }
 
     // XXX scms are just mpq files, so we need to read them from disk
-    pub fn read(gd: &GameDataTrait, filename: &str) -> Map {
+    pub fn read(gd: &dyn GameDataTrait, filename: &str) -> Map {
         println!("reading {}", filename);
         let mpq_archive = MPQArchive::open(filename);
         let mut chk_file = mpq_archive.open_file("staredit/scenario.chk");
@@ -778,7 +777,7 @@ struct VX4 {
     data: [u16; 16],
 }
 impl VX4 {
-    pub fn read(infile: &mut Read) -> Option<VX4> {
+    pub fn read(infile: &mut dyn Read) -> Option<VX4> {
         let mut data = [0 as u16; 16];
         for i in 0..16 {
             let val = infile.read_u16::<LittleEndian>();
@@ -799,7 +798,7 @@ struct VR4 {
     bitmap: [u8; 64],
 }
 impl VR4 {
-    pub fn read(infile: &mut Read) -> Option<VR4> {
+    pub fn read(infile: &mut dyn Read) -> Option<VR4> {
         let mut data = [0 as u8; 64];
         for i in 0..64 {
             let val = infile.read_u8();
@@ -824,7 +823,7 @@ pub enum TileHeight {
     High,
 }
 impl VF4 {
-    pub fn read(infile: &mut Read) -> Option<VF4> {
+    pub fn read(infile: &mut dyn Read) -> Option<VF4> {
         let mut data = [0 as u16; 16];
         // read_u16buf(infile, 16, &mut data);
         for i in 0..16 {
@@ -882,7 +881,7 @@ pub struct TerrainInfo {
     vf4: Vec<VF4>,
 }
 impl TerrainInfo {
-    pub fn read(gd: &GameDataTrait, tileset: TileSet) -> TerrainInfo {
+    pub fn read(gd: &dyn GameDataTrait, tileset: TileSet) -> TerrainInfo {
         let pal = Palette::read_wpe(&mut gd.open(make_tileset_filename(tileset, ".wpe").as_str())
             .unwrap());
         let mut cv5 = Vec::<CV5>::new();

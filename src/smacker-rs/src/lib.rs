@@ -3,7 +3,6 @@ use std::ptr;
 use std::fs::File;
 use std::io::{Write, Read};
 
-extern crate libc;
 use libc::{c_char, c_ulong, c_uchar, c_void, c_double};
 
 // FIXME don't copy data + palette on every frame
@@ -53,7 +52,7 @@ pub enum FrameIterationStatus {
 }
 
 impl SMK {
-    pub fn read(infile: &mut Read, size: usize) -> Self {
+    pub fn read(infile: &mut dyn Read, size: usize) -> Self {
         let mut inbuf = vec![0u8; size];
         infile.read(&mut inbuf).ok();
         unsafe {

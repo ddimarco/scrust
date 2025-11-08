@@ -1,5 +1,4 @@
 use std::io::{Read, Seek, SeekFrom};
-extern crate sdl2;
 use sdl2::rect::Rect;
 use sdl2::rect::Point;
 use sdl2::pixels::Color;
@@ -10,7 +9,6 @@ use byteorder::{ReadBytesExt};
 extern crate num;
 use num::FromPrimitive;
 
-extern crate scrust;
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::render::{render_block};

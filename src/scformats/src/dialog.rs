@@ -1,5 +1,7 @@
 use std::io::Read;
 use byteorder::{LittleEndian, ReadBytesExt};
+use num_derive::FromPrimitive;
+use bitflags::bitflags;
 
 /// //////////////////////////////////////
 /// low level structs
@@ -48,9 +50,7 @@ def_bin_struct!(SMKLLStruct {
     ____skip: u32
 });
 
-enum_from_primitive! {
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, FromPrimitive)]
 pub enum ControlType {
     DialogBox = 0x0,
     // draw with rounded corners
@@ -71,53 +71,54 @@ pub enum ControlType {
     ComboBox = 0xd,
     LightupButton = 0xe,
 }
-}
 
 // FIXME: doesn't seem to be fully correct
 bitflags! {
     // following BinEdit II flags
-    pub flags DialogFlags: u32 {
-        const DLG_UNKNOWN0  = 0x1,
-        const DLG_DISABLED  = 0x2,
-        const DLG_ACTIVE  = 0x4,
-        const DLG_VISIBLE  = 0x8,
-        const DLG_RESPOND_TO_EVENTS  = 0x10,
-        const DLG_UNKNOWN5  = 0x20,
-        const DLG_CANCEL_BUTTON  = 0x40,
-        const DLG_NO_HOVER_SOUND  = 0x80,
-        const DLG_VIRTUAL_KEY  = 0x100,
-        const DLG_HAS_HOTKEY  = 0x200,
-        const DLG_FONT10  = 0x400,
-        const DLG_FONT16  = 0x800,
-        const DLG_UNKNOWN12  = 0x1000,
-        const DLG_COL0_TRANSPARENT  = 0x00002000,
-        const DLG_FONT16X  = 0x00004000,
-        const DLG_ALTERNATE_STYLE  = 0x00008000,
-
-    const DLG_FONT14  = 0x00010000,
-        const DLG_REMOVE_STYLES  = 0x00020000,
-        const DLG_APPLY_TRANSLUCENCY  = 0x00040000,
-        const DLG_DEFAULT_BUTTON  = 0x00080000,
-        const DLG_BRING_TO_FRONT  = 0x00100000,
-        const DLG_HORIZONTAL_ALIGNMENT_CENTER  = 0x00200000,
-        const DLG_HORIZONTAL_ALIGNMENT_RIGHT  = 0x00400000,
-        const DLG_HORIZONTAL_ALIGNMENT_CENTER2  = 0x00800000,
-        const DLG_VERTICAL_ALIGNMENT_TOP  = 0x01000000,
-        const DLG_VERTICAL_ALIGNMENT_MIDDLE  = 0x02000000,
-        const DLG_VERTICAL_ALIGNMENT_BOTTOM  = 0x04000000,
-        const DLG_UNKNOWN_27  = 0x08000000,
-        const DLG_REVERSE_DIALOG_DIRECTION  = 0x10000000,
-        const DLG_USE_ALTERNATE_STYLE  = 0x20000000,
-        const DLG_NO_CLICK_SOUND = 0x40000000,
-        const DLG_UNKNOWN31 = 0x80000000
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct DialogFlags: u32 {
+        const DLG_UNKNOWN0  = 0x1;
+        const DLG_DISABLED  = 0x2;
+        const DLG_ACTIVE  = 0x4;
+        const DLG_VISIBLE  = 0x8;
+        const DLG_RESPOND_TO_EVENTS  = 0x10;
+        const DLG_UNKNOWN5  = 0x20;
+        const DLG_CANCEL_BUTTON  = 0x40;
+        const DLG_NO_HOVER_SOUND  = 0x80;
+        const DLG_VIRTUAL_KEY  = 0x100;
+        const DLG_HAS_HOTKEY  = 0x200;
+        const DLG_FONT10  = 0x400;
+        const DLG_FONT16  = 0x800;
+        const DLG_UNKNOWN12  = 0x1000;
+        const DLG_COL0_TRANSPARENT  = 0x00002000;
+        const DLG_FONT16X  = 0x00004000;
+        const DLG_ALTERNATE_STYLE  = 0x00008000;
+        const DLG_FONT14  = 0x00010000;
+        const DLG_REMOVE_STYLES  = 0x00020000;
+        const DLG_APPLY_TRANSLUCENCY  = 0x00040000;
+        const DLG_DEFAULT_BUTTON  = 0x00080000;
+        const DLG_BRING_TO_FRONT  = 0x00100000;
+        const DLG_HORIZONTAL_ALIGNMENT_CENTER  = 0x00200000;
+        const DLG_HORIZONTAL_ALIGNMENT_RIGHT  = 0x00400000;
+        const DLG_HORIZONTAL_ALIGNMENT_CENTER2  = 0x00800000;
+        const DLG_VERTICAL_ALIGNMENT_TOP  = 0x01000000;
+        const DLG_VERTICAL_ALIGNMENT_MIDDLE  = 0x02000000;
+        const DLG_VERTICAL_ALIGNMENT_BOTTOM  = 0x04000000;
+        const DLG_UNKNOWN_27  = 0x08000000;
+        const DLG_REVERSE_DIALOG_DIRECTION  = 0x10000000;
+        const DLG_USE_ALTERNATE_STYLE  = 0x20000000;
+        const DLG_NO_CLICK_SOUND = 0x40000000;
+        const DLG_UNKNOWN31 = 0x80000000;
     }
 }
+
 bitflags! {
-    pub flags SMKFlags: u16 {
-        const SMK_FADE_IN = 0x01,
-        const SMK_DARK = 0x02,
-        const SMK_REPEAT_FOREVER = 0x04,
-        const SMK_SHOW_IF_OVER = 0x08,
-        const SMK_UNKNOWN4 = 0x10
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct SMKFlags: u16 {
+        const SMK_FADE_IN = 0x01;
+        const SMK_DARK = 0x02;
+        const SMK_REPEAT_FOREVER = 0x04;
+        const SMK_SHOW_IF_OVER = 0x08;
+        const SMK_UNKNOWN4 = 0x10;
     }
 }

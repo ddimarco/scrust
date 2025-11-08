@@ -3,7 +3,7 @@ use std::io::{Read, Write, Seek, SeekFrom};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
-use ::pal::Palette;
+use crate::pal::Palette;
 
 pub struct PCXHeader {
     pub version: u8,

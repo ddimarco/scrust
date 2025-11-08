@@ -1,7 +1,6 @@
 use std::path::Path;
 use std::env;
 
-extern crate scrust;
 use scrust::gamedata::GameData;
 
 

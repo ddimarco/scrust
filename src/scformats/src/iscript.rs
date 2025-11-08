@@ -1,9 +1,7 @@
 use std::io::{Read, Seek, SeekFrom};
-
 use byteorder::{ReadBytesExt, LittleEndian};
-
-
 use std::collections::HashMap;
+use num_derive::FromPrimitive;
 
 #[derive(Clone)]
 pub struct IScript {
@@ -64,9 +62,7 @@ impl IScript {
     }
 }
 
-enum_from_primitive! {
-#[derive(PartialEq)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive)]
 pub enum AnimationType {
     Init = 0,
     Death,
@@ -97,10 +93,8 @@ pub enum AnimationType {
     Unburrow,
     Enable,
 }
-}
 
-enum_from_primitive! {
-#[derive(Debug)]
+#[derive(Debug, FromPrimitive)]
 #[allow(non_camel_case_types)]
 pub enum OpCode {
   PlayFram = 0,
@@ -172,5 +166,4 @@ pub enum OpCode {
   GrdSprOl,
   __43,
   DoGrdDamage,
-}
 }

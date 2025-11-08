@@ -1,7 +1,5 @@
-extern crate sdl2;
 use sdl2::pixels::Color;
 
-extern crate scrust;
 use scrust::gamedata::GameData;
 use scrust::{GameContext, GameState, View, ViewAction};
 use scrust::render::{render_buffer_solid};

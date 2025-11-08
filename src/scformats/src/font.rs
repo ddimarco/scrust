@@ -1,7 +1,6 @@
 use std::io::{Read, Seek, SeekFrom};
 use std::cmp::min;
 
-extern crate byteorder;
 use byteorder::{LittleEndian, ReadBytesExt};
 
 #[derive(Copy, Clone)]
@@ -121,8 +120,7 @@ impl Font {
 
 // render into 8bit screen buffer
 
-extern crate sdl2;
-use self::sdl2::rect::Rect;
+use sdl2::rect::Rect;
 
 #[derive(Clone)]
 pub enum HorizontalAlignment {
@@ -266,12 +264,12 @@ impl RenderText for Font {
 
 // render into rgb24 texture
 //
-// use ::pal::Palette;
+// use crate::pal::Palette;
 //
 // extern crate sdl2;
-// use self::sdl2::pixels::PixelFormatEnum;
-// use self::sdl2::rect::Rect;
-// use self::sdl2::render::{Renderer, Texture};
+// use sdl2::pixels::PixelFormatEnum;
+// use sdl2::rect::Rect;
+// use sdl2::render::{Renderer, Texture};
 //
 // pub trait RenderText {
 // fn render_textbox(&self,

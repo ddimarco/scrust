@@ -1,9 +1,8 @@
 use std::io::{Read, Seek, SeekFrom};
 
-extern crate byteorder;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-use ::utils::read_vec_u32;
+use crate::utils::read_vec_u32;
 
 pub struct LOX {
     pub frames: Vec<LOXFrame>,

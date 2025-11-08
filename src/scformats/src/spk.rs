@@ -1,10 +1,9 @@
 use std::io::{Read, Seek, SeekFrom};
 use std::collections::HashMap;
 
-extern crate byteorder;
 use byteorder::{ReadBytesExt, LittleEndian};
 
-use ::utils::read_vec_u16;
+use crate::utils::read_vec_u16;
 
 pub struct SPK {
     pub layers: Vec<Vec<SPKStar>>,

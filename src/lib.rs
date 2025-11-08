@@ -1,23 +1,6 @@
-extern crate byteorder;
-extern crate libc;
-extern crate enum_primitive;
-extern crate num;
-extern crate sdl2;
-extern crate rand;
-extern crate config;
-
-extern crate pathplanning;
-extern crate smacker;
 use smacker::SMK;
-
-extern crate scformats;
 use scformats::pal::Palette;
-
-#[macro_use]
-extern crate ecs;
 use ecs::Entity;
-
-extern crate bresenham;
 
 #[macro_use]
 pub mod events;

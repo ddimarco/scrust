@@ -1,6 +1,5 @@
 use std::env;
 
-extern crate scrust;
 use scrust::{GameContext, GameState, View, ViewAction, GameEvents};
 use scrust::gamedata::GameData;
 
@@ -12,7 +11,6 @@ use scrust::LayerTrait;
 use scrust::ui::UiLayer;
 use scrust::unit_ecs::PlanningMap;
 
-extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 

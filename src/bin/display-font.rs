@@ -1,7 +1,5 @@
-extern crate sdl2;
 use sdl2::rect::Rect;
 
-extern crate scrust;
 
 extern crate scformats;
 use scformats::font::FontSize;
